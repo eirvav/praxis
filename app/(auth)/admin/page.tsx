@@ -1,6 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { setRole, deleteUser, refreshUserList } from "./actions";
-import { SearchUsers } from "./SearchUsers";
+import { SearchUsers } from "./_components/SearchUsers";
 import {
   Table,
   TableBody,
