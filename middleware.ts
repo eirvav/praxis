@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
@@ -9,12 +10,30 @@ const isPublicRoute = createRouteMatcher([
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (isAdminRoute(request) && 
-  (await auth()).sessionClaims?.metadata?.role !== 'admin'
-) {
-  const url = new URL('/', request.url)
-  return NextResponse.redirect(url)
-}
+  const { userId, sessionClaims } = await auth();
+  const userRole = sessionClaims?.metadata?.role as string | undefined;
+
+  // Handle admin routes
+  if (isAdminRoute(request) && userRole !== 'admin') {
+    const url = new URL('/', request.url)
+    return NextResponse.redirect(url)
+  }
+
+  // If it's the root path and user is authenticated, redirect based on role
+  if (request.nextUrl.pathname === '/' && userId) {
+    let redirectPath = '/student'; // default path
+
+    if (userRole === 'admin') {
+      redirectPath = '/admin';
+    } else if (userRole === 'teacher') {
+      redirectPath = '/teacher';
+    }
+
+    const url = new URL(redirectPath, request.url)
+    return NextResponse.redirect(url)
+  }
+
+  // Protect non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
