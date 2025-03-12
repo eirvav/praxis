@@ -3,7 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
-  title: 'Student Dashboard',
+  title: 'praXis Student Dashboard',
   description: 'Created By Eirik Pagani Vavik',
 }
 
