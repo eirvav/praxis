@@ -3,6 +3,7 @@
 import React from "react";
 import { Home, LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import SidebarItem from "./SidebarItem";
 import { cn } from "@/lib/utils";
 
@@ -27,9 +28,13 @@ const Sidebar = ({ items, title, className }: SidebarProps) => {
       {/* Sidebar header with title and logo */}
       <div className="p-6">
         <Link href="/" className="flex items-center gap-x-2">
-          <div className="bg-purple-600 text-white rounded-full p-2 flex items-center justify-center h-8 w-8">
-            <span className="text-sm font-bold">P</span>
-          </div>
+          <Image 
+            src="/logo.svg" 
+            alt="Praxis Logo" 
+            width={32} 
+            height={32} 
+            className="h-8 w-8"
+          />
           <h1 className="font-semibold text-xl">Praxis</h1>
           <span className="text-sm text-slate-500">{title}</span>
         </Link>
