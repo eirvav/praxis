@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useClerk } from "@clerk/nextjs";
 import SidebarItem from "./SidebarItem";
 import { cn } from "@/lib/utils";
 
@@ -18,10 +19,15 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ items, title, className }: SidebarProps) => {
+  const { signOut } = useClerk();
+  
   // Group navigation items by category
   const dashboardItems = items.slice(0, 1); // Dashboard only
   const mainItems = items.slice(1, 5); // First 4 items after dashboard
-  const otherItems = items.slice(5); // Remaining items
+  
+  // Find settings item and remove it from otherItems
+  const settingsItem = items.find(item => item.label === "Settings");
+  const otherItemsWithoutSettings = items.slice(5).filter(item => item.label !== "Settings");
 
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
@@ -67,29 +73,43 @@ const Sidebar = ({ items, title, className }: SidebarProps) => {
       </div>
 
       {/* Navigation Links - Other */}
-      <div className="flex flex-col w-full px-3 pt-4">
-        <p className="text-xs font-medium text-gray-400 px-3 mb-2 uppercase">Others</p>
-        {otherItems.map((item) => (
-          <SidebarItem
-            key={item.href}
-            icon={item.icon}
-            label={item.label}
-            href={item.href}
-          />
-        ))}
-      </div>
+      {otherItemsWithoutSettings.length > 0 && (
+        <div className="flex flex-col w-full px-3 pt-4">
+          <p className="text-xs font-medium text-gray-400 px-3 mb-2 uppercase">Others</p>
+          {otherItemsWithoutSettings.map((item) => (
+            <SidebarItem
+              key={item.href}
+              icon={item.icon}
+              label={item.label}
+              href={item.href}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Logout at bottom */}
+      {/* Settings and Logout at bottom */}
       <div className="mt-auto px-3 mb-4">
-        <form action="/sign-out" method="post">
-          <button 
-            className="flex items-center gap-x-3 text-slate-600 text-sm font-medium pl-3 
-                     transition-all hover:text-slate-700 hover:bg-slate-100/50 py-3 rounded-lg w-full"
-          >
-            <LogOut size={20} className="text-slate-400" />
-            <span>Logout</span>
-          </button>
-        </form>
+        <p className="text-xs font-medium text-gray-400 px-3 mb-2 uppercase">Settings & Account</p>
+        
+        {/* Settings item */}
+        {settingsItem && (
+          <SidebarItem
+            key={settingsItem.href}
+            icon={settingsItem.icon}
+            label={settingsItem.label}
+            href={settingsItem.href}
+          />
+        )}
+        
+        {/* Logout button using Clerk */}
+        <button 
+          onClick={() => signOut({ redirectUrl: '/' })}
+          className="flex items-center gap-x-3 text-red-600 text-sm font-medium pl-3 
+                   transition-all hover:text-red-700 hover:bg-red-50 py-3 rounded-lg w-full mt-2"
+        >
+          <LogOut size={20} className="text-red-500" />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

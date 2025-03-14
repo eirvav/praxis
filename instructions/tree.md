@@ -55,7 +55,9 @@
 ├── eslint.config.mjs
 ├── instructions
 │   ├── layout-structure.md
-│   └── routing-implementation.md
+│   ├── module-creation-implementation-plan.md
+│   ├── routing-implementation.md
+│   └── tree.md
 ├── lib
 │   └── utils.ts
 ├── middleware.ts
@@ -67,6 +69,7 @@
 ├── public
 │   ├── file.svg
 │   ├── globe.svg
+│   ├── icons
 │   ├── logo.svg
 │   ├── next.svg
 │   ├── vercel.svg
