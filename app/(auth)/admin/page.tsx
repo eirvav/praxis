@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { UserButton } from "@clerk/nextjs";
 import { setRole, deleteUser, refreshUserList } from "./actions";
 import { SearchUsers } from "./_components/SearchUsers";
 import {
@@ -88,6 +89,11 @@ export default async function Admin({
 
   return (
     <div className="container mx-auto py-8">
+      {/* User Avatar in top right */}
+      <div className="flex justify-end mb-4">
+        <UserButton afterSignOutUrl="/" />
+      </div>
+      
       <Card className="mb-8">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>

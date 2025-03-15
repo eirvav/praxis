@@ -1,5 +1,6 @@
 import React from "react";
 import { Toaster } from "sonner";
+import { SupabaseProvider } from './_components/SupabaseProvider';
 
 const DashboardLayout = ({
   children
@@ -7,10 +8,12 @@ const DashboardLayout = ({
   children: React.ReactNode;
 }) => {
   return (
-    <div className="min-h-screen">
-      <Toaster position="top-center" />
-      {children}
-    </div>
+    <SupabaseProvider>
+      <div className="min-h-screen">
+        <Toaster position="top-center" />
+        {children}
+      </div>
+    </SupabaseProvider>
   );
 };
 

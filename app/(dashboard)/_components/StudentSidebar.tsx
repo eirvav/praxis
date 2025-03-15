@@ -9,7 +9,8 @@ import {
   Home,
   Clock,
   Folder,
-  Settings
+  Settings,
+  Book
 } from "lucide-react";
 import Sidebar from "./Sidebar";
 
@@ -21,20 +22,25 @@ const StudentSidebar = () => {
       href: "/student",
     },
     {
-      icon: BookOpen,
-      label: "Courses",
-      href: "/student/courses",
+      icon: Book,
+      label: "Modules",
+      href: "/student/modules",
     },
-    {
-      icon: GraduationCap,
-      label: "Assignments",
-      href: "/student/assignments",
-    },
-    {
-      icon: CalendarDays,
-      label: "Schedule",
-      href: "/student/schedule",
-    },
+    // {
+    //   icon: BookOpen,
+    //   label: "Courses",
+    //   href: "/student/courses",
+    // },
+    // {
+    //   icon: GraduationCap,
+    //   label: "Assignments",
+    //   href: "/student/assignments",
+    // },
+    // {
+    //   icon: CalendarDays,
+    //   label: "Schedule",
+    //   href: "/student/schedule",
+    // },
     {
       icon: Clock,
       label: "Progress",

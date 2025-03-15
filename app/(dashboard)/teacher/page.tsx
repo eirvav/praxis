@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import LayoutWrapper from "../_components/LayoutWrapper";
 import TeacherSidebar from "../_components/TeacherSidebar";
+import DashboardContent from "./DashboardContent";
 
 export default async function TeacherDashboard() {
   const { userId, sessionClaims } = await auth();
@@ -25,6 +26,8 @@ export default async function TeacherDashboard() {
       sidebar={<TeacherSidebar />}
       firstName={firstName}
       userRole={userRole}
-    />
+    >
+      <DashboardContent />
+    </LayoutWrapper>
   );
 }

@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+const isTeacherRoute = createRouteMatcher(['/teacher/modules(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
   const { userId, sessionClaims } = await auth();
@@ -15,6 +16,18 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Handle admin routes
   if (isAdminRoute(request) && userRole !== 'admin') {
+    const url = new URL('/', request.url)
+    return NextResponse.redirect(url)
+  }
+
+  // Handle teacher routes
+  if (isTeacherRoute(request) && userRole !== 'teacher') {
+    // Students trying to access teacher routes should be redirected to student dashboard
+    if (userRole === 'student') {
+      const url = new URL('/student', request.url)
+      return NextResponse.redirect(url)
+    }
+    // Others are redirected to the home page
     const url = new URL('/', request.url)
     return NextResponse.redirect(url)
   }

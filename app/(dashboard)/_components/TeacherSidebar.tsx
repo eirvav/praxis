@@ -11,7 +11,8 @@ import {
   Home,
   GraduationCap,
   BarChart,
-  Star
+  Star,
+  Book
 } from "lucide-react";
 import Sidebar from "./Sidebar";
 
@@ -21,6 +22,11 @@ const TeacherSidebar = () => {
       icon: Home,
       label: "Dashboard",
       href: "/teacher",
+    },
+    {
+      icon: Book,
+      label: "Modules",
+      href: "/teacher/modules",
     },
     {
       icon: BookOpen,
