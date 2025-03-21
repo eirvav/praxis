@@ -1,8 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import LayoutWrapper from "../_components/LayoutWrapper";
-import StudentSidebar from "../_components/StudentSidebar";
-import DashboardContent from "./modules/_components/DashboardContent";
+import RecentModules from "../_components/RecentModules";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
 
 export default async function StudentDashboard() {
   const { userId, sessionClaims } = await auth();
@@ -22,12 +21,13 @@ export default async function StudentDashboard() {
   }
 
   return (
-    <LayoutWrapper 
-      sidebar={<StudentSidebar />}
-      firstName={firstName}
-      userRole={userRole}
-    >
-      <DashboardContent />
-    </LayoutWrapper>
+    <ContentLayout title="Student Dashboard">
+      <div className="flex flex-col gap-4">
+        <div className="bg-white dark:bg-zinc-800 p-6 rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold mb-6">Student Dashboard</h1>
+          <RecentModules isTeacher={false} />
+        </div>
+      </div>
+    </ContentLayout>
   );
 }
