@@ -1,22 +1,31 @@
-import { auth } from "@clerk/nextjs/server";
+'use client';
+
+import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
 import RecentModules from "../_components/RecentModules";
+import RecentCourses from "../_components/RecentCourses";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { BookOpen, PlusCircle } from "lucide-react";
+import { CreateCourseModal } from "../_components/CreateCourseModal";
 
-export default async function TeacherDashboard() {
-  const { userId, sessionClaims } = await auth();
+export default function TeacherDashboard() {
+  const { user, isLoaded, sessionClaims } = useUser();
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
   
   // If no user is found, redirect to sign-in
-  if (!userId) {
+  if (!user) {
     redirect("/sign-in");
   }
 
-  // Get the user's role from session claims
-  const userRole = sessionClaims?.metadata?.role as string | undefined;
-  const firstName = sessionClaims?.firstName as string | undefined;
+  // Get the user's role from publicMetadata
+  const userRole = user.publicMetadata?.role as string | undefined;
 
   // If user is not a teacher, redirect to their appropriate dashboard
   if (userRole === "student") {
@@ -25,19 +34,33 @@ export default async function TeacherDashboard() {
 
   return (
     <ContentLayout title="Teacher Dashboard">
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Quick Actions</h2>
-          <Link href="/teacher/modules/create">
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Create Module
+          <div className="flex gap-3">
+            <Button 
+              className="flex items-center gap-2"
+              onClick={() => setIsCourseModalOpen(true)}
+            >
+              <BookOpen className="h-4 w-4" />
+              Create Course
             </Button>
-          </Link>
+            <Link href="/teacher/modules/create">
+              <Button className="flex items-center gap-2">
+                <PlusCircle className="h-4 w-4" />
+                Create Module
+              </Button>
+            </Link>
+          </div>
         </div>
         
-        <div className="bg-white dark:bg-zinc-800 p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold mb-6">Teacher Dashboard</h1>
+        <CreateCourseModal 
+          isOpen={isCourseModalOpen} 
+          onClose={() => setIsCourseModalOpen(false)} 
+        />
+        
+        <div className="space-y-6">
+          <RecentCourses isTeacher={true} />
           <RecentModules isTeacher={true} />
         </div>
       </div>

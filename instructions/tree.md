@@ -20,28 +20,35 @@
 │   │       └── layout.tsx
 │   ├── (dashboard)
 │   │   ├── _components
+│   │   │   ├── CourseCard.tsx
+│   │   │   ├── CourseNavigation.tsx
+│   │   │   ├── CreateCourseModal.tsx
 │   │   │   ├── ModuleCard.tsx
+│   │   │   ├── RecentCourses.tsx
 │   │   │   ├── RecentModules.tsx
 │   │   │   └── SupabaseProvider.tsx
 │   │   ├── layout.tsx
 │   │   ├── student
-│   │   │   ├── layout.tsx
-│   │   │   ├── modules
-│   │   │   │   ├── [moduleId]
+│   │   │   ├── courses
+│   │   │   │   ├── [courseId]
+│   │   │   │   │   ├── modules
+│   │   │   │   │   │   └── [moduleId]
+│   │   │   │   │   │       └── page.tsx
 │   │   │   │   │   └── page.tsx
-│   │   │   │   ├── _components
 │   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
 │   │   └── teacher
-│   │       ├── layout.tsx
-│   │       ├── modules
-│   │       │   ├── [moduleId]
-│   │       │   │   ├── edit
-│   │       │   │   │   └── page.tsx
-│   │       │   │   └── page.tsx
-│   │       │   ├── create
+│   │       ├── courses
+│   │       │   ├── [courseId]
+│   │       │   │   ├── modules
+│   │       │   │   │   ├── [moduleId]
+│   │       │   │   │   │   └── page.tsx
+│   │       │   │   │   └── create
+│   │       │   │   │       └── page.tsx
 │   │       │   │   └── page.tsx
 │   │       │   └── page.tsx
+│   │       ├── layout.tsx
 │   │       └── page.tsx
 │   ├── api
 │   │   └── webhook
@@ -78,6 +85,7 @@
 │       ├── input.tsx
 │       ├── label.tsx
 │       ├── scroll-area.tsx
+│       ├── select.tsx
 │       ├── sheet.tsx
 │       ├── sonner.tsx
 │       ├── table.tsx
@@ -89,15 +97,15 @@
 │   ├── use-sidebar.ts
 │   └── use-store.ts
 ├── instructions
-│   ├── layout-structure.md
-│   ├── module-creation-implementation-plan.md
-│   ├── module-tree.md
-│   ├── routing-implementation.md
+│   ├── advanced-module-creation-implementation.md
+│   ├── current_Supabase_SQL.md
+│   ├── dashboard_structure.md
 │   └── tree.md
 ├── lib
 │   ├── menu-list.ts
 │   └── utils.ts
 ├── middleware.ts
+├── module-slides-schema.sql
 ├── next-env.d.ts
 ├── next.config.ts
 ├── package-lock.json

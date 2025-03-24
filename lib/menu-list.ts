@@ -11,7 +11,9 @@ import {
   NotebookPen,
   Box,
   File,
-  ClipboardCheck
+  ClipboardCheck,
+  BookOpen,
+  BookMarked
 } from "lucide-react";
 
 type Submenu = {
@@ -26,6 +28,7 @@ type Menu = {
   active?: boolean;
   icon: LucideIcon;
   submenus?: Submenu[];
+  injectComponent?: boolean;
 };
 
 type Group = {
@@ -40,28 +43,16 @@ const teacherMenuConfig = {
     label: "Dashboard",
     icon: LayoutGrid
   },
+  courses: {
+    href: "/teacher/courses",
+    label: "Courses",
+    icon: BookOpen,
+    injectComponent: true
+  },
   modules: {
-    href: "",
-    label: "Modules",
-    icon: Book,
-    submenus: [
-      {
-        href: "/teacher/modules",
-        label: "All Modules"
-      },
-      {
-        href: "/teacher/modules/create",
-        label: "Create Module"
-      },
-      {
-        href: "/teacher/modules/MIX250",
-        label: "MIX250"
-      },
-      {
-        href: "/teacher/modules/PSYK101",
-        label: "PSYK101"
-      }
-    ]
+    href: "/teacher/modules",
+    label: "All Modules",
+    icon: Book
   },
   resources: {
     href: "/teacher/resources",
@@ -87,24 +78,16 @@ const studentMenuConfig = {
     label: "Dashboard",
     icon: LayoutGrid
   },
+  courses: {
+    href: "/student/courses",
+    label: "Courses",
+    icon: BookOpen,
+    injectComponent: true
+  },
   modules: {
-    href: "",
-    label: "Modules",
-    icon: Book,
-    submenus: [
-      {
-        href: "/student/modules",
-        label: "All Modules"
-      },
-      {
-        href: "/student/modules/MIX250",
-        label: "MIX250"
-      },
-      {
-        href: "/student/modules/PSYK101",
-        label: "PSYK101"
-      }
-    ]
+    href: "/student/modules",
+    label: "All Modules",
+    icon: Book
   },
   resources: {
     href: "/student/resources",
@@ -150,12 +133,12 @@ function getTeacherMenu(pathname: string): Group[] {
       groupLabel: "Teaching",
       menus: [
         {
+          ...teacherMenuConfig.courses,
+          active: pathname.startsWith("/teacher/courses")
+        },
+        {
           ...teacherMenuConfig.modules,
-          active: pathname.startsWith("/teacher/modules"),
-          submenus: teacherMenuConfig.modules.submenus?.map(submenu => ({
-            ...submenu,
-            active: pathname === submenu.href
-          }))
+          active: pathname.startsWith("/teacher/modules")
         },
         {
           ...teacherMenuConfig.resources,
@@ -194,12 +177,12 @@ function getStudentMenu(pathname: string): Group[] {
       groupLabel: "Learning",
       menus: [
         {
+          ...studentMenuConfig.courses,
+          active: pathname.startsWith("/student/courses")
+        },
+        {
           ...studentMenuConfig.modules,
-          active: pathname.startsWith("/student/modules"),
-          submenus: studentMenuConfig.modules.submenus?.map(submenu => ({
-            ...submenu,
-            active: pathname === submenu.href
-          }))
+          active: pathname.startsWith("/student/modules")
         },
         {
           ...studentMenuConfig.resources,
@@ -240,21 +223,16 @@ function getDefaultMenu(pathname: string): Group[] {
       groupLabel: "Contents",
       menus: [
         {
-          href: "",
-          label: "Modules",
-          icon: Box,
-          submenus: [
-            {
-              href: "/modules/MIX250",
-              label: "MIX250",
-              active: pathname === "/modules/MIX250"
-            },
-            {
-              href: "/modules/PSYK101",
-              label: "PSYK101",
-              active: pathname === "/modules/PSYK101"
-            }
-          ]
+          href: "/courses",
+          label: "Courses",
+          icon: BookOpen,
+          active: pathname.startsWith("/courses")
+        },
+        {
+          href: "/modules",
+          label: "All Modules",
+          icon: Book,
+          active: pathname.startsWith("/modules")
         },
         {
           href: "/resources",
@@ -263,33 +241,10 @@ function getDefaultMenu(pathname: string): Group[] {
           active: pathname === "/resources"
         },
         {
-          href: "/categories",
-          label: "Categories",
-          icon: Bookmark,
-          active: pathname === "/categories"
-        },
-        {
-          href: "/tags",
-          label: "Tags",
-          icon: Tag,
-          active: pathname === "/tags"
-        }
-      ]
-    },
-    {
-      groupLabel: "Settings",
-      menus: [
-        {
-          href: "/users",
-          label: "Users",
-          icon: Users,
-          active: pathname === "/users"
-        },
-        {
-          href: "/account",
-          label: "Account",
+          href: "/settings",
+          label: "Settings",
           icon: Settings,
-          active: pathname === "/account"
+          active: pathname === "/settings"
         }
       ]
     }

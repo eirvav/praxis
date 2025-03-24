@@ -1,0 +1,215 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Edit, Trash } from 'lucide-react';
+import Link from 'next/link';
+import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
+import { toast } from 'sonner';
+import { ContentLayout } from '@/components/admin-panel/content-layout';
+import SlideEditor from '@/app/(dashboard)/_components/SlideEditor';
+import SlideViewer from '@/app/(dashboard)/_components/SlideViewer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface Module {
+  id: string;
+  title: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  course_id: string;
+  teacher_id: string;
+}
+
+export default function CourseModuleDetailPage() {
+  const [module, setModule] = useState<Module | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditingSlides, setIsEditingSlides] = useState(false);
+  
+  const { user } = useUser();
+  const supabase = useSupabase();
+  const router = useRouter();
+  const params = useParams();
+  const moduleId = params.moduleId as string;
+  const courseId = params.courseId as string;
+
+  useEffect(() => {
+    if (!user || !supabase || !moduleId || !courseId) return;
+
+    async function loadModule() {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const { data, error } = await supabase!
+          .from('modules')
+          .select('*')
+          .eq('id', moduleId)
+          .eq('course_id', courseId)
+          .single();
+        
+        if (error) throw error;
+        
+        if (!data) {
+          setError('Module not found or you might not have permission to view it.');
+          return;
+        }
+        
+        setModule(data);
+      } catch (err: any) {
+        console.error('Error loading module:', err);
+        setError(err.message || 'Failed to load module.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadModule();
+  }, [user, supabase, moduleId, courseId]);
+
+  async function deleteModule() {
+    if (!confirm('Are you sure you want to delete this module?')) return;
+    
+    if (!supabase || !module) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const { error } = await supabase
+        .from('modules')
+        .delete()
+        .eq('id', moduleId);
+      
+      if (error) throw error;
+      
+      toast.success('Module deleted successfully');
+      router.push(`/teacher/courses/${courseId}`);
+      router.refresh();
+    } catch (err: any) {
+      console.error('Error deleting module:', err);
+      toast.error('Failed to delete module');
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  const handleSlidesUpdated = () => {
+    toast.success('Slides updated successfully');
+    setIsEditingSlides(false);
+  };
+
+  if (loading) {
+    return (
+      <ContentLayout title="Module Details">
+        <div className="flex items-center justify-center h-64">
+          <p>Loading module...</p>
+        </div>
+      </ContentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <ContentLayout title="Error">
+        <div className="mb-6">
+          <Link href={`/teacher/courses/${courseId}`} className="flex items-center text-blue-500 hover:text-blue-700">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Course
+          </Link>
+        </div>
+        
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </ContentLayout>
+    );
+  }
+
+  if (!module) {
+    return (
+      <ContentLayout title="Module Not Found">
+        <div className="mb-6">
+          <Link href={`/teacher/courses/${courseId}`} className="flex items-center text-blue-500 hover:text-blue-700">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Course
+          </Link>
+        </div>
+        
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded">
+          Module not found
+        </div>
+      </ContentLayout>
+    );
+  }
+
+  return (
+    <ContentLayout title={module.title}>
+      <div className="mb-6">
+        <Link href={`/teacher/courses/${courseId}`} className="flex items-center text-muted-foreground hover:text-primary">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Course
+        </Link>
+      </div>
+      
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">{module.title}</h1>
+          {module.description && (
+            <p className="text-muted-foreground mt-2">{module.description}</p>
+          )}
+        </div>
+        
+        <div className="flex space-x-2">
+          {!isEditingSlides && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditingSlides(true)}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Slides
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            onClick={deleteModule}
+            disabled={isDeleting}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash className="mr-2 h-4 w-4" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </div>
+      
+      <div className="bg-card rounded-lg shadow-sm p-6 border">
+        <div className="mb-6 text-sm text-muted-foreground">
+          Last updated: {new Date(module.updated_at).toLocaleString()}
+        </div>
+        
+        {isEditingSlides ? (
+          <SlideEditor moduleId={moduleId} onSave={handleSlidesUpdated} />
+        ) : (
+          <Tabs defaultValue="preview" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="preview">
+              <SlideViewer moduleId={moduleId} />
+            </TabsContent>
+            
+            <TabsContent value="edit">
+              <SlideEditor moduleId={moduleId} onSave={handleSlidesUpdated} />
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </ContentLayout>
+  );
+} 

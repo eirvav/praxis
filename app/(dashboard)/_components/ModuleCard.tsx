@@ -8,12 +8,33 @@ export type ModuleCardProps = {
   id: string;
   title: string;
   content: string;
-  updated_at: string;
+  updated_at?: string;
+  createdAt?: string; // For backward compatibility
+  courseId?: string;
   isTeacher?: boolean;
+  href?: string; // Allow custom href to be passed
 };
 
-const ModuleCard = ({ id, title, content, updated_at, isTeacher = false }: ModuleCardProps) => {
-  const route = isTeacher ? `/teacher/modules/${id}` : `/student/modules/${id}`;
+const ModuleCard = ({ 
+  id, 
+  title, 
+  content, 
+  updated_at,
+  createdAt,
+  courseId, 
+  isTeacher = false,
+  href
+}: ModuleCardProps) => {
+  // Use updated_at if available, otherwise use createdAt
+  const lastUpdated = updated_at || createdAt || '';
+  
+  // If custom href is provided, use it
+  // Otherwise, use course context if available, fallback to standalone route
+  const route = href || (
+    courseId 
+      ? `/${isTeacher ? 'teacher' : 'student'}/courses/${courseId}/modules/${id}`
+      : `/${isTeacher ? 'teacher' : 'student'}/modules/${id}`
+  );
   
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
@@ -22,7 +43,7 @@ const ModuleCard = ({ id, title, content, updated_at, isTeacher = false }: Modul
         <p className="text-gray-600 mb-4 line-clamp-3">{content}</p>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-500">
-            Last updated: {new Date(updated_at).toLocaleDateString()}
+            Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}
           </span>
           <Link href={route}>
             <Button variant="default" size="sm">
