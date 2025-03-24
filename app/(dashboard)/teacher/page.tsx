@@ -12,7 +12,7 @@ import { BookOpen, PlusCircle } from "lucide-react";
 import { CreateCourseModal } from "../_components/CreateCourseModal";
 
 export default function TeacherDashboard() {
-  const { user, isLoaded, sessionClaims } = useUser();
+  const { user, isLoaded } = useUser();
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   
   if (!isLoaded) {

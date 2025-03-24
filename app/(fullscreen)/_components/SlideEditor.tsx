@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSupabase } from './SupabaseProvider';
+import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -610,7 +610,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             onClick={saveSlides} 
             disabled={saving || slides.length === 0}
           >
-            {saving ? 'Saving...' : 'Save & Preview'}
+            {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </div>

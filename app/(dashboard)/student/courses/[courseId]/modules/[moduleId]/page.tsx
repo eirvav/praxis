@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/admin-panel/content-layout';
-import SlideViewer from '@/app/(dashboard)/_components/SlideViewer';
+import SlideViewer from '@/app/(fullscreen)/_components/SlideViewer';
 
 interface Module {
   id: string;

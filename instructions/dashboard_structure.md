@@ -6,6 +6,7 @@
 │   ├── ModuleCard.tsx
 │   ├── RecentCourses.tsx
 │   ├── RecentModules.tsx
+│   ├── SlideViewer.tsx
 │   └── SupabaseProvider.tsx
 ├── layout.tsx
 ├── student
@@ -22,9 +23,7 @@
     ├── courses
     │   ├── [courseId]
     │   │   ├── modules
-    │   │   │   ├── [moduleId]
-    │   │   │   │   └── page.tsx
-    │   │   │   └── create
+    │   │   │   └── [moduleId]
     │   │   │       └── page.tsx
     │   │   └── page.tsx
     │   └── page.tsx
