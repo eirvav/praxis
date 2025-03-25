@@ -12,7 +12,9 @@ import { Ban } from 'lucide-react';
 interface ModuleWithCourse {
   id: string;
   title: string;
-  content: string;
+  content?: string;
+  description?: string;
+  thumbnail_url?: string;
   updated_at: string;
   course_id: string;
 }
@@ -24,35 +26,50 @@ const RecentModules = ({ isTeacher = false }: { isTeacher?: boolean }) => {
   const supabase = useSupabase();
   
   useEffect(() => {
-    if (!user || !supabase) return;
-
-    async function loadModules() {
-      setLoading(true);
-      // Query to get the 3 most recent modules with course_id
-      const { data, error } = await supabase!
-        .from('modules')
-        .select('id, title, content, updated_at, course_id')
-        .order('updated_at', { ascending: false })
-        .limit(3);
+    async function fetchRecentModules() {
+      if (!supabase || !user) return;
       
-      if (!error && data) {
-        setModules(data);
-      } else {
-        console.error('Error loading modules:', error);
+      try {
+        setLoading(true);
+        
+        // For teachers, fetch their own modules
+        // For students, fetch all available modules
+        const query = supabase
+          .from('modules')
+          .select('id, title, description, thumbnail_url, updated_at, course_id')
+          .order('updated_at', { ascending: false })
+          .limit(5);
+          
+        if (isTeacher) {
+          query.eq('teacher_id', user.id);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        setModules(data || []);
+      } catch (err) {
+        console.error('Error fetching modules:', err);
+        setModules([]);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     }
-
-    loadModules();
-  }, [user, supabase]);
+    
+    fetchRecentModules();
+  }, [supabase, user, isTeacher]);
 
   if (loading) {
     return (
       <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Recent Modules</h2>
-        <div className="h-40 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading recent modules...</p>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Recent Modules</h2>
+        </div>
+        <div className="space-y-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="h-[120px] animate-pulse bg-gray-100 rounded-md"></div>
+          ))}
         </div>
       </div>
     );
@@ -61,18 +78,12 @@ const RecentModules = ({ isTeacher = false }: { isTeacher?: boolean }) => {
   if (modules.length === 0) {
     return (
       <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Recent Modules</h2>
-        <div className="h-40 flex flex-col items-center justify-center text-center gap-2">
-          <Ban className="h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">No modules available yet.</p>
-          {isTeacher && (
-            <Link 
-              href="/teacher/courses" 
-              className="text-sm text-primary hover:underline"
-            >
-              Manage your courses
-            </Link>
-          )}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Recent Modules</h2>
+        </div>
+        <div className="text-center py-10">
+          <Ban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No modules found.</p>
         </div>
       </div>
     );
@@ -96,7 +107,8 @@ const RecentModules = ({ isTeacher = false }: { isTeacher?: boolean }) => {
             key={module.id}
             id={module.id}
             title={module.title}
-            content={module.content}
+            description={module.description}
+            thumbnail_url={module.thumbnail_url}
             updated_at={module.updated_at}
             courseId={module.course_id}
             href={isTeacher 

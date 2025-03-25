@@ -8,11 +8,14 @@ import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/admin-panel/content-layout';
 import SlideViewer from '@/app/(fullscreen)/_components/SlideViewer';
+import Image from 'next/image';
+import { FileImage } from 'lucide-react';
 
 interface Module {
   id: string;
   title: string;
   description?: string;
+  thumbnail_url?: string;
   created_at: string;
   updated_at: string;
   course_id: string;
@@ -124,6 +127,28 @@ export default function StudentCourseModuleDetailPage() {
         )}
       </div>
       
+      {/* Display thumbnail if available */}
+      {module.thumbnail_url && (
+        <div className="relative w-full h-64 md:h-80 mb-8 overflow-hidden rounded-lg border">
+          <Image
+            src={module.thumbnail_url}
+            alt={module.title}
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </div>
+      )}
+
+      {!module.thumbnail_url && (
+        <div className="w-full h-40 md:h-60 bg-amber-50 rounded-lg mb-8 flex items-center justify-center">
+          <div className="text-center">
+            <FileImage className="h-12 w-12 text-amber-300 mx-auto mb-2" />
+            <p className="text-amber-800">No cover image</p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-card rounded-lg shadow-sm p-6 border">
         <div className="mb-6 text-sm text-muted-foreground">
           Last updated: {new Date(module.updated_at).toLocaleString()}

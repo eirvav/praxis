@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, ArrowUp, ArrowDown, FileText, Video, ListTodo, Settings, Grip, X } from 'lucide-react';
+import { Plus, Trash, ArrowUp, ArrowDown, FileText, Video, ListTodo, Settings, Grip, X, Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { useUser } from '@clerk/nextjs';
 
 export interface Slide {
   id?: string;
@@ -28,12 +29,31 @@ interface SlideEditorProps {
 }
 
 export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
+  console.log('[SlideEditor] RENDERING with moduleId:', moduleId);
+  
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
-  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const initialFetchDoneRef = useRef(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useSupabase();
+  const { user } = useUser();
+  
+  // Log the current slide state for debugging
+  useEffect(() => {
+    console.log('[SlideEditor] Current slides state:', slides);
+  }, [slides]);
+  
+  // Track component mounting and unmounting
+  useEffect(() => {
+    console.log('[SlideEditor] Component MOUNTED');
+    
+    return () => {
+      console.log('[SlideEditor] Component UNMOUNTED');
+    };
+  }, []);
 
   // Create a default slide
   const createDefaultSlide = useCallback((): Slide => {
@@ -45,45 +65,79 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     };
   }, [moduleId]);
 
-  // Load existing slides only once
+  // Save slides to localStorage for persistence
+  useEffect(() => {
+    if (slides.length > 0 && moduleId) {
+      try {
+        localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(slides));
+      } catch (err) {
+        console.error('Error saving slides to localStorage:', err);
+      }
+    }
+  }, [slides, moduleId]);
+
+  // Load existing slides only once - with localStorage fallback
   useEffect(() => {
     async function loadSlides() {
-      if (!supabase || !moduleId || initialFetchDone) return;
+      if (!moduleId) return;
+      
+      setLoading(true);
       
       try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('slides')
-          .select('*')
-          .eq('module_id', moduleId)
-          .order('position', { ascending: true });
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setSlides(data);
-          setActiveSlideIndex(0);
-        } else {
-          // Start with one default slide
-          const defaultSlide = createDefaultSlide();
-          setSlides([defaultSlide]);
-          setActiveSlideIndex(0);
+        // Try to load from localStorage first for immediate display
+        let cachedSlidesData = null;
+        try {
+          const cached = localStorage.getItem(`slides_cache_${moduleId}`);
+          if (cached) {
+            cachedSlidesData = JSON.parse(cached);
+            console.log('Retrieved slides from localStorage cache');
+            
+            // If we have cached slides, set them immediately
+            if (cachedSlidesData && cachedSlidesData.length > 0) {
+              setSlides(cachedSlidesData);
+              setActiveSlideIndex(0);
+              setLoading(false);
+            }
+          }
+        } catch (err) {
+          console.error('Error reading from localStorage:', err);
+        }
+      
+        // Then always try to load from Supabase to get the latest
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('slides')
+            .select('*')
+            .eq('module_id', moduleId)
+            .order('position', { ascending: true });
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            setSlides(data);
+            setActiveSlideIndex(0);
+          } else if (!cachedSlidesData) {
+            // If no slides from DB and no cached slides, create default
+            const defaultSlide = createDefaultSlide();
+            setSlides([defaultSlide]);
+            setActiveSlideIndex(0);
+          }
         }
       } catch (err: any) {
         console.error('Error loading slides:', err);
         toast.error('Failed to load slides');
-        // Start with one default slide on error
+        // Create a default slide since both DB and cache failed
         const defaultSlide = createDefaultSlide();
         setSlides([defaultSlide]);
         setActiveSlideIndex(0);
       } finally {
         setLoading(false);
-        setInitialFetchDone(true);
+        initialFetchDoneRef.current = true;
       }
     }
     
     loadSlides();
-  }, [supabase, moduleId, initialFetchDone, createDefaultSlide]);
+  }, [moduleId, supabase, createDefaultSlide]);
 
   // Add a new slide
   const addSlide = () => {
@@ -196,12 +250,20 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         config = { content: '' };
         break;
       case 'video':
-        config = { url: '', title: '' };
+        // Ensure we preserve any existing video URL if changing back to video type
+        config = { 
+          url: updatedSlides[index].config?.url || '', 
+          title: updatedSlides[index].config?.title || '',
+          videoUrl: updatedSlides[index].config?.videoUrl || '',
+          videoFileName: updatedSlides[index].config?.videoFileName || '',
+        };
         break;
       case 'quiz':
         config = { question: '', options: [''], correctOptionIndex: 0 };
         break;
     }
+    
+    console.log(`Changing slide ${index} type to ${slideType} with config:`, config);
     
     updatedSlides[index] = {
       ...updatedSlides[index],
@@ -210,6 +272,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     };
     
     setSlides(updatedSlides);
+    
+    // Also update localStorage immediately
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(updatedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage after type change:', err);
+    }
   };
 
   // Handle slide config change
@@ -223,7 +292,16 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       }
     };
     
+    console.log(`Updating slide ${index} config:`, configUpdate);
+    
     setSlides(updatedSlides);
+    
+    // Also update localStorage immediately 
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(updatedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage after config update:', err);
+    }
   };
 
   // Save all slides
@@ -232,30 +310,79 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     
     try {
       setSaving(true);
+      console.log('Saving all slides to database:', slides);
       
-      // First, delete all existing slides for this module
-      const { error: deleteError } = await supabase
+      // First, fetch existing slides to identify which ones need to be kept
+      const { data: existingSlides, error: fetchError } = await supabase
         .from('slides')
-        .delete()
+        .select('id')
         .eq('module_id', moduleId);
-      
-      if (deleteError) throw deleteError;
-      
-      // Then insert all new slides
-      if (slides.length > 0) {
-        const { error: insertError } = await supabase
-          .from('slides')
-          .insert(slides.map((slide) => ({
-            module_id: moduleId,
-            slide_type: slide.slide_type,
-            position: slide.position,
-            config: slide.config
-          })));
         
-        if (insertError) throw insertError;
+      if (fetchError) throw fetchError;
+      
+      // Create a map of existing slide IDs for easy lookup
+      const existingSlideIds = new Set((existingSlides || []).map(slide => slide.id));
+      const newSlideIds = new Set(slides.filter(slide => slide.id).map(slide => slide.id));
+      
+      // Delete slides that exist in the database but not in our current state
+      const slidesToDelete = Array.from(existingSlideIds).filter(id => !newSlideIds.has(id));
+      
+      if (slidesToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('slides')
+          .delete()
+          .in('id', slidesToDelete);
+        
+        if (deleteError) throw deleteError;
       }
       
+      // Insert or update slides
+      for (const slide of slides) {
+        if (slide.id) {
+          // Update existing slide
+          const { error: updateError } = await supabase
+            .from('slides')
+            .update({
+              slide_type: slide.slide_type,
+              position: slide.position,
+              config: slide.config
+            })
+            .eq('id', slide.id);
+            
+          if (updateError) throw updateError;
+        } else {
+          // Insert new slide
+          const { data: insertedSlide, error: insertError } = await supabase
+            .from('slides')
+            .insert({
+              module_id: moduleId,
+              slide_type: slide.slide_type,
+              position: slide.position,
+              config: slide.config
+            })
+            .select();
+            
+          if (insertError) throw insertError;
+          
+          // Update our local slides with the new IDs
+          if (insertedSlide && insertedSlide.length > 0) {
+            slide.id = insertedSlide[0].id;
+          }
+        }
+      }
+      
+      // Update localStorage with the saved slides
+      try {
+        localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(slides));
+      } catch (err) {
+        console.error('Error saving slides to localStorage:', err);
+      }
+      
+      // After successful save, update initialFetchDone to prevent reload
+      initialFetchDoneRef.current = true;
+      
       toast.success('Slides saved successfully');
+      console.log('All slides saved successfully:', slides);
       
       if (onSave) {
         onSave();
@@ -342,8 +469,155 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     }
   };
 
+  // Upload video for slide
+  const uploadVideo = async (file: File, slideIndex: number) => {
+    if (!file || !supabase || !user) return;
+    
+    try {
+      setIsUploading(true);
+      
+      // Create a unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      console.log(`[SlideEditor] Uploading video file '${fileName}' to path '${filePath}'`);
+      
+      // Upload the video to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('module-videos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL for the file
+      const { data: urlData } = supabase.storage
+        .from('module-videos')
+        .getPublicUrl(filePath);
+        
+      console.log(`[SlideEditor] Video uploaded successfully, public URL: ${urlData.publicUrl}`);
+      
+      // Update slide config with video URL without resetting other slides
+      const updatedSlides = [...slides];
+      updatedSlides[slideIndex] = {
+        ...updatedSlides[slideIndex],
+        config: {
+          ...updatedSlides[slideIndex].config,
+          videoUrl: urlData.publicUrl,
+          videoFileName: file.name
+        }
+      };
+      
+      // Set slides state first
+      setSlides(updatedSlides);
+      
+      // Then save to database immediately to ensure persistence
+      try {
+        console.log(`[SlideEditor] Saving slide ${slideIndex} with video to database`);
+        
+        const slideToSave = updatedSlides[slideIndex];
+        
+        if (slideToSave.id) {
+          // Update existing slide
+          const { error: updateError } = await supabase
+            .from('slides')
+            .update({
+              slide_type: slideToSave.slide_type,
+              position: slideToSave.position,
+              config: slideToSave.config
+            })
+            .eq('id', slideToSave.id);
+          
+          if (updateError) {
+            console.error('[SlideEditor] Error updating slide with video:', updateError);
+            throw updateError;
+          }
+          
+          console.log('[SlideEditor] Existing slide updated with video');
+        } else {
+          // Insert new slide
+          const { data: insertedSlide, error: insertError } = await supabase
+            .from('slides')
+            .insert({
+              module_id: moduleId,
+              slide_type: slideToSave.slide_type,
+              position: slideToSave.position,
+              config: slideToSave.config
+            })
+            .select();
+          
+          if (insertError) {
+            console.error('[SlideEditor] Error inserting slide with video:', insertError);
+            throw insertError;
+          }
+          
+          // Update the local slide with the new ID
+          if (insertedSlide && insertedSlide.length > 0) {
+            updatedSlides[slideIndex].id = insertedSlide[0].id;
+            setSlides(updatedSlides);
+            console.log(`[SlideEditor] New slide inserted with ID: ${insertedSlide[0].id}`);
+          }
+        }
+        
+        // Also update localStorage
+        try {
+          localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(updatedSlides));
+          console.log('[SlideEditor] Slides with video saved to localStorage');
+        } catch (err) {
+          console.error('[SlideEditor] Error saving to localStorage:', err);
+        }
+        
+        toast.success('Video uploaded and saved successfully');
+      } catch (err) {
+        console.error('[SlideEditor] Error saving slide with video to database:', err);
+        toast.error('Video uploaded but failed to save slide');
+      }
+    } catch (err) {
+      console.error('[SlideEditor] Error uploading video:', err);
+      toast.error('Failed to upload video');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Handle file selection
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, slideIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is a video
+    if (!file.type.startsWith('video/')) {
+      toast.error('Please upload a video file');
+      return;
+    }
+    
+    // Check file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error('File size should not exceed 100MB');
+      return;
+    }
+    
+    uploadVideo(file, slideIndex);
+    
+    // Clear the input value to allow uploading the same file again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+  
+  // Trigger file input click
+  const handleVideoUploadClick = () => {
+    videoFileInputRef.current?.click();
+  };
+
   // Render slide editor based on type
   const renderSlideEditor = (slide: Slide, index: number) => {
+    console.log(`Rendering editor for slide ${index} of type ${slide.slide_type} with config:`, slide.config);
+    
     switch (slide.slide_type) {
       case 'text':
         return (
@@ -368,7 +642,56 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Video URL</label>
+              <label className="text-sm font-medium">Upload Video</label>
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer" onClick={() => {
+                if (activeSlideIndex !== null) {
+                  videoFileInputRef.current?.click();
+                }
+              }}>
+                <input
+                  type="file"
+                  ref={videoFileInputRef}
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => handleVideoFileChange(e, index)}
+                />
+                
+                {isUploading ? (
+                  <div className="text-center">
+                    <div className="animate-pulse mb-2">Uploading...</div>
+                    <p className="text-sm text-gray-500">Please wait while your video is being uploaded</p>
+                  </div>
+                ) : slide.config.videoUrl ? (
+                  <div className="text-center">
+                    <div className="mb-2 flex items-center justify-center">
+                      <Video className="h-8 w-8 text-green-500 mr-2" />
+                      <span className="font-medium text-green-600">Video uploaded</span>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-2">{slide.config.videoFileName || 'Video file'}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-blue-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        videoFileInputRef.current?.click();
+                      }}
+                    >
+                      Replace video
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
+                    <p className="text-sm font-medium mb-1">Click to upload video</p>
+                    <p className="text-xs text-gray-500">MP4, WebM, or MOV (max. 100MB)</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Or use external video URL</label>
               <Input
                 placeholder="Paste YouTube, Vimeo or other video URL"
                 value={slide.config.url || ''}
@@ -379,16 +702,24 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
               </p>
             </div>
             
-            {slide.config.url && (
+            {(slide.config.url || slide.config.videoUrl) && (
               <div className="border rounded-md p-2 bg-muted/20">
                 <p className="text-xs font-medium mb-1">Preview:</p>
                 <div className="aspect-video">
-                  <iframe 
-                    src={slide.config.url} 
-                    className="w-full h-full rounded"
-                    allowFullScreen
-                    frameBorder="0"
-                  ></iframe>
+                  {slide.config.videoUrl ? (
+                    <video 
+                      src={slide.config.videoUrl} 
+                      className="w-full h-full rounded"
+                      controls
+                    />
+                  ) : slide.config.url ? (
+                    <iframe 
+                      src={slide.config.url} 
+                      className="w-full h-full rounded"
+                      allowFullScreen
+                      frameBorder="0"
+                    ></iframe>
+                  ) : null}
                 </div>
               </div>
             )}

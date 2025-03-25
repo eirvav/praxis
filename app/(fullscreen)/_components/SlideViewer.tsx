@@ -36,6 +36,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         
         if (error) throw error;
         
+        console.log('[SlideViewer] Loaded slides from database:', data);
         setSlides(data || []);
       } catch (err: any) {
         console.error('Error loading slides:', err);
@@ -129,6 +130,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
     }
 
     const currentSlide = slides[currentSlideIndex];
+    console.log('[SlideViewer] Rendering slide:', currentSlide);
 
     switch (currentSlide.slide_type) {
       case 'text':
@@ -151,6 +153,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         );
       
       case 'video':
+        console.log('[SlideViewer] Video slide config:', currentSlide.config);
         return (
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -161,7 +164,14 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
             </CardHeader>
             <CardContent className="pt-4">
               <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                {currentSlide.config.url ? (
+                {currentSlide.config.videoUrl ? (
+                  <video 
+                    src={currentSlide.config.videoUrl} 
+                    className="w-full h-full"
+                    controls
+                    preload="metadata"
+                  />
+                ) : currentSlide.config.url ? (
                   <iframe 
                     src={currentSlide.config.url} 
                     className="w-full h-full"
@@ -171,7 +181,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                   ></iframe>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">No video URL provided</p>
+                    <p className="text-muted-foreground">No video provided</p>
                   </div>
                 )}
               </div>

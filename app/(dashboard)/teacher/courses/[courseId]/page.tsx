@@ -25,6 +25,8 @@ interface Module {
   title: string;
   content: string;
   created_at: string;
+  description: string;
+  thumbnail_url: string;
 }
 
 export default function CourseDetailPage() {
@@ -202,7 +204,8 @@ export default function CourseDetailPage() {
                   key={module.id}
                   id={module.id}
                   title={module.title}
-                  content={module.content}
+                  description={module.description}
+                  thumbnail_url={module.thumbnail_url}
                   createdAt={module.created_at}
                   href={`/teacher/courses/${course.id}/modules/${module.id}`}
                 />

@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
@@ -32,9 +33,12 @@ interface ModuleData {
   title: string;
   description: string;
   course_id: string;
+  thumbnail_url?: string;
 }
 
 export default function CreateModulePage() {
+  console.log('[CreateModulePage] RENDERING component');
+  
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -46,25 +50,130 @@ export default function CreateModulePage() {
   const [error, setError] = useState('');
   const [slides, setSlides] = useState<any[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const initialLoadDoneRef = useRef(false);
+  const pageInitializedRef = useRef(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Update step when URL changes
+  // Track component mounting and unmounting
   useEffect(() => {
-    const stepParam = searchParams.get('step');
-    if (stepParam) {
-      const stepNumber = parseInt(stepParam, 10);
-      setStep(stepNumber);
+    console.log('[CreateModulePage] Component MOUNTED');
+    
+    return () => {
+      console.log('[CreateModulePage] Component UNMOUNTED');
+    };
+  }, []);
+  
+  // Track router events
+  useEffect(() => {
+    const handleRouteChangeStart = (url: string) => {
+      console.log('[CreateModulePage] Router event: route change start', url);
+    };
+    
+    const handleRouteChangeComplete = (url: string) => {
+      console.log('[CreateModulePage] Router event: route change complete', url);
+    };
+    
+    const handleBeforeHistoryChange = (url: string) => {
+      console.log('[CreateModulePage] Router event: before history change', url);
+    };
+    
+    // @ts-ignore - Next.js types might be incomplete
+    router.events?.on('routeChangeStart', handleRouteChangeStart);
+    // @ts-ignore
+    router.events?.on('routeChangeComplete', handleRouteChangeComplete);
+    // @ts-ignore
+    router.events?.on('beforeHistoryChange', handleBeforeHistoryChange);
+    
+    return () => {
+      // @ts-ignore
+      router.events?.off('routeChangeStart', handleRouteChangeStart);
+      // @ts-ignore
+      router.events?.off('routeChangeComplete', handleRouteChangeComplete);
+      // @ts-ignore
+      router.events?.off('beforeHistoryChange', handleBeforeHistoryChange);
+    };
+  }, [router]);
+  
+  // Handle file upload
+  const uploadThumbnail = async (file: File) => {
+    if (!file || !supabase || !user) return;
+    
+    console.log('[CreateModulePage] Starting thumbnail upload');
+    try {
+      setIsUploading(true);
       
-      // If moving to step 3, refresh the slides data
-      if (stepNumber === 3 && moduleId && supabase) {
-        fetchSlides();
+      // Create a unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      // Upload the image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('module-thumbnails')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL for the file
+      const { data } = supabase.storage
+        .from('module-thumbnails')
+        .getPublicUrl(filePath);
+        
+      // Update thumbnail URL state
+      setThumbnailUrl(data.publicUrl);
+      
+      // If we already have a module ID, update it with the thumbnail
+      if (moduleId) {
+        const { error: updateError } = await supabase
+          .from('modules')
+          .update({ thumbnail_url: data.publicUrl })
+          .eq('id', moduleId);
+          
+        if (updateError) throw updateError;
       }
+      
+      console.log('[CreateModulePage] Thumbnail uploaded successfully:', data.publicUrl);
+      toast.success('Thumbnail uploaded successfully');
+    } catch (err) {
+      console.error('Error uploading thumbnail:', err);
+      toast.error('Failed to upload thumbnail');
+    } finally {
+      setIsUploading(false);
     }
-  }, [searchParams, moduleId, supabase]);
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size should not exceed 5MB');
+        return;
+      }
+      
+      uploadThumbnail(file);
+    }
+  };
+  
+  // Trigger file input click
+  const handleThumbnailClick = () => {
+    fileInputRef.current?.click();
+  };
   
   // Function to fetch slides
   const fetchSlides = async () => {
@@ -88,8 +197,10 @@ export default function CreateModulePage() {
     }
   };
   
-  // Initialize state from URL parameters
+  // Initialize state from URL parameters only once
   useEffect(() => {
+    if (initialLoadDoneRef.current) return;
+    
     const moduleIdParam = searchParams.get('moduleId');
     const stepParam = searchParams.get('step');
     const preselectedCourseId = searchParams.get('preselectedCourseId');
@@ -105,7 +216,23 @@ export default function CreateModulePage() {
     if (preselectedCourseId) {
       setSelectedCourseId(preselectedCourseId);
     }
+    
+    initialLoadDoneRef.current = true;
   }, [searchParams]);
+  
+  // Update step when URL changes
+  useEffect(() => {
+    const stepParam = searchParams.get('step');
+    if (stepParam) {
+      const stepNumber = parseInt(stepParam, 10);
+      setStep(stepNumber);
+      
+      // If moving to step 3, refresh the slides data
+      if (stepNumber === 3 && moduleId && supabase) {
+        fetchSlides();
+      }
+    }
+  }, [searchParams, moduleId, supabase]);
   
   // Fetch module data if editing an existing module
   useEffect(() => {
@@ -128,6 +255,9 @@ export default function CreateModulePage() {
           setTitle(data.title || '');
           setDescription(data.description || '');
           setSelectedCourseId(data.course_id);
+          if (data.thumbnail_url) {
+            setThumbnailUrl(data.thumbnail_url);
+          }
         }
         
         // Fetch module slides
@@ -153,10 +283,10 @@ export default function CreateModulePage() {
     fetchModuleData();
   }, [moduleId, supabase]);
 
-  // Fetch teacher's courses
+  // Fetch teacher's courses only once
   useEffect(() => {
     async function fetchCourses() {
-      if (!user || !supabase) return;
+      if (!user || !supabase || courses.length > 0) return;
       
       try {
         setIsLoading(true);
@@ -185,7 +315,7 @@ export default function CreateModulePage() {
     }
     
     fetchCourses();
-  }, [user, supabase, selectedCourseId, searchParams]);
+  }, [user, supabase, selectedCourseId, searchParams, courses.length]);
 
   // Step 1: Create initial module
   async function handleCreateModule() {
@@ -218,6 +348,7 @@ export default function CreateModulePage() {
             title: title.trim(),
             description: description.trim(),
             course_id: selectedCourseId,
+            thumbnail_url: thumbnailUrl
           })
           .eq('id', moduleId);
 
@@ -234,7 +365,8 @@ export default function CreateModulePage() {
             title: title.trim(),
             description: description.trim(),
             course_id: selectedCourseId,
-            teacher_id: user.id
+            teacher_id: user.id,
+            thumbnail_url: thumbnailUrl
           })
           .select();
 
@@ -460,9 +592,62 @@ export default function CreateModulePage() {
         {/* Step 1: Module Overview */}
         {step === 1 && (
           <div>
-            <div className="flex justify-center mb-8">
-              <div className="w-32 h-32 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <FileImage className="h-16 w-16 text-indigo-500" />
+            {/* Thumbnail Upload Section */}
+            <div className="mb-8">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+              />
+              
+              <div 
+                onClick={handleThumbnailClick}
+                className="relative mx-auto w-full max-w-2xl h-48 md:h-64 bg-amber-100 rounded-xl overflow-hidden cursor-pointer group"
+              >
+                {thumbnailUrl ? (
+                  <>
+                    <Image 
+                      src={thumbnailUrl} 
+                      alt="Module thumbnail" 
+                      fill 
+                      style={{ objectFit: 'cover' }}
+                      className="transition-opacity group-hover:opacity-80"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                      <div className="bg-white p-3 rounded-full">
+                        <Edit2 className="h-6 w-6 text-gray-800" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center space-y-2">
+                      <Camera className="h-10 w-10 text-amber-600" />
+                      <span className="text-amber-800 font-medium">Click to add a cover image</span>
+                      <span className="text-amber-700 text-sm">Recommended size: 1280×720</span>
+                    </div>
+                    
+                    {/* Sample icons for decoration */}
+                    <div className="absolute right-10 top-8">
+                      <div className="w-16 h-16 bg-amber-200 rounded-lg flex items-center justify-center">
+                        <FileImage className="h-8 w-8 text-amber-600" />
+                      </div>
+                    </div>
+                    <div className="absolute left-12 bottom-10">
+                      <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-amber-600" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="animate-pulse text-white">Uploading...</div>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -526,6 +711,7 @@ export default function CreateModulePage() {
             <SlideEditor 
               moduleId={moduleId} 
               onSave={() => {
+                console.log('[CreateModulePage] SlideEditor onSave callback triggered');
                 // Move to next step after slides are saved
                 setStep(3);
                 // Update URL with step
@@ -543,8 +729,26 @@ export default function CreateModulePage() {
         {/* Step 3: Review & Publish */}
         {step === 3 && moduleId && (
           <div className="space-y-8">
-            <div className="bg-white border rounded-xl p-6 shadow-sm">
-              <div className="space-y-4">
+            <div className="bg-white border rounded-xl overflow-hidden">
+              {thumbnailUrl ? (
+                <div className="relative w-full h-48 md:h-64">
+                  <Image 
+                    src={thumbnailUrl} 
+                    alt="Module thumbnail" 
+                    fill 
+                    style={{ objectFit: 'cover' }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-32 md:h-48 bg-amber-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <FileImage className="h-10 w-10 text-amber-600 mx-auto mb-2" />
+                    <p className="text-amber-800">No cover image</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-6 space-y-4">
                 <h2 className="text-xl font-bold">Module Overview</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

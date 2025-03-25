@@ -23,6 +23,8 @@ interface Module {
   title: string;
   content: string;
   created_at: string;
+  description: string;
+  thumbnail_url: string;
 }
 
 export default function StudentCourseDetailPage() {
@@ -137,7 +139,8 @@ export default function StudentCourseDetailPage() {
                   key={module.id}
                   id={module.id}
                   title={module.title}
-                  content={module.content}
+                  description={module.description}
+                  thumbnail_url={module.thumbnail_url}
                   createdAt={module.created_at}
                   href={`/student/courses/${course.id}/modules/${module.id}`}
                 />
