@@ -1,6 +1,5 @@
 import { type Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: 'Teacher Dashboard',
@@ -16,7 +15,6 @@ export default function TeacherLayout({
     <ClerkProvider>
       <div className="min-h-screen">
         {children}
-        <Toaster />
       </div>
     </ClerkProvider>
   )

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera, FileText, Clock, Calendar, Users2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -19,9 +19,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import SlideEditor from '@/app/(fullscreen)/_components/SlideEditor';
 import SlideViewer from '@/app/(fullscreen)/_components/SlideViewer';
+import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 
 interface Course {
   id: string;
@@ -34,6 +38,8 @@ interface ModuleData {
   description: string;
   course_id: string;
   thumbnail_url?: string;
+  deadline: string;
+  publish_date?: string;
 }
 
 export default function CreateModulePage() {
@@ -42,6 +48,8 @@ export default function CreateModulePage() {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [publishDate, setPublishDate] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [moduleId, setModuleId] = useState<string | null>(null);
@@ -61,6 +69,25 @@ export default function CreateModulePage() {
   const supabase = useSupabase();
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  const [selectedTeachers, setSelectedTeachers] = useState<Array<{ id: string; name: string }>>([]);
+  const [searchTeachers, setSearchTeachers] = useState('');
+  const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  
+  // Mock teacher data - in production this would come from your API
+  const mockTeachers = [
+    { id: '1', name: 'John Smith', email: 'john@school.com' },
+    { id: '2', name: 'Sarah Johnson', email: 'sarah@school.com' },
+    { id: '3', name: 'Michael Brown', email: 'michael@school.com' },
+    { id: '4', name: 'Emma Davis', email: 'emma@school.com' },
+    { id: '5', name: 'James Wilson', email: 'james@school.com' },
+  ];
+
+  const filteredTeachers = mockTeachers.filter(teacher => 
+    teacher.name.toLowerCase().includes(searchTeachers.toLowerCase()) ||
+    teacher.email.toLowerCase().includes(searchTeachers.toLowerCase())
+  ).filter(teacher => !selectedTeachers.some(selected => selected.id === teacher.id));
   
   // Track component mounting and unmounting
   useEffect(() => {
@@ -258,6 +285,12 @@ export default function CreateModulePage() {
           if (data.thumbnail_url) {
             setThumbnailUrl(data.thumbnail_url);
           }
+          if (data.deadline) {
+            setDeadline(data.deadline);
+          }
+          if (data.publish_date) {
+            setPublishDate(data.publish_date);
+          }
         }
         
         // Fetch module slides
@@ -329,6 +362,11 @@ export default function CreateModulePage() {
       return;
     }
 
+    if (!deadline) {
+      setError('Please set a module deadline');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError('');
@@ -348,7 +386,9 @@ export default function CreateModulePage() {
             title: title.trim(),
             description: description.trim(),
             course_id: selectedCourseId,
-            thumbnail_url: thumbnailUrl
+            thumbnail_url: thumbnailUrl,
+            deadline,
+            publish_date: publishDate || null
           })
           .eq('id', moduleId);
 
@@ -366,7 +406,9 @@ export default function CreateModulePage() {
             description: description.trim(),
             course_id: selectedCourseId,
             teacher_id: user.id,
-            thumbnail_url: thumbnailUrl
+            thumbnail_url: thumbnailUrl,
+            deadline,
+            publish_date: publishDate || null
           })
           .select();
 
@@ -377,7 +419,7 @@ export default function CreateModulePage() {
         if (data && data.length > 0) {
           newModuleId = data[0].id;
           setModuleId(newModuleId);
-          toast.success('Module created successfully! Now you can add slides.');
+          toast.success('Module created successfully!');
         }
       }
       
@@ -467,6 +509,114 @@ export default function CreateModulePage() {
     }
   };
 
+  // Add this after the Module Dates section and before the Description section
+  const teacherSharingSection = (
+    <div className="grid grid-cols-4 gap-6 items-start">
+      <div className="col-span-1">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Users2 className="h-4 w-4" />
+          <span className="font-medium">Share With</span>
+        </div>
+      </div>
+      <div className="col-span-3 space-y-4">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {selectedTeachers.map(teacher => (
+            <Badge 
+              key={teacher.id} 
+              variant="secondary"
+              className="flex items-center gap-1 pl-3 pr-2 py-1.5"
+            >
+              {teacher.name}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedTeachers(current => 
+                    current.filter(t => t.id !== teacher.id)
+                  );
+                }}
+                className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        
+        <Popover open={teacherSearchOpen} onOpenChange={setTeacherSearchOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={teacherSearchOpen}
+              className="w-full justify-between"
+            >
+              <span>Search for teachers to share with...</span>
+              <Users2 className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="start">
+            <Command>
+              <CommandInput
+                placeholder="Search teachers..."
+                className="h-9"
+                value={searchTeachers}
+                onValueChange={setSearchTeachers}
+              />
+              <CommandEmpty>No teachers found.</CommandEmpty>
+              <CommandGroup>
+                {filteredTeachers.map(teacher => (
+                  <CommandItem
+                    key={teacher.id}
+                    value={teacher.name}
+                    onSelect={() => {
+                      setSelectedTeachers(current => [...current, { id: teacher.id, name: teacher.name }]);
+                      setTeacherSearchOpen(false);
+                    }}
+                  >
+                    {teacher.name}
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      {teacher.email}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <p className="text-sm text-gray-500">
+          Share this module with other teachers to allow them to use it in their courses
+        </p>
+      </div>
+    </div>
+  );
+
+  // Update the bottom continue button section with better styling
+  const bottomContinueButton = (
+    <div className="px-8 py-6 mt-8 border-t bg-gray-50">
+      <div className="max-w-xl mx-auto">
+        <Button 
+          onClick={handleCreateModule}
+          disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-6 text-lg relative group transition-all duration-200"
+        >
+          <span className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+          Next Step
+          <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+        </Button>
+        <p className="text-sm text-gray-500 text-center mt-3">
+          You'll be able to add slides and content in the next step
+        </p>
+      </div>
+    </div>
+  );
+
+  // Add this function to handle course creation
+  const handleCreateCourseClick = () => {
+    setTeacherSearchOpen(false); // Close any open popovers
+    setIsCourseModalOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -517,7 +667,7 @@ export default function CreateModulePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header with integrated step indicator */}
-      <div className="border-b bg-white">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
@@ -551,10 +701,25 @@ export default function CreateModulePage() {
             {step === 1 && (
               <Button 
                 onClick={handleCreateModule}
-                disabled={isSubmitting || !title.trim() || !selectedCourseId}
+                disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                Continue
+                Next Step
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+            
+            {step === 2 && moduleId && (
+              <Button 
+                onClick={() => {
+                  const slideEditorSaveButton = document.querySelector('[data-slide-editor-save]') as HTMLButtonElement;
+                  if (slideEditorSaveButton) {
+                    slideEditorSaveButton.click();
+                  }
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                Save Changes
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -581,8 +746,8 @@ export default function CreateModulePage() {
         </div>
       </div>
       
-      {/* Content area */}
-      <div className="max-w-6xl mx-auto py-8 px-4">
+      {/* Content area with dynamic width based on step */}
+      <div className={`mx-auto py-8 px-4 ${step === 1 ? 'max-w-3xl' : 'max-w-full container'} mt-[57px]`}>
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
             {error}
@@ -592,122 +757,202 @@ export default function CreateModulePage() {
         {/* Step 1: Module Overview */}
         {step === 1 && (
           <div>
-            {/* Thumbnail Upload Section */}
-            <div className="mb-8">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
-              />
-              
-              <div 
-                onClick={handleThumbnailClick}
-                className="relative mx-auto w-full max-w-2xl h-48 md:h-64 bg-amber-100 rounded-xl overflow-hidden cursor-pointer group"
-              >
-                {thumbnailUrl ? (
-                  <>
-                    <Image 
-                      src={thumbnailUrl} 
-                      alt="Module thumbnail" 
-                      fill 
-                      style={{ objectFit: 'cover' }}
-                      className="transition-opacity group-hover:opacity-80"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                      <div className="bg-white p-3 rounded-full">
-                        <Edit2 className="h-6 w-6 text-gray-800" />
+            <div className="bg-white border rounded-xl shadow-sm overflow-hidden font-sans">
+              {/* Thumbnail Upload Section */}
+              <div className="relative mx-auto w-full h-64 bg-slate-50 border-b">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+                
+                <div 
+                  onClick={handleThumbnailClick}
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+                >
+                  {thumbnailUrl ? (
+                    <>
+                      <Image 
+                        src={thumbnailUrl} 
+                        alt="Module thumbnail" 
+                        fill 
+                        style={{ objectFit: 'cover' }}
+                        className="transition-opacity group-hover:opacity-80"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                        <div className="bg-white p-3 rounded-full">
+                          <Edit2 className="h-6 w-6 text-gray-800" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="flex flex-col items-center space-y-2">
+                        <Camera className="h-10 w-10 text-slate-400" />
+                        <span className="text-slate-600 font-medium">Click to add a cover image</span>
+                        <span className="text-slate-500 text-sm">Recommended size: 1280×720</span>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="flex flex-col items-center space-y-2">
-                      <Camera className="h-10 w-10 text-amber-600" />
-                      <span className="text-amber-800 font-medium">Click to add a cover image</span>
-                      <span className="text-amber-700 text-sm">Recommended size: 1280×720</span>
+                  )}
+                  
+                  {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <div className="animate-pulse text-white">Uploading...</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Form Fields with improved hierarchy */}
+              <div className="p-8 space-y-8">
+                {/* Module Title - Made prominent */}
+                <div className="space-y-4">
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title..."
+                    disabled={isSubmitting}
+                    className="text-6xl leading-tight font-semibold w-full p-0 h-auto border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent placeholder:text-gray-400/70 outline-none"
+                    style={{
+                      fontSize: '32px'
+                    }}
+                  />
+                </div>
+                
+                {/* Course Selection - Second most important */}
+                <div className="grid grid-cols-4 gap-6 items-start">
+                  <div className="col-span-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <BookOpen className="h-4 w-4" />
+                      <span className="font-medium">Select Course</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3">
+                    <Select 
+                      value={selectedCourseId} 
+                      onValueChange={(value) => {
+                        if (value === 'create_new') {
+                          setIsCourseModalOpen(true);
+                        } else {
+                          setSelectedCourseId(value);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base">
+                        <SelectValue placeholder="Select a course for this module" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {courses.map(course => (
+                          <SelectItem 
+                            key={course.id} 
+                            value={course.id}
+                            className="py-2.5 text-base"
+                          >
+                            {course.title}
+                          </SelectItem>
+                        ))}
+                        <div className="px-2 py-2 border-t">
+                          <SelectItem 
+                            value="create_new"
+                            className="py-2.5 text-base text-indigo-600 font-medium cursor-pointer"
+                          >
+                            <div className="flex items-center">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create new course
+                            </div>
+                          </SelectItem>
+                        </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Module Dates */}
+                <div className="grid grid-cols-4 gap-6 items-start">
+                  <div className="col-span-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="h-4 w-4" />
+                      <span className="font-medium">Module Timing</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3 space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          Module Deadline<span className="text-red-500 ml-1">*</span>
+                        </label>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="datetime-local"
+                          value={deadline}
+                          onChange={(e) => setDeadline(e.target.value)}
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          required
+                        />
+                      </div>
+                      <p className="text-sm text-gray-500">Set when this module needs to be completed by students</p>
                     </div>
                     
-                    {/* Sample icons for decoration */}
-                    <div className="absolute right-10 top-8">
-                      <div className="w-16 h-16 bg-amber-200 rounded-lg flex items-center justify-center">
-                        <FileImage className="h-8 w-8 text-amber-600" />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          Publish Date
+                          <span className="ml-2 text-xs text-gray-500 font-normal">(Optional)</span>
+                        </label>
                       </div>
-                    </div>
-                    <div className="absolute left-12 bottom-10">
-                      <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
-                        <BookOpen className="h-6 w-6 text-amber-600" />
+                      <div className="relative">
+                        <input
+                          type="datetime-local"
+                          value={publishDate}
+                          onChange={(e) => setPublishDate(e.target.value)}
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                        />
                       </div>
+                      <p className="text-sm text-gray-500">Schedule when this module becomes available to students</p>
                     </div>
                   </div>
-                )}
+                </div>
                 
-                {isUploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <div className="animate-pulse text-white">Uploading...</div>
+                {/* Teacher Sharing */}
+                {teacherSharingSection}
+                
+                {/* Divider */}
+                <div className="border-t border-gray-100"></div>
+                
+                {/* Module Description */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                    <FileText className="h-4 w-4" />
+                    <span className="font-medium">Description</span>
                   </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="bg-white border rounded-xl p-8 shadow-sm space-y-8">
-              <div className="space-y-3">
-                <Label htmlFor="course" className="text-base font-medium">Course</Label>
-                <Select 
-                  value={selectedCourseId} 
-                  onValueChange={setSelectedCourseId}
-                >
-                  <SelectTrigger className="p-3 h-12">
-                    <SelectValue placeholder="Select a course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map(course => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  Select the course this module will belong to
-                </p>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Let your learner know a little about the module"
+                    rows={5}
+                    disabled={isSubmitting}
+                    className="resize-none p-0 text-base border-0 focus-visible:ring-0 placeholder:text-gray-400 font-normal"
+                  />
+                  <p className="text-sm text-gray-400 flex justify-end">
+                    {description.length}/400
+                  </p>
+                </div>
               </div>
               
-              <div className="space-y-3">
-                <Label htmlFor="title" className="text-base font-medium">Module Title</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter a descriptive title"
-                  disabled={isSubmitting}
-                  className="text-lg p-3 h-12"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="description" className="text-base font-medium">Module Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="What will students learn in this module?"
-                  rows={5}
-                  disabled={isSubmitting}
-                  className="resize-none p-3 text-base"
-                />
-                <p className="text-sm text-gray-500 mt-1 flex justify-end">
-                  {description.length}/400
-                </p>
-              </div>
+              {/* Bottom Continue Button */}
+              {bottomContinueButton}
             </div>
           </div>
         )}
         
         {/* Step 2: Add Content/Slides */}
         {step === 2 && moduleId && (
-          <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div>
             <SlideEditor 
               moduleId={moduleId} 
               onSave={() => {
@@ -761,6 +1006,26 @@ export default function CreateModulePage() {
                       {courses.find(c => c.id === selectedCourseId)?.title || 'Unknown Course'}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Deadline</p>
+                    <p className="text-lg font-medium">
+                      {new Date(deadline).toLocaleString('en-US', {
+                        dateStyle: 'long',
+                        timeStyle: 'short'
+                      })}
+                    </p>
+                  </div>
+                  {publishDate && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Publish Date</p>
+                      <p className="text-lg font-medium">
+                        {new Date(publishDate).toLocaleString('en-US', {
+                          dateStyle: 'long',
+                          timeStyle: 'short'
+                        })}
+                      </p>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <p className="text-sm font-medium text-gray-500">Description</p>
                     <p className="text-base">{description}</p>
@@ -790,6 +1055,33 @@ export default function CreateModulePage() {
           </div>
         )}
       </div>
+      <CreateCourseModal 
+        isOpen={isCourseModalOpen} 
+        onClose={async () => {
+          setIsCourseModalOpen(false);
+          // Fetch updated courses list
+          if (user && supabase) {
+            try {
+              const { data, error } = await supabase
+                .from('courses')
+                .select('id, title')
+                .eq('teacher_id', user.id)
+                .order('title', { ascending: true });
+                
+              if (error) throw error;
+              
+              setCourses(data || []);
+              // Select the most recently created course
+              if (data && data.length > 0) {
+                setSelectedCourseId(data[data.length - 1].id);
+              }
+            } catch (err) {
+              console.error('Error fetching updated courses:', err);
+              toast.error('Failed to refresh courses list');
+            }
+          }
+        }} 
+      />
     </div>
   );
 } 

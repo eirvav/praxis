@@ -290,3 +290,84 @@ CREATE TRIGGER update_slides_updated_at
 BEFORE UPDATE ON slides
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
+
+
+STORAGE BUCKET THUMBNAIL:
+
+-- 1. Add thumbnail_url column to modules table
+ALTER TABLE modules
+ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
+
+-- 2. Create module-thumbnails storage bucket
+-- Note: You'll need to create the bucket through the Supabase UI
+-- Go to Storage > Create new bucket > Name it "module-thumbnails" > Set to private
+
+-- 3. Create storage policies for the module-thumbnails bucket
+-- These will be applied after you create the bucket through the UI
+
+-- Allow authenticated users to view thumbnails (public read access)
+CREATE POLICY "Anyone can view thumbnails" ON storage.objects
+FOR SELECT
+USING (bucket_id = 'module-thumbnails');
+
+-- Allow any authenticated user to upload thumbnails
+-- We'll check if they're a teacher in the application code
+CREATE POLICY "Authenticated users can insert thumbnails" ON storage.objects
+FOR INSERT
+WITH CHECK (
+  bucket_id = 'module-thumbnails' AND
+  auth.role() = 'authenticated'
+);
+
+-- Allow users to update their own thumbnails
+CREATE POLICY "Users can update their own thumbnails" ON storage.objects
+FOR UPDATE
+USING (
+  bucket_id = 'module-thumbnails' AND
+  auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Allow users to delete their own thumbnails
+CREATE POLICY "Users can delete their own thumbnails" ON storage.objects
+FOR DELETE
+USING (
+  bucket_id = 'module-thumbnails' AND
+  auth.uid()::text = (storage.foldername(name))[1]
+);
+
+
+
+STORAGE BUCKET VIDEOS:
+
+-- Create a new storage bucket for module videos
+-- Note: You'll need to create this bucket through the Supabase dashboard
+-- 1. Go to Storage in Supabase dashboard
+-- 2. Click "Create a new bucket"
+-- 3. Name it "module-videos"
+-- 4. Set it to public
+
+-- Create storage policies for the module-videos bucket
+-- Allow authenticated users to view videos
+CREATE POLICY "Anyone can view videos" ON storage.objects
+FOR SELECT
+USING (bucket_id = 'module-videos');
+
+-- Allow authenticated users to upload videos
+CREATE POLICY "Authenticated users can upload videos" ON storage.objects
+FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'module-videos');
+
+-- Allow users to update and delete their own videos
+CREATE POLICY "Users can update their own videos" ON storage.objects
+FOR UPDATE TO authenticated
+USING (
+  bucket_id = 'module-videos' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete their own videos" ON storage.objects
+FOR DELETE TO authenticated
+USING (
+  bucket_id = 'module-videos' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);

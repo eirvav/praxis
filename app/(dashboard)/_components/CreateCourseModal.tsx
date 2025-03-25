@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
 import { useSupabase } from './SupabaseProvider';
 import { toast } from 'sonner';
 
@@ -72,51 +71,60 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
+      <DialogContent className="sm:max-w-[550px] p-6">
+        <DialogHeader className="space-y-4">
+          <DialogTitle className="text-2xl font-semibold text-center">
             Create New Course
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
         
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg my-6">
             {error}
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Course Title</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="title" className="text-base">Course Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter course title"
               disabled={isSubmitting}
+              className="h-11"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-base">Description (Optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter course description"
-              rows={3}
+              rows={4}
               disabled={isSubmitting}
+              className="resize-none min-h-[120px]"
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <DialogFooter className="gap-4 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              disabled={isSubmitting}
+              className="min-w-[100px]"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="min-w-[100px]"
+            >
               {isSubmitting ? 'Creating...' : 'Create Course'}
             </Button>
           </DialogFooter>

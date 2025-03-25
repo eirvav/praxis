@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, ArrowUp, ArrowDown, FileText, Video, ListTodo, Settings, Grip, X, Upload } from 'lucide-react';
+import { Plus, Trash, ArrowUp, ArrowDown, FileText, Video, ListTodo, Settings, Grip, X, Upload, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, BarChart2, Cloud, Gauge } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@clerk/nextjs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface Slide {
   id?: string;
@@ -40,6 +41,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useSupabase();
   const { user } = useUser();
+  const [showSlideTypeSelector, setShowSlideTypeSelector] = useState(false);
   
   // Log the current slide state for debugging
   useEffect(() => {
@@ -449,7 +451,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       case 'text':
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-            <FileText className="h-3 w-3 mr-1" /> Text
+            <AlignLeft className="h-3 w-3 mr-1" /> Text
           </Badge>
         );
       case 'video':
@@ -798,14 +800,288 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     }
   };
 
-  // Settings panel for the current slide
-  const renderSlideSettings = () => {
-    if (activeSlideIndex === null || !slides[activeSlideIndex]) return null;
+  // Create a new slide of a specific type
+  const createSlideOfType = (type: 'text' | 'video' | 'quiz') => {
+    const newSlide: Slide = {
+      module_id: moduleId,
+      slide_type: type,
+      position: slides.length > 0 ? Math.max(...slides.map(slide => slide.position)) + 1 : 0,
+      config: type === 'text' ? { content: '' } : type === 'video' ? { url: '', title: '', videoUrl: '', videoFileName: '' } : { question: '', options: [''], correctOptionIndex: 0 }
+    };
     
-    const slide = slides[activeSlideIndex];
+    const newSlides = [...slides, newSlide];
+    setSlides(newSlides);
+    setActiveSlideIndex(newSlides.length - 1);
+    setShowSlideTypeSelector(false);
+  };
+
+  if (loading) {
+    return <p className="text-center py-8">Loading slides...</p>;
+  }
     
     return (
-      <Card className="shadow-sm">
+    <div className="space-y-6">
+      <div className="hidden">
+        <Button 
+          onClick={saveSlides} 
+          disabled={saving || slides.length === 0}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          data-slide-editor-save
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+      
+      {/* Slide Type Selector Modal */}
+      <Dialog open={showSlideTypeSelector} onOpenChange={setShowSlideTypeSelector}>
+        <DialogContent className="sm:max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Select slide type</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
+            {/* TEXT SLIDE */}
+            <div 
+              className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <AlignLeft className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Text</h3>
+                  <p className="text-xs text-gray-500">Simple text content slide</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* VIDEO SLIDE */}
+            <div 
+              className="border rounded-lg p-4 hover:border-purple-500 cursor-pointer hover:bg-purple-50 transition-colors"
+              onClick={() => createSlideOfType('video')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Video className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Video</h3>
+                  <p className="text-xs text-gray-500">Embed video content</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* QUIZ SLIDE */}
+            <div 
+              className="border rounded-lg p-4 hover:border-amber-500 cursor-pointer hover:bg-amber-50 transition-colors"
+              onClick={() => createSlideOfType('quiz')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <ListTodo className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Quiz</h3>
+                  <p className="text-xs text-gray-500">Multiple choice questions</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* DECORATIVE OPTIONS (Creates text slides) */}
+            <div 
+              className="border rounded-lg p-4 hover:border-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Poll</h3>
+                  <p className="text-xs text-gray-500">Get learner opinions</p>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              className="border rounded-lg p-4 hover:border-rose-500 cursor-pointer hover:bg-rose-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Q&A</h3>
+                  <p className="text-xs text-gray-500">Question and answer format</p>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              className="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer hover:bg-indigo-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <MoveHorizontal className="h-6 w-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Slider</h3>
+                  <p className="text-xs text-gray-500">Scale-based feedback</p>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              className="border rounded-lg p-4 hover:border-sky-500 cursor-pointer hover:bg-sky-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
+                  <BarChart2 className="h-6 w-6 text-sky-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Ranking</h3>
+                  <p className="text-xs text-gray-500">Prioritize items</p>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              className="border rounded-lg p-4 hover:border-teal-500 cursor-pointer hover:bg-teal-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                  <Gauge className="h-6 w-6 text-teal-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Scale</h3>
+                  <p className="text-xs text-gray-500">Rating on a scale</p>
+                </div>
+              </div>
+            </div>
+            
+            <div 
+              className="border rounded-lg p-4 hover:border-cyan-500 cursor-pointer hover:bg-cyan-50 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
+                  <Cloud className="h-6 w-6 text-cyan-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Word Cloud</h3>
+                  <p className="text-xs text-gray-500">Visualize text responses</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[2000px] mx-auto">
+        {/* Slide list sidebar - LEFT COLUMN */}
+        <div className="lg:col-span-2">
+          <div className="bg-transparent">
+            <div className="p-2">
+              <div className="flex items-center gap-2">
+                <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-transparent"></div>
+                <Button 
+                  size="lg" 
+                  className="flex-grow rounded-full" 
+                  onClick={() => setShowSlideTypeSelector(true)}
+                  title="Add new slide"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Slide
+                </Button>
+              </div>
+            </div>
+            <ScrollArea className="h-[600px]">
+              <div className="p-2 space-y-4">
+                {slides.map((slide, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <div
+                      className={`
+                        relative aspect-[16/9] rounded-lg cursor-pointer group overflow-hidden flex-grow
+                        ${activeSlideIndex === index ? 'ring-2 ring-indigo-500' : 'ring-1 ring-gray-200'}
+                        bg-white hover:ring-2 hover:ring-indigo-400 transition-all
+                      `}
+                      onClick={() => setActiveSlideIndex(index)}
+                    >
+                      {/* Centered Icon */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {slide.slide_type === 'text' && (
+                          <AlignLeft className="h-6 w-6 text-blue-500" />
+                        )}
+                        {slide.slide_type === 'video' && (
+                          <Video className="h-6 w-6 text-purple-500" />
+                        )}
+                        {slide.slide_type === 'quiz' && (
+                          <ListTodo className="h-6 w-6 text-amber-500" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            {slides.length === 0 && (
+              <div className="p-6 text-center text-gray-500">
+                <p className="mb-2">No slides yet</p>
+                <Button 
+                  onClick={() => setShowSlideTypeSelector(true)} 
+                  size="sm"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add your first slide
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Active slide editor - MIDDLE COLUMN */}
+        <div className="lg:col-span-7">
+          {activeSlideIndex !== null && slides[activeSlideIndex] ? (
+            <Card className="shadow-sm border-slate-200 bg-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 pb-2 border-b">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base font-medium">
+                      Slide {activeSlideIndex + 1}
+                    </CardTitle>
+                    {getSlideTypeBadge(slides[activeSlideIndex].slide_type)}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                {renderSlideEditor(slides[activeSlideIndex], activeSlideIndex)}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="h-[400px] border rounded-lg bg-white flex items-center justify-center">
+              <div className="text-center p-6">
+                <p className="text-gray-500 mb-4">Select a slide to edit or create a new slide</p>
+                <Button 
+                  onClick={() => setShowSlideTypeSelector(true)} 
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" /> Add Slide
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Settings panel - RIGHT COLUMN */}
+        <div className="lg:col-span-3">
+          {activeSlideIndex !== null && slides[activeSlideIndex] ? (
+            <Card className="shadow-sm bg-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">Slide Settings</CardTitle>
@@ -816,7 +1092,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
           <div className="space-y-2">
             <label className="text-sm font-medium">Slide Type</label>
             <Select
-              value={slide.slide_type}
+                    value={slides[activeSlideIndex].slide_type}
               onValueChange={(value) => handleSlideTypeChange(value, activeSlideIndex)}
             >
               <SelectTrigger className="w-full">
@@ -868,114 +1144,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
           </div>
         </CardContent>
       </Card>
-    );
-  };
-
-  // Render slide list sidebar
-  const renderSlideList = () => {
-    return (
-      <div className="border rounded-lg bg-white">
-        <div className="px-3 py-3 border-b flex justify-between items-center">
-          <h3 className="text-sm font-medium">Slides</h3>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={addSlide}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <ScrollArea className="h-[600px]">
-          <div className="p-2 space-y-1">
-            {slides.map((slide, index) => (
-              <div
-                key={index}
-                className={`
-                  flex items-center p-2 rounded-md cursor-pointer text-sm group
-                  ${activeSlideIndex === index ? 'bg-blue-50 border border-blue-200' : 'hover:bg-slate-50'}
-                `}
-                onClick={() => setActiveSlideIndex(index)}
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full 
-                    ${activeSlideIndex === index ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-700 border'} text-xs`}>
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate">
-                      {slide.slide_type === 'text' ? 
-                        (slide.config.content?.slice(0, 20) || 'Text slide') : 
-                       slide.slide_type === 'video' ? 
-                        (slide.config.title || 'Video slide') : 
-                        (slide.config.question || 'Quiz slide')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-        <div className="px-2 py-2 border-t">
-          <Button 
-            onClick={addSlide}
-            variant="outline" 
-            className="w-full h-8 text-xs border-dashed border-slate-300"
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Slide
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return <p className="text-center py-8">Loading slides...</p>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Content</h2>
-        <div className="flex space-x-2">
-          <Button onClick={addSlide} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Slide
-          </Button>
-          <Button 
-            onClick={saveSlides} 
-            disabled={saving || slides.length === 0}
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Slide list sidebar - LEFT COLUMN */}
-        <div className="lg:col-span-3">
-          {renderSlideList()}
-        </div>
-        
-        {/* Active slide editor - MIDDLE COLUMN */}
-        <div className="lg:col-span-6">
-          {activeSlideIndex !== null && slides[activeSlideIndex] && (
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 pb-2 border-b">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-base font-medium">
-                      Slide {activeSlideIndex + 1}
-                    </CardTitle>
-                    {getSlideTypeBadge(slides[activeSlideIndex].slide_type)}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {renderSlideEditor(slides[activeSlideIndex], activeSlideIndex)}
-              </CardContent>
-            </Card>
+          ) : (
+            <div className="h-10"></div>
           )}
-        </div>
-        
-        {/* Settings panel - RIGHT COLUMN */}
-        <div className="lg:col-span-3">
-          {renderSlideSettings()}
         </div>
       </div>
     </div>

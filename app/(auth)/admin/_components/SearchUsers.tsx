@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Loader, Search, X } from 'lucide-react'
 import { useState, useTransition, useEffect } from 'react'
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 
 export const SearchUsers = () => {
   const router = useRouter()
@@ -49,52 +49,49 @@ export const SearchUsers = () => {
   }
 
   return (
-    <>
-      <Toaster position="top-center" />
-      <form onSubmit={handleSearch} className="flex w-full max-w-lg items-center space-x-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="search"
-            name="search"
-            type="text"
-            placeholder="Search users by name or email..."
-            className="pl-8"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={isPending}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Searching...
-            </>
-          ) : (
-            'Search'
-          )}
-        </Button>
+    <form onSubmit={handleSearch} className="flex w-full max-w-lg items-center space-x-2">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="search"
+          name="search"
+          type="text"
+          placeholder="Search users by name or email..."
+          className="pl-8"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          disabled={isPending}
+        />
         {query && (
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={handleClear}
-            disabled={isPending}
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
           >
-            Clear
-          </Button>
+            <X className="h-4 w-4" />
+          </button>
         )}
-      </form>
-    </>
+      </div>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? (
+          <>
+            <Loader className="mr-2 h-4 w-4 animate-spin" />
+            Searching...
+          </>
+        ) : (
+          'Search'
+        )}
+      </Button>
+      {query && (
+        <Button 
+          type="button" 
+          variant="outline"
+          onClick={handleClear}
+          disabled={isPending}
+        >
+          Clear
+        </Button>
+      )}
+    </form>
   )
 }
