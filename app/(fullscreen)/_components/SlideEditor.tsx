@@ -448,7 +448,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     switch (type) {
       case 'text':
         return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
+          <Badge variant="outline" className="bg-red-50 text-blue-700 hover:bg-blue-50 border-blue-200">
             <FileText className="h-3 w-3 mr-1" /> Text
           </Badge>
         );
