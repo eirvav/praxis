@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { ChevronDown, ChevronRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -13,10 +12,27 @@ interface Course {
   title: string;
 }
 
+// Array of nice-looking colors
+const colors = [
+  "#FF6B6B", // coral red
+  "#4ECDC4", // turquoise
+  "#45B7D1", // sky blue
+  "#96CEB4", // sage green
+  "#FFEEAD", // cream yellow
+  "#D4A5A5", // dusty rose
+  "#9B5DE5", // purple
+  "#F15BB5", // pink
+  "#00BBF9", // bright blue
+  "#00F5D4", // mint
+  "#FEE440", // yellow
+  "#8338EC", // violet
+  "#3A86FF", // royal blue
+  "#38B000", // green
+];
+
 export function CourseNavigation({ isTeacher = false }) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(true);
   const { user } = useUser();
   const supabase = useSupabase();
   const pathname = usePathname();
@@ -65,38 +81,30 @@ export function CourseNavigation({ isTeacher = false }) {
   }
 
   return (
-    <div className="py-2">
-      <div 
-        className="flex items-center px-3 py-2 cursor-pointer text-sm font-medium"
-        onClick={() => setExpanded(!expanded)}
-      >
-        {expanded ? (
-          <ChevronDown className="h-4 w-4 mr-1" />
-        ) : (
-          <ChevronRight className="h-4 w-4 mr-1" />
-        )}
-        <span>Courses</span>
-      </div>
-      
-      {expanded && (
-        <div className="ml-6 space-y-1 mt-1">
-          {courses.map((course) => (
-            <Link
-              key={course.id}
-              href={`${baseUrl}/${course.id}`}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-                pathname.includes(`${baseUrl}/${course.id}`) 
-                  ? "bg-accent text-accent-foreground font-medium" 
-                  : "hover:bg-accent/50"
-              )}
-            >
-              <BookOpen className="h-4 w-4" />
-              <span className="truncate">{course.title}</span>
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="ml-6 space-y-1 mt-1">
+      {courses.map((course) => {
+        // Get a random color for each course
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        return (
+          <Link
+            key={course.id}
+            href={`${baseUrl}/${course.id}`}
+            className={cn(
+              "flex items-center gap-2 rounded-md pl-3 pr-3 py-2 text-sm relative",
+              pathname.includes(`${baseUrl}/${course.id}`) 
+                ? "bg-accent text-accent-foreground font-medium" 
+                : "hover:bg-accent/50"
+            )}
+          >
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4" 
+              style={{ backgroundColor: randomColor }}
+            />
+            <span className="truncate">{course.title}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 } 

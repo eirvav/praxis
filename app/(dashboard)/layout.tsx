@@ -1,6 +1,6 @@
 import React from "react";
 import { SupabaseProvider } from './_components/SupabaseProvider';
-import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout";
+import AdminPanelLayout from "@/components/navbar-components/admin-panel-layout";
 
 const DashboardLayout = ({
   children

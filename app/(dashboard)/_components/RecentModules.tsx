@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, Ban, GraduationCap } from 'lucide-react';
 import ModuleCard, { ModuleCardProps } from './ModuleCard';
 import { useSupabase } from './SupabaseProvider';
-import { Ban } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ModuleWithCourse {
   id: string;
@@ -32,8 +31,6 @@ const RecentModules = ({ isTeacher = false }: { isTeacher?: boolean }) => {
       try {
         setLoading(true);
         
-        // For teachers, fetch their own modules
-        // For students, fetch all available modules
         const query = supabase
           .from('modules')
           .select('id, title, description, thumbnail_url, updated_at, course_id')
@@ -62,63 +59,78 @@ const RecentModules = ({ isTeacher = false }: { isTeacher?: boolean }) => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Modules</h2>
-        </div>
-        <div className="space-y-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-[120px] animate-pulse bg-gray-100 rounded-md"></div>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-muted-foreground" />
+            Recent Modules
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="h-[100px] animate-pulse bg-muted rounded-md" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (modules.length === 0) {
     return (
-      <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Modules</h2>
-        </div>
-        <div className="text-center py-10">
-          <Ban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No modules found.</p>
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-muted-foreground" />
+            Recent Modules
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Ban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No modules found.</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Recent Modules</h2>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <GraduationCap className="h-5 w-5 text-muted-foreground" />
+          Recent Modules
+        </CardTitle>
         <Link 
           href={isTeacher ? "/teacher/courses" : "/student/courses"} 
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary flex items-center hover:underline"
         >
           View all
+          <ArrowRight className="ml-1 h-4 w-4" />
         </Link>
-      </div>
-      
-      <div className="space-y-4">
-        {modules.map((module) => (
-          <ModuleCard
-            key={module.id}
-            id={module.id}
-            title={module.title}
-            description={module.description}
-            thumbnail_url={module.thumbnail_url}
-            updated_at={module.updated_at}
-            courseId={module.course_id}
-            href={isTeacher 
-              ? `/teacher/courses/${module.course_id}/modules/${module.id}`
-              : `/student/courses/${module.course_id}/modules/${module.id}`
-            }
-          />
-        ))}
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {modules.map((module) => (
+            <ModuleCard
+              key={module.id}
+              id={module.id}
+              title={module.title}
+              description={module.description}
+              thumbnail_url={module.thumbnail_url}
+              updated_at={module.updated_at}
+              courseId={module.course_id}
+              href={isTeacher 
+                ? `/teacher/courses/${module.course_id}/modules/${module.id}`
+                : `/student/courses/${module.course_id}/modules/${module.id}`
+              }
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

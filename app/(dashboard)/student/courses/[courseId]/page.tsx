@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
-import { ContentLayout } from '@/components/admin-panel/content-layout';
+import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { toast } from 'sonner';
 
 interface Course {

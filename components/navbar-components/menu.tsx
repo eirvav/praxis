@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, LogOut } from "lucide-react";
+import { Ellipsis, LogOut, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { getMenuList } from "@/lib/menu-list";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CollapseMenuButton } from "@/components/admin-panel/collapse-menu-button";
+import { CollapseMenuButton } from "@/components/navbar-components/collapse-menu-button";
 import { CourseNavigation } from "@/app/(dashboard)/_components/CourseNavigation";
 import {
   Tooltip,
@@ -71,8 +72,8 @@ export function Menu({ isOpen }: MenuProps) {
               )}
               {menus.map(
                 ({ href, label, icon: Icon, active, submenus, injectComponent }, index) => {
-                  // Regular menu item
-                  if (!submenus || submenus.length === 0) {
+                  // Regular menu item without submenus or injection
+                  if (!submenus && !injectComponent) {
                     return (
                       <div className="w-full" key={index}>
                         <TooltipProvider disableHoverableContent>
@@ -116,18 +117,74 @@ export function Menu({ isOpen }: MenuProps) {
                           </Tooltip>
                         </TooltipProvider>
                         
-                        {/* If this item has an injected component and the menu is open, render it */}
-                        {injectComponent && isOpen && (
-                          <div className={cn(
-                            "transition-all",
-                            isOpen === false ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
-                          )}>
-                            <CourseNavigation isTeacher={userRole === "teacher"} />
-                          </div>
-                        )}
                       </div>
                     );
                   } 
+                  
+                  // Item with injection (CourseNavigation)
+                  if (injectComponent) {
+                    const [isExpanded, setIsExpanded] = useState(true);
+                    
+                    return (
+                      <div className="w-full" key={index}>
+                        <TooltipProvider disableHoverableContent>
+                          <Tooltip delayDuration={100}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={
+                                  (active === undefined &&
+                                    pathname.startsWith(href)) ||
+                                  active
+                                    ? "secondary"
+                                    : "ghost"
+                                }
+                                className="w-full justify-start h-10 mb-1"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                              >
+                                <div className="w-full flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <span className={cn(isOpen === false ? "" : "mr-4")}>
+                                      <Icon size={18} />
+                                    </span>
+                                    <p
+                                      className={cn(
+                                        "max-w-[200px] truncate",
+                                        isOpen === false
+                                          ? "-translate-x-96 opacity-0"
+                                          : "translate-x-0 opacity-100"
+                                      )}
+                                    >
+                                      {label}
+                                    </p>
+                                  </div>
+                                  <ChevronDown
+                                    size={18}
+                                    className={cn(
+                                      "transition-transform duration-200",
+                                      isExpanded ? "rotate-180" : ""
+                                    )}
+                                  />
+                                </div>
+                              </Button>
+                            </TooltipTrigger>
+                            {isOpen === false && (
+                              <TooltipContent side="right">
+                                {label}
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        {/* Injected component */}
+                        <div className={cn(
+                          "transition-all",
+                          !isExpanded || isOpen === false ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
+                        )}>
+                          <CourseNavigation isTeacher={userRole === "teacher"} />
+                        </div>
+                      </div>
+                    );
+                  }
                   
                   // Item with submenus
                   return (

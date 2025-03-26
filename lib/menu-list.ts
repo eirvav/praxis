@@ -43,12 +43,6 @@ const teacherMenuConfig = {
     label: "Dashboard",
     icon: LayoutGrid
   },
-  courses: {
-    href: "/teacher/courses",
-    label: "Courses",
-    icon: BookOpen,
-    injectComponent: true
-  },
   modules: {
     href: "/teacher/modules",
     label: "All Modules",
@@ -133,8 +127,11 @@ function getTeacherMenu(pathname: string): Group[] {
       groupLabel: "Teaching",
       menus: [
         {
-          ...teacherMenuConfig.courses,
-          active: pathname.startsWith("/teacher/courses")
+          href: "/teacher/courses",
+          label: "Courses",
+          icon: BookOpen,
+          active: pathname.startsWith("/teacher/courses"),
+          injectComponent: true
         },
         {
           ...teacherMenuConfig.modules,
@@ -177,8 +174,11 @@ function getStudentMenu(pathname: string): Group[] {
       groupLabel: "Learning",
       menus: [
         {
-          ...studentMenuConfig.courses,
-          active: pathname.startsWith("/student/courses")
+          href: "/student/courses",
+          label: "Courses",
+          icon: BookOpen,
+          active: pathname.startsWith("/student/courses"),
+          injectComponent: true
         },
         {
           ...studentMenuConfig.modules,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { ContentLayout } from '@/components/admin-panel/content-layout';
+import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BookOpen, Plus, Search } from 'lucide-react';

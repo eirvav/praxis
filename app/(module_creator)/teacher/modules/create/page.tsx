@@ -23,8 +23,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import SlideEditor from '@/app/(fullscreen)/_components/SlideEditor';
-import SlideViewer from '@/app/(fullscreen)/_components/SlideViewer';
+import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
+import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 
 interface Course {

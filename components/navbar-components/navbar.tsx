@@ -1,5 +1,5 @@
-import { UserNav } from "@/components/admin-panel/user-nav";
-import { SheetMenu } from "@/components/admin-panel/sheet-menu";
+import { UserNav } from "@/components/navbar-components/user-nav";
+import { SheetMenu } from "@/components/navbar-components/sheet-menu";
 
 interface NavbarProps {
   title: string;

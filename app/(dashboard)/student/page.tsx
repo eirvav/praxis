@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import RecentModules from "../_components/RecentModules";
 import RecentCourses from "../_components/RecentCourses";
-import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { ContentLayout } from "@/components/navbar-components/content-layout";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 

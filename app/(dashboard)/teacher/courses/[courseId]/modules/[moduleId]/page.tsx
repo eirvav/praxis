@@ -8,9 +8,9 @@ import { ArrowLeft, Edit, Trash, FileImage } from 'lucide-react';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
-import { ContentLayout } from '@/components/admin-panel/content-layout';
-import SlideEditor from '@/app/(fullscreen)/_components/SlideEditor';
-import SlideViewer from '@/app/(fullscreen)/_components/SlideViewer';
+import { ContentLayout } from '@/components/navbar-components/content-layout';
+import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
+import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 

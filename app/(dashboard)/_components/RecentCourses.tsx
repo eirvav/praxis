@@ -5,7 +5,8 @@ import { useUser } from '@clerk/nextjs';
 import { CourseCard } from './CourseCard';
 import { useSupabase } from './SupabaseProvider';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Course {
   id: string;
@@ -33,7 +34,6 @@ export default function RecentCourses({ isTeacher = false, limit = 3 }: RecentCo
       try {
         setLoading(true);
         
-        // Get base query for courses
         let query = supabase
           .from('courses')
           .select(`
@@ -46,7 +46,6 @@ export default function RecentCourses({ isTeacher = false, limit = 3 }: RecentCo
           .order('created_at', { ascending: false })
           .limit(limit);
           
-        // Filter by teacher if needed
         if (isTeacher) {
           query = query.eq('teacher_id', user.id);
         }
@@ -55,7 +54,6 @@ export default function RecentCourses({ isTeacher = false, limit = 3 }: RecentCo
         
         if (error) throw error;
         
-        // Transform data to include module count
         const formattedData = data?.map(course => ({
           ...course,
           module_count: Array.isArray(course.modules) ? course.modules.length : 0,
@@ -77,38 +75,51 @@ export default function RecentCourses({ isTeacher = false, limit = 3 }: RecentCo
   
   if (loading) {
     return (
-      <div className="w-full p-4 rounded-md border">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Recent Courses</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-[200px] animate-pulse bg-gray-100 rounded-md"></div>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
+            Recent Courses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="h-[100px] animate-pulse bg-muted rounded-md" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (courses.length === 0) {
     return (
-      <div className="w-full p-4 rounded-md border">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Recent Courses</h2>
-        </div>
-        <div className="p-8 text-center text-muted-foreground">
-          {isTeacher 
-            ? "You haven't created any courses yet." 
-            : "No courses available at the moment."}
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
+            Recent Courses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-8 text-center text-muted-foreground">
+            {isTeacher 
+              ? "You haven't created any courses yet." 
+              : "No courses available at the moment."}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="w-full p-4 rounded-md border">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Recent Courses</h2>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-muted-foreground" />
+          Recent Courses
+        </CardTitle>
         {courses.length > 0 && (
           <Link 
             href={viewAllUrl}
@@ -118,21 +129,22 @@ export default function RecentCourses({ isTeacher = false, limit = 3 }: RecentCo
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         )}
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {courses.map((course) => (
-          <CourseCard
-            key={course.id}
-            id={course.id}
-            title={course.title}
-            description={course.description}
-            moduleCount={course.module_count}
-            createdAt={course.created_at}
-            href={`${baseUrl}/${course.id}`}
-          />
-        ))}
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {courses.map((course) => (
+            <CourseCard
+              key={course.id}
+              id={course.id}
+              title={course.title}
+              description={course.description}
+              moduleCount={course.module_count}
+              createdAt={course.created_at}
+              href={`${baseUrl}/${course.id}`}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

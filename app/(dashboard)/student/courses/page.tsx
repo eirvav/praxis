@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { ContentLayout } from '@/components/admin-panel/content-layout';
+import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { CourseCard } from '@/app/(dashboard)/_components/CourseCard';
