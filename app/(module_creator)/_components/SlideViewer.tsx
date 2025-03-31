@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Slide } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,8 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResults, setQuizResults] = useState<Record<number, boolean>>({});
+  const [videoPlayedOnce, setVideoPlayedOnce] = useState<Record<number, boolean>>({});
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const supabase = useSupabase();
 
   // Load slides
@@ -154,6 +156,9 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
       
       case 'video':
         console.log('[SlideViewer] Video slide config:', currentSlide.config);
+        const isVideoPlayed = videoPlayedOnce[currentSlideIndex] || false;
+        const allowReplay = currentSlide.config.allowReplay !== false; // Default to true if not specified
+        
         return (
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -162,23 +167,47 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                 {getSlideTypeBadge('video')}
               </div>
             </CardHeader>
-            <CardContent className="pt-4">
-              <div className="aspect-video overflow-hidden rounded-md border bg-muted">
+            <CardContent className="pt-4 space-y-4">
+              {/* Context field */}
+              {currentSlide.config.context && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-800">
+                  <p className="text-sm">{currentSlide.config.context}</p>
+                </div>
+              )}
+              
+              <div className="aspect-video overflow-hidden rounded-md border bg-muted relative">
                 {currentSlide.config.videoUrl ? (
-                  <video 
-                    src={currentSlide.config.videoUrl} 
-                    className="w-full h-full"
-                    controls
-                    preload="metadata"
-                  />
-                ) : currentSlide.config.url ? (
-                  <iframe 
-                    src={currentSlide.config.url} 
-                    className="w-full h-full"
-                    allowFullScreen
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  ></iframe>
+                  <>
+                    <video 
+                      ref={el => videoRefs.current[currentSlideIndex] = el}
+                      src={currentSlide.config.videoUrl} 
+                      className="w-full h-full"
+                      controls={!isVideoPlayed || allowReplay}
+                      preload="metadata"
+                      onPlay={() => {
+                        if (!videoPlayedOnce[currentSlideIndex]) {
+                          // Track that this video has been played
+                          setVideoPlayedOnce(prev => ({ ...prev, [currentSlideIndex]: true }));
+                        }
+                      }}
+                      onEnded={() => {
+                        // Mark as played when the video ends
+                        setVideoPlayedOnce(prev => ({ ...prev, [currentSlideIndex]: true }));
+                      }}
+                    />
+                    
+                    {/* Overlay for videos that can't be replayed */}
+                    {isVideoPlayed && !allowReplay && (
+                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white p-4">
+                        <AlertCircle className="h-12 w-12 text-yellow-500 mb-3" />
+                        <h3 className="text-xl font-bold mb-2">Video can only be played once</h3>
+                        <p className="text-sm text-center max-w-md">
+                          This video has been configured to only allow a single viewing.
+                          Please continue to the next slide.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <p className="text-muted-foreground">No video provided</p>

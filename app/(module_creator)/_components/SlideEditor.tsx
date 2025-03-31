@@ -4,15 +4,26 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, ArrowUp, ArrowDown, FileText, Video, ListTodo, Settings, Grip, X, Upload, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, BarChart2, Cloud, Gauge } from 'lucide-react';
+import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, BarChart2, Cloud, Gauge, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { useUser } from '@clerk/nextjs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+
+// Import slide type components
+import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig } from './slide_types/TextSlide';
+import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig } from './slide_types/VideoSlide';
+import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 
 export interface Slide {
   id?: string;
@@ -37,11 +48,10 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const [saving, setSaving] = useState(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
   const initialFetchDoneRef = useRef(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useSupabase();
   const { user } = useUser();
   const [showSlideTypeSelector, setShowSlideTypeSelector] = useState(false);
+  const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   
   // Log the current slide state for debugging
   useEffect(() => {
@@ -63,7 +73,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       module_id: moduleId,
       slide_type: 'text',
       position: 0,
-      config: { content: 'Enter your content here...' }
+      config: { content: '' }
     };
   }, [moduleId]);
 
@@ -189,39 +199,90 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     }
   };
 
-  // Move slide up in order
-  const moveSlideUp = (index: number) => {
-    if (index === 0) return;
+  // Handle drag start
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    setDraggedSlideIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add some visual feedback
+    e.currentTarget.classList.add('opacity-50');
     
-    const updatedSlides = [...slides];
-    const temp = updatedSlides[index];
-    updatedSlides[index] = updatedSlides[index - 1];
-    updatedSlides[index - 1] = temp;
-    
-    // Update positions
-    const reorderedSlides = updatedSlides.map((slide, idx) => ({
-      ...slide,
-      position: idx
-    }));
-    
-    setSlides(reorderedSlides);
-    
-    // Update active slide index
-    if (activeSlideIndex === index) {
-      setActiveSlideIndex(index - 1);
-    } else if (activeSlideIndex === index - 1) {
-      setActiveSlideIndex(index);
+    // Set the drag image
+    try {
+      const dragImage = document.createElement('div');
+      dragImage.classList.add('w-20', 'h-12', 'bg-white', 'rounded', 'shadow-md', 'flex', 'items-center', 'justify-center');
+      dragImage.innerHTML = `<div class="text-sm font-medium">Slide ${index + 1}</div>`;
+      document.body.appendChild(dragImage);
+      e.dataTransfer.setDragImage(dragImage, 10, 10);
+      
+      // Clean up the drag image after it's used
+      setTimeout(() => {
+        document.body.removeChild(dragImage);
+      }, 0);
+    } catch (err) {
+      console.error('Error setting drag image:', err);
     }
   };
 
-  // Move slide down in order
-  const moveSlideDown = (index: number) => {
-    if (index === slides.length - 1) return;
+  // Handle drag over
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
     
+    // Add visual indicator
+    const target = e.currentTarget;
+    
+    // If we're dragging over a new target
+    if (draggedSlideIndex !== null && draggedSlideIndex !== index) {
+      // Highlight drop zone
+      target.classList.add('bg-gray-100');
+      
+      // If dragging downward, add border to bottom
+      if (draggedSlideIndex < index) {
+        target.classList.add('border-b-2', 'border-indigo-500');
+      } else {
+        // If dragging upward, add border to top
+        target.classList.add('border-t-2', 'border-indigo-500');
+      }
+    }
+  };
+
+  // Handle drag leave
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Remove visual indicators
+    e.currentTarget.classList.remove('bg-gray-100', 'border-t-2', 'border-b-2', 'border-indigo-500');
+  };
+
+  // Handle drag end
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    // Remove visual indicators
+    e.currentTarget.classList.remove('opacity-50');
+    setDraggedSlideIndex(null);
+    
+    // Clean up any remaining highlight classes
+    document.querySelectorAll('.slide-thumbnail').forEach(el => {
+      el.classList.remove('bg-gray-100', 'border-t-2', 'border-b-2', 'border-indigo-500');
+    });
+  };
+
+  // Handle drop
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    
+    // Remove visual indicators
+    e.currentTarget.classList.remove('bg-gray-100', 'border-t-2', 'border-b-2', 'border-indigo-500');
+    
+    if (draggedSlideIndex === null || draggedSlideIndex === dropIndex) {
+      return;
+    }
+    
+    // Make a copy of slides
     const updatedSlides = [...slides];
-    const temp = updatedSlides[index];
-    updatedSlides[index] = updatedSlides[index + 1];
-    updatedSlides[index + 1] = temp;
+    
+    // Remove dragged item
+    const [draggedSlide] = updatedSlides.splice(draggedSlideIndex, 1);
+    
+    // Insert it at the drop position
+    updatedSlides.splice(dropIndex, 0, draggedSlide);
     
     // Update positions
     const reorderedSlides = updatedSlides.map((slide, idx) => ({
@@ -229,13 +290,30 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       position: idx
     }));
     
+    // Update active slide index if needed
+    if (activeSlideIndex === draggedSlideIndex) {
+      setActiveSlideIndex(dropIndex);
+    } else if (
+      (activeSlideIndex !== null) &&
+      ((draggedSlideIndex < activeSlideIndex && dropIndex >= activeSlideIndex) ||
+       (draggedSlideIndex > activeSlideIndex && dropIndex <= activeSlideIndex))
+    ) {
+      // Adjust active slide index if the dragged slide crosses over it
+      const offset = draggedSlideIndex < activeSlideIndex ? 1 : -1;
+      setActiveSlideIndex(activeSlideIndex + offset);
+    }
+    
+    // Update slides array
     setSlides(reorderedSlides);
     
-    // Update active slide index
-    if (activeSlideIndex === index) {
-      setActiveSlideIndex(index + 1);
-    } else if (activeSlideIndex === index + 1) {
-      setActiveSlideIndex(index);
+    // Reset drag state
+    setDraggedSlideIndex(null);
+    
+    // Also update localStorage immediately
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(reorderedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage after reordering:', err);
     }
   };
 
@@ -249,11 +327,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     
     switch (slideType) {
       case 'text':
-        config = { content: '' };
+        config = createDefaultTextSlideConfig();
         break;
       case 'video':
         // Ensure we preserve any existing video URL if changing back to video type
         config = { 
+          ...createDefaultVideoSlideConfig(),
           url: updatedSlides[index].config?.url || '', 
           title: updatedSlides[index].config?.title || '',
           videoUrl: updatedSlides[index].config?.videoUrl || '',
@@ -261,7 +340,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         };
         break;
       case 'quiz':
-        config = { question: '', options: [''], correctOptionIndex: 0 };
+        config = createDefaultQuizSlideConfig();
         break;
     }
     
@@ -397,223 +476,18 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     }
   };
 
-  // Add a quiz option
-  const addQuizOption = (slideIndex: number) => {
-    const slide = slides[slideIndex];
-    const updatedOptions = [...slide.config.options, ''];
-    
-    updateSlideConfig(slideIndex, {
-      options: updatedOptions
-    });
-  };
-
-  // Remove a quiz option
-  const removeQuizOption = (slideIndex: number, optionIndex: number) => {
-    const slide = slides[slideIndex];
-    const updatedOptions = [...slide.config.options];
-    updatedOptions.splice(optionIndex, 1);
-    
-    // Update correct option index if needed
-    let correctOptionIndex = slide.config.correctOptionIndex;
-    if (optionIndex === correctOptionIndex) {
-      correctOptionIndex = 0;
-    } else if (optionIndex < correctOptionIndex) {
-      correctOptionIndex--;
-    }
-    
-    updateSlideConfig(slideIndex, {
-      options: updatedOptions,
-      correctOptionIndex
-    });
-  };
-
-  // Update a quiz option
-  const updateQuizOption = (slideIndex: number, optionIndex: number, value: string) => {
-    const slide = slides[slideIndex];
-    const updatedOptions = [...slide.config.options];
-    updatedOptions[optionIndex] = value;
-    
-    updateSlideConfig(slideIndex, {
-      options: updatedOptions
-    });
-  };
-
-  // Set correct quiz option
-  const setCorrectQuizOption = (slideIndex: number, optionIndex: number) => {
-    updateSlideConfig(slideIndex, {
-      correctOptionIndex: optionIndex
-    });
-  };
-
   // Get slide type badge
   const getSlideTypeBadge = (type: string) => {
     switch (type) {
       case 'text':
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-            <AlignLeft className="h-3 w-3 mr-1" /> Text
-          </Badge>
-        );
+        return <TextSlideTypeBadge />;
       case 'video':
-        return (
-          <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50 border-purple-200">
-            <Video className="h-3 w-3 mr-1" /> Video
-          </Badge>
-        );
+        return <VideoSlideTypeBadge />;
       case 'quiz':
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200">
-            <ListTodo className="h-3 w-3 mr-1" /> Quiz
-          </Badge>
-        );
+        return <QuizSlideTypeBadge />;
       default:
         return null;
     }
-  };
-
-  // Upload video for slide
-  const uploadVideo = async (file: File, slideIndex: number) => {
-    if (!file || !supabase || !user) return;
-    
-    try {
-      setIsUploading(true);
-      
-      // Create a unique file path
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-      
-      console.log(`[SlideEditor] Uploading video file '${fileName}' to path '${filePath}'`);
-      
-      // Upload the video to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('module-videos')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type
-        });
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL for the file
-      const { data: urlData } = supabase.storage
-        .from('module-videos')
-        .getPublicUrl(filePath);
-        
-      console.log(`[SlideEditor] Video uploaded successfully, public URL: ${urlData.publicUrl}`);
-      
-      // Update slide config with video URL without resetting other slides
-      const updatedSlides = [...slides];
-      updatedSlides[slideIndex] = {
-        ...updatedSlides[slideIndex],
-        config: {
-          ...updatedSlides[slideIndex].config,
-          videoUrl: urlData.publicUrl,
-          videoFileName: file.name
-        }
-      };
-      
-      // Set slides state first
-      setSlides(updatedSlides);
-      
-      // Then save to database immediately to ensure persistence
-      try {
-        console.log(`[SlideEditor] Saving slide ${slideIndex} with video to database`);
-        
-        const slideToSave = updatedSlides[slideIndex];
-        
-        if (slideToSave.id) {
-          // Update existing slide
-          const { error: updateError } = await supabase
-            .from('slides')
-            .update({
-              slide_type: slideToSave.slide_type,
-              position: slideToSave.position,
-              config: slideToSave.config
-            })
-            .eq('id', slideToSave.id);
-          
-          if (updateError) {
-            console.error('[SlideEditor] Error updating slide with video:', updateError);
-            throw updateError;
-          }
-          
-          console.log('[SlideEditor] Existing slide updated with video');
-        } else {
-          // Insert new slide
-          const { data: insertedSlide, error: insertError } = await supabase
-            .from('slides')
-            .insert({
-              module_id: moduleId,
-              slide_type: slideToSave.slide_type,
-              position: slideToSave.position,
-              config: slideToSave.config
-            })
-            .select();
-          
-          if (insertError) {
-            console.error('[SlideEditor] Error inserting slide with video:', insertError);
-            throw insertError;
-          }
-          
-          // Update the local slide with the new ID
-          if (insertedSlide && insertedSlide.length > 0) {
-            updatedSlides[slideIndex].id = insertedSlide[0].id;
-            setSlides(updatedSlides);
-            console.log(`[SlideEditor] New slide inserted with ID: ${insertedSlide[0].id}`);
-          }
-        }
-        
-        // Also update localStorage
-        try {
-          localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(updatedSlides));
-          console.log('[SlideEditor] Slides with video saved to localStorage');
-        } catch (err) {
-          console.error('[SlideEditor] Error saving to localStorage:', err);
-        }
-        
-        toast.success('Video uploaded and saved successfully');
-      } catch (err) {
-        console.error('[SlideEditor] Error saving slide with video to database:', err);
-        toast.error('Video uploaded but failed to save slide');
-      }
-    } catch (err) {
-      console.error('[SlideEditor] Error uploading video:', err);
-      toast.error('Failed to upload video');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  
-  // Handle file selection
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, slideIndex: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check if file is a video
-    if (!file.type.startsWith('video/')) {
-      toast.error('Please upload a video file');
-      return;
-    }
-    
-    // Check file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error('File size should not exceed 100MB');
-      return;
-    }
-    
-    uploadVideo(file, slideIndex);
-    
-    // Clear the input value to allow uploading the same file again
-    if (e.target) {
-      e.target.value = '';
-    }
-  };
-  
-  // Trigger file input click
-  const handleVideoUploadClick = () => {
-    videoFileInputRef.current?.click();
   };
 
   // Render slide editor based on type
@@ -622,178 +496,17 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     
     switch (slide.slide_type) {
       case 'text':
-        return (
-          <Textarea
-            placeholder="Enter slide content"
-            className="min-h-[200px] resize-none"
-            value={slide.config.content || ''}
-            onChange={(e) => updateSlideConfig(index, { content: e.target.value })}
-          />
-        );
+        return <TextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
       
       case 'video':
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Video Title</label>
-              <Input
-                placeholder="Enter a title for this video"
-                value={slide.config.title || ''}
-                onChange={(e) => updateSlideConfig(index, { title: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Upload Video</label>
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer" onClick={() => {
-                if (activeSlideIndex !== null) {
-                  videoFileInputRef.current?.click();
-                }
-              }}>
-                <input
-                  type="file"
-                  ref={videoFileInputRef}
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) => handleVideoFileChange(e, index)}
-                />
-                
-                {isUploading ? (
-                  <div className="text-center">
-                    <div className="animate-pulse mb-2">Uploading...</div>
-                    <p className="text-sm text-gray-500">Please wait while your video is being uploaded</p>
-                  </div>
-                ) : slide.config.videoUrl ? (
-                  <div className="text-center">
-                    <div className="mb-2 flex items-center justify-center">
-                      <Video className="h-8 w-8 text-green-500 mr-2" />
-                      <span className="font-medium text-green-600">Video uploaded</span>
-                    </div>
-                    <p className="text-sm text-gray-500 mb-2">{slide.config.videoFileName || 'Video file'}</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-blue-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        videoFileInputRef.current?.click();
-                      }}
-                    >
-                      Replace video
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
-                    <p className="text-sm font-medium mb-1">Click to upload video</p>
-                    <p className="text-xs text-gray-500">MP4, WebM, or MOV (max. 100MB)</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Or use external video URL</label>
-              <Input
-                placeholder="Paste YouTube, Vimeo or other video URL"
-                value={slide.config.url || ''}
-                onChange={(e) => updateSlideConfig(index, { url: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Support for YouTube, Vimeo, and other embeddable video platforms
-              </p>
-            </div>
-            
-            {(slide.config.url || slide.config.videoUrl) && (
-              <div className="border rounded-md p-2 bg-muted/20">
-                <p className="text-xs font-medium mb-1">Preview:</p>
-                <div className="aspect-video">
-                  {slide.config.videoUrl ? (
-                    <video 
-                      src={slide.config.videoUrl} 
-                      className="w-full h-full rounded"
-                      controls
-                    />
-                  ) : slide.config.url ? (
-                    <iframe 
-                      src={slide.config.url} 
-                      className="w-full h-full rounded"
-                      allowFullScreen
-                      frameBorder="0"
-                    ></iframe>
-                  ) : null}
-                </div>
-              </div>
-            )}
-          </div>
-        );
+        return <VideoSlideContent 
+                 config={slide.config} 
+                 onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
+                 slideIndex={index}
+               />;
       
       case 'quiz':
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Question</label>
-              <Input
-                placeholder="Enter your question"
-                value={slide.config.question || ''}
-                onChange={(e) => updateSlideConfig(index, { question: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Options</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => addQuizOption(index)}
-                  className="h-7 px-2"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Option
-                </Button>
-              </div>
-              
-              {slide.config.options.map((option: string, optionIndex: number) => (
-                <div key={optionIndex} className="flex items-center gap-2">
-                  <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md text-xs font-medium">
-                    {optionIndex + 1}
-                  </div>
-                  <Input
-                    placeholder={`Option ${optionIndex + 1}`}
-                    value={option}
-                    onChange={(e) => updateQuizOption(index, optionIndex, e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant={slide.config.correctOptionIndex === optionIndex ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCorrectQuizOption(index, optionIndex)}
-                    className="h-8 px-2"
-                  >
-                    Correct
-                  </Button>
-                  {slide.config.options.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeQuizOption(index, optionIndex)}
-                      className="h-8 px-2 text-red-500 hover:text-red-600"
-                    >
-                      <Trash className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              
-              <p className="text-xs text-muted-foreground">
-                Mark one option as correct for the quiz
-              </p>
-            </div>
-          </div>
-        );
+        return <QuizSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
       
       default:
         return <p>Unknown slide type</p>;
@@ -806,13 +519,63 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       module_id: moduleId,
       slide_type: type,
       position: slides.length > 0 ? Math.max(...slides.map(slide => slide.position)) + 1 : 0,
-      config: type === 'text' ? { content: '' } : type === 'video' ? { url: '', title: '', videoUrl: '', videoFileName: '' } : { question: '', options: [''], correctOptionIndex: 0 }
+      config: type === 'text' ? createDefaultTextSlideConfig() : 
+              type === 'video' ? createDefaultVideoSlideConfig() : 
+              createDefaultQuizSlideConfig()
     };
     
     const newSlides = [...slides, newSlide];
     setSlides(newSlides);
     setActiveSlideIndex(newSlides.length - 1);
     setShowSlideTypeSelector(false);
+  };
+
+  // Add a duplicate slide function
+  const duplicateSlide = (index: number) => {
+    console.log(`[SlideEditor] Attempting to duplicate slide at index ${index}`);
+    
+    const slideToDuplicate = slides[index];
+    if (!slideToDuplicate) {
+      console.error('[SlideEditor] Cannot duplicate: invalid slide index');
+      return;
+    }
+
+    // Create a new slide based on the one being duplicated
+    const newSlide: Slide = {
+      module_id: moduleId,
+      slide_type: slideToDuplicate.slide_type,
+      // Insert the new slide right after the current one
+      position: slideToDuplicate.position + 1,
+      // Deep clone the config to avoid reference issues
+      config: JSON.parse(JSON.stringify(slideToDuplicate.config))
+    };
+    
+    // Create a new array with the duplicate slide inserted
+    const updatedSlides = [...slides];
+    updatedSlides.splice(index + 1, 0, newSlide);
+    
+    // Update all positions to ensure they're sequential
+    const reorderedSlides = updatedSlides.map((slide, idx) => ({
+      ...slide,
+      position: idx
+    }));
+    
+    console.log('[SlideEditor] Slide duplicated, new slides array:', reorderedSlides);
+    
+    // Update slides state
+    setSlides(reorderedSlides);
+    
+    // Set the new slide as active
+    setActiveSlideIndex(index + 1);
+    
+    // Update localStorage
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(reorderedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage after duplication:', err);
+    }
+    
+    toast.success('Slide duplicated');
   };
 
   if (loading) {
@@ -1002,31 +765,91 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             <ScrollArea className="h-[600px]">
               <div className="p-2 space-y-4">
                 {slides.map((slide, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div 
+                    key={index} 
+                    className="flex items-center gap-2"
+                  >
                     <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-xs font-medium">
                       {index + 1}
                     </div>
-                    <div
-                      className={`
-                        relative aspect-[16/9] rounded-lg cursor-pointer group overflow-hidden flex-grow
-                        ${activeSlideIndex === index ? 'ring-2 ring-indigo-500' : 'ring-1 ring-gray-200'}
-                        bg-white hover:ring-2 hover:ring-indigo-400 transition-all
-                      `}
-                      onClick={() => setActiveSlideIndex(index)}
-                    >
-                      {/* Centered Icon */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {slide.slide_type === 'text' && (
-                          <AlignLeft className="h-6 w-6 text-blue-500" />
-                        )}
-                        {slide.slide_type === 'video' && (
-                          <Video className="h-6 w-6 text-purple-500" />
-                        )}
-                        {slide.slide_type === 'quiz' && (
-                          <ListTodo className="h-6 w-6 text-amber-500" />
-                        )}
-                      </div>
-                    </div>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <div
+                          className={`
+                            relative aspect-[16/9] rounded-lg cursor-grab group overflow-hidden flex-grow slide-thumbnail
+                            ${activeSlideIndex === index ? 'ring-2 ring-indigo-500' : 'ring-1 ring-gray-200'}
+                            bg-white hover:ring-2 hover:ring-indigo-400 transition-all
+                          `}
+                          onClick={() => {
+                            console.log(`[SlideEditor] Slide thumbnail clicked, index: ${index}`);
+                            setActiveSlideIndex(index);
+                          }}
+                          draggable
+                          onDragStart={(e) => {
+                            console.log(`[SlideEditor] Drag started on slide index: ${index}`);
+                            handleDragStart(e, index);
+                          }}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={handleDragLeave}
+                          onDragEnd={(e) => {
+                            console.log(`[SlideEditor] Drag ended for slide index: ${index}`);
+                            handleDragEnd(e);
+                          }}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onContextMenu={(e) => {
+                            console.log(`[SlideEditor] Context menu opened for slide index: ${index}`);
+                            // Stop propagation to prevent default browser context menu
+                            // (this shouldn't be needed with ContextMenu but adding as precaution)
+                            e.stopPropagation();
+                          }}
+                        >
+                          {/* Drag handle indicator */}
+                          <div className="absolute top-1 left-1 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Grip className="h-3 w-3" />
+                          </div>
+                          
+                          {/* Centered Icon */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {slide.slide_type === 'text' && (
+                              <AlignLeft className="h-6 w-6 text-blue-500" />
+                            )}
+                            {slide.slide_type === 'video' && (
+                              <Video className="h-6 w-6 text-purple-500" />
+                            )}
+                            {slide.slide_type === 'quiz' && (
+                              <ListTodo className="h-6 w-6 text-amber-500" />
+                            )}
+                          </div>
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-40">
+                        <ContextMenuItem
+                          onClick={() => {
+                            console.log(`[SlideEditor] Duplicate menu item clicked for slide index: ${index}`);
+                            duplicateSlide(index);
+                          }}
+                          className="flex items-center cursor-pointer"
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          <span>Duplicate</span>
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => {
+                            console.log(`[SlideEditor] Delete menu item clicked for slide index: ${index}`);
+                            if (slides.length <= 1) {
+                              toast.error("You must have at least one slide");
+                              return;
+                            }
+                            removeSlide(index);
+                          }}
+                          className="flex items-center cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50"
+                          disabled={slides.length <= 1}
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          <span>Delete</span>
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   </div>
                 ))}
               </div>
@@ -1082,68 +905,70 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         <div className="lg:col-span-3">
           {activeSlideIndex !== null && slides[activeSlideIndex] ? (
             <Card className="shadow-sm bg-white">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-medium">Slide Settings</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Slide Type</label>
-            <Select
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-medium">Slide Settings</CardTitle>
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Slide Type</label>
+                  <Select
                     value={slides[activeSlideIndex].slide_type}
-              onValueChange={(value) => handleSlideTypeChange(value, activeSlideIndex)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
-                <SelectItem value="quiz">Quiz</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Slide Position</label>
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => moveSlideUp(activeSlideIndex)}
-                disabled={activeSlideIndex === 0}
-              >
-                <ArrowUp className="h-3.5 w-3.5 mr-1" /> Move Up
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => moveSlideDown(activeSlideIndex)}
-                disabled={activeSlideIndex === slides.length - 1}
-              >
-                <ArrowDown className="h-3.5 w-3.5 mr-1" /> Move Down
-              </Button>
-            </div>
-          </div>
-          
-          <div className="pt-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => removeSlide(activeSlideIndex)}
-              className="w-full text-red-500 hover:text-red-700 hover:bg-red-50"
-              disabled={slides.length <= 1}
-            >
-              <Trash className="h-4 w-4 mr-1" />
-              Remove Slide
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                    onValueChange={(value) => handleSlideTypeChange(value, activeSlideIndex)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text">Text</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="quiz">Quiz</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Video-specific settings */}
+                {slides[activeSlideIndex].slide_type === 'video' && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium">Video Settings</h3>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="allowReplay" 
+                          checked={slides[activeSlideIndex].config.allowReplay ?? true}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { allowReplay: checked });
+                          }}
+                        />
+                        <Label htmlFor="allowReplay" className="text-sm cursor-pointer">
+                          Allow students to replay the video
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-7">
+                        If disabled, students will only be able to play the video once
+                      </p>
+                    </div>
+                  </>
+                )}
+                
+                <div className="pt-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeSlide(activeSlideIndex)}
+                    className="w-full text-red-500 hover:text-red-700 hover:bg-red-50"
+                    disabled={slides.length <= 1}
+                  >
+                    <Trash className="h-4 w-4 mr-1" />
+                    Remove Slide
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <div className="h-10"></div>
           )}

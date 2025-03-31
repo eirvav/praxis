@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Ellipsis, LogOut, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -18,6 +18,13 @@ import {
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserButton } from "@clerk/nextjs";
 
 interface MenuProps {
   isOpen: boolean | undefined;
@@ -27,6 +34,7 @@ export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const { userId } = useAuth();
   const { signOut } = useClerk();
+  const { user } = useUser();
   
   // Determine user role from pathname
   let userRole: string | undefined;
@@ -207,32 +215,28 @@ export function Menu({ isOpen }: MenuProps) {
             </li>
           ))}
           <li className="w-full grow flex items-end">
-            <TooltipProvider disableHoverableContent>
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={handleSignOut}
-                    variant="outline"
-                    className="w-full justify-center h-10 mt-5"
-                  >
-                    <span className={cn(isOpen === false ? "" : "mr-4")}>
-                      <LogOut size={18} />
+            <div className="w-full border-t pt-4">
+              <div className="flex items-center gap-3 px-2">
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-10 w-10"
+                    }
+                  }}
+                />
+                {isOpen && (
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium truncate">
+                      {user?.fullName || user?.username}
                     </span>
-                    <p
-                      className={cn(
-                        "whitespace-nowrap",
-                        isOpen === false ? "opacity-0 hidden" : "opacity-100"
-                      )}
-                    >
-                      Sign out
-                    </p>
-                  </Button>
-                </TooltipTrigger>
-                {isOpen === false && (
-                  <TooltipContent side="right">Sign out</TooltipContent>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {user?.primaryEmailAddress?.emailAddress}
+                    </span>
+                  </div>
                 )}
-              </Tooltip>
-            </TooltipProvider>
+              </div>
+            </div>
           </li>
         </ul>
       </nav>

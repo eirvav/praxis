@@ -1,252 +1,188 @@
 import {
-  Tag,
-  Users,
   Settings,
-  Bookmark,
-  SquarePen,
   LayoutGrid,
   LucideIcon,
-  Book,
-  GraduationCap,
-  NotebookPen,
-  Box,
   File,
   ClipboardCheck,
   BookOpen,
-  BookMarked
+  GraduationCap,
 } from "lucide-react";
 
-type Submenu = {
+// Types
+type MenuItem = {
   href: string;
   label: string;
-  active?: boolean;
-};
-
-type Menu = {
-  href: string;
-  label: string;
-  active?: boolean;
   icon: LucideIcon;
-  submenus?: Submenu[];
   injectComponent?: boolean;
 };
 
-type Group = {
-  groupLabel: string;
-  menus: Menu[];
+type MenuGroup = {
+  label: string;
+  items: MenuItem[];
 };
 
-// Define teacher menu configuration for easy addition/removal of items
-const teacherMenuConfig = {
-  dashboard: {
-    href: "/teacher",
-    label: "Dashboard",
-    icon: LayoutGrid
-  },
-  modules: {
-    href: "/teacher/modules",
-    label: "All Modules",
-    icon: Book
-  },
-  resources: {
-    href: "/teacher/resources",
-    label: "Resources",
-    icon: File
-  },
-  grading: {
-    href: "/teacher/grading",
-    label: "Grading",
-    icon: ClipboardCheck
-  },
-  settings: {
-    href: "/teacher/settings",
-    label: "Settings",
-    icon: Settings
-  }
+type RoleConfig = {
+  baseUrl: string;
+  groups: MenuGroup[];
 };
 
-// Define student menu configuration for easy addition/removal of items
-const studentMenuConfig = {
+// Base menu items that can be shared between roles
+const sharedMenuItems = {
   dashboard: {
-    href: "/student",
     label: "Dashboard",
-    icon: LayoutGrid
+    icon: LayoutGrid,
   },
   courses: {
-    href: "/student/courses",
     label: "Courses",
     icon: BookOpen,
-    injectComponent: true
-  },
-  modules: {
-    href: "/student/modules",
-    label: "All Modules",
-    icon: Book
+    injectComponent: true,
   },
   resources: {
-    href: "/student/resources",
     label: "Resources",
-    icon: File
-  },
-  progress: {
-    href: "/student/progress",
-    label: "My Progress",
-    icon: GraduationCap
+    icon: File,
   },
   settings: {
-    href: "/student/settings",
     label: "Settings",
-    icon: Settings
-  }
+    icon: Settings,
+  },
+} as const;
+
+// Role-specific menu configurations
+const menuConfigs: Record<string, RoleConfig> = {
+  teacher: {
+    baseUrl: "/teacher",
+    groups: [
+      {
+        label: "",
+        items: [
+          {
+            ...sharedMenuItems.dashboard,
+            href: "/teacher",
+          },
+        ],
+      },
+      {
+        label: "Teaching",
+        items: [
+          {
+            ...sharedMenuItems.courses,
+            href: "/teacher/courses",
+          },
+          {
+            ...sharedMenuItems.resources,
+            href: "/teacher/resources",
+          },
+          {
+            label: "Grading",
+            href: "/teacher/grading",
+            icon: ClipboardCheck,
+          },
+        ],
+      },
+      {
+        label: "Account",
+        items: [
+          {
+            ...sharedMenuItems.settings,
+            href: "/teacher/settings",
+          },
+        ],
+      },
+    ],
+  },
+  student: {
+    baseUrl: "/student",
+    groups: [
+      {
+        label: "",
+        items: [
+          {
+            ...sharedMenuItems.dashboard,
+            href: "/student",
+          },
+        ],
+      },
+      {
+        label: "Learning",
+        items: [
+          {
+            ...sharedMenuItems.courses,
+            href: "/student/courses",
+          },
+          {
+            ...sharedMenuItems.resources,
+            href: "/student/resources",
+          },
+          {
+            label: "My Progress",
+            href: "/student/progress",
+            icon: GraduationCap,
+          },
+        ],
+      },
+      {
+        label: "Account",
+        items: [
+          {
+            ...sharedMenuItems.settings,
+            href: "/student/settings",
+          },
+        ],
+      },
+    ],
+  },
+  default: {
+    baseUrl: "",
+    groups: [
+      {
+        label: "",
+        items: [
+          {
+            ...sharedMenuItems.dashboard,
+            href: "/dashboard",
+          },
+        ],
+      },
+      {
+        label: "Contents",
+        items: [
+          {
+            ...sharedMenuItems.courses,
+            href: "/courses",
+          },
+          {
+            ...sharedMenuItems.resources,
+            href: "/resources",
+          },
+          {
+            ...sharedMenuItems.settings,
+            href: "/settings",
+          },
+        ],
+      },
+    ],
+  },
 };
 
-export function getMenuList(pathname: string, role?: string): Group[] {
-  // Return role-specific menu based on the user role
-  if (role === "teacher") {
-    return getTeacherMenu(pathname);
-  } else if (role === "student") {
-    return getStudentMenu(pathname);
-  }
+// Helper function to check if a path is active
+function isPathActive(pathname: string, href: string, exact: boolean = false): boolean {
+  return exact ? pathname === href : pathname.startsWith(href);
+}
+
+// Helper function to add active state to menu items
+function addActiveState(items: MenuItem[], pathname: string): (MenuItem & { active: boolean })[] {
+  return items.map(item => ({
+    ...item,
+    active: isPathActive(pathname, item.href, item.href.split("/").length <= 2),
+  }));
+}
+
+// Main export function
+export function getMenuList(pathname: string, role?: string): { groupLabel: string; menus: (MenuItem & { active: boolean })[] }[] {
+  const config = menuConfigs[role || "default"] || menuConfigs.default;
   
-  // Default menu if no role is specified or role doesn't match
-  return getDefaultMenu(pathname);
-}
-
-function getTeacherMenu(pathname: string): Group[] {
-  return [
-    {
-      groupLabel: "",
-      menus: [
-        {
-          ...teacherMenuConfig.dashboard,
-          active: pathname === teacherMenuConfig.dashboard.href
-        }
-      ]
-    },
-    {
-      groupLabel: "Teaching",
-      menus: [
-        {
-          href: "/teacher/courses",
-          label: "Courses",
-          icon: BookOpen,
-          active: pathname.startsWith("/teacher/courses"),
-          injectComponent: true
-        },
-        {
-          ...teacherMenuConfig.modules,
-          active: pathname.startsWith("/teacher/modules")
-        },
-        {
-          ...teacherMenuConfig.resources,
-          active: pathname === teacherMenuConfig.resources.href
-        },
-        {
-          ...teacherMenuConfig.grading,
-          active: pathname === teacherMenuConfig.grading.href
-        }
-      ]
-    },
-    {
-      groupLabel: "Account",
-      menus: [
-        {
-          ...teacherMenuConfig.settings,
-          active: pathname.startsWith(teacherMenuConfig.settings.href)
-        }
-      ]
-    }
-  ];
-}
-
-function getStudentMenu(pathname: string): Group[] {
-  return [
-    {
-      groupLabel: "",
-      menus: [
-        {
-          ...studentMenuConfig.dashboard,
-          active: pathname === studentMenuConfig.dashboard.href
-        }
-      ]
-    },
-    {
-      groupLabel: "Learning",
-      menus: [
-        {
-          href: "/student/courses",
-          label: "Courses",
-          icon: BookOpen,
-          active: pathname.startsWith("/student/courses"),
-          injectComponent: true
-        },
-        {
-          ...studentMenuConfig.modules,
-          active: pathname.startsWith("/student/modules")
-        },
-        {
-          ...studentMenuConfig.resources,
-          active: pathname === studentMenuConfig.resources.href
-        },
-        {
-          ...studentMenuConfig.progress,
-          active: pathname === studentMenuConfig.progress.href
-        }
-      ]
-    },
-    {
-      groupLabel: "Account",
-      menus: [
-        {
-          ...studentMenuConfig.settings,
-          active: pathname.startsWith(studentMenuConfig.settings.href)
-        }
-      ]
-    }
-  ];
-}
-
-function getDefaultMenu(pathname: string): Group[] {
-  return [
-    {
-      groupLabel: "",
-      menus: [
-        {
-          href: "/dashboard",
-          label: "Dashboard",
-          icon: LayoutGrid,
-          active: pathname === "/dashboard"
-        }
-      ]
-    },
-    {
-      groupLabel: "Contents",
-      menus: [
-        {
-          href: "/courses",
-          label: "Courses",
-          icon: BookOpen,
-          active: pathname.startsWith("/courses")
-        },
-        {
-          href: "/modules",
-          label: "All Modules",
-          icon: Book,
-          active: pathname.startsWith("/modules")
-        },
-        {
-          href: "/resources",
-          label: "Resources",
-          icon: File,
-          active: pathname === "/resources"
-        },
-        {
-          href: "/settings",
-          label: "Settings",
-          icon: Settings,
-          active: pathname === "/settings"
-        }
-      ]
-    }
-  ];
+  return config.groups.map(group => ({
+    groupLabel: group.label,
+    menus: addActiveState(group.items, pathname),
+  }));
 }
