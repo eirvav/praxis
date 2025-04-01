@@ -222,7 +222,7 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* Navigation Tabs 
+      {/* 
       <div className="border-b">
         <nav className="flex gap-6 -mb-px">
           <div 
@@ -253,23 +253,6 @@ export default function CourseDetailPage() {
             <div className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Settings
-              <div className="hidden group-hover:flex items-center gap-2 ml-4 pl-4 border-l">
-                <Link href={`/teacher/courses/${course.id}/edit`}>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Edit className="h-4 w-4" />
-                    Edit Course
-                  </Button>
-                </Link>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="flex items-center gap-1"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
             </div>
           </div>
         </nav>
