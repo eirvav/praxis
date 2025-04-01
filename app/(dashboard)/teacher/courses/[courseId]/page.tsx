@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Edit, Trash2, Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus } from 'lucide-react';
+import { Edit, Trash2, Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus, BarChart2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -19,6 +19,7 @@ interface Course {
   description: string | null;
   created_at: string;
   teacher_id: string;
+  semester?: string;
 }
 
 interface Module {
@@ -42,12 +43,20 @@ export default function CourseDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'enrolled' | 'completion'>('date');
+  const [selectedSemester, setSelectedSemester] = useState<string>('all');
   
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
+
+  // Mock semesters for demonstration - in real app, fetch from database
+  const semesters = [
+    { id: 'spring2024', label: 'Spring 2024' },
+    { id: 'fall2023', label: 'Fall 2023' },
+    { id: 'spring2023', label: 'Spring 2023' },
+  ];
 
   useEffect(() => {
     async function fetchCourseAndModules() {
@@ -162,52 +171,87 @@ export default function CourseDetailPage() {
 
   return (
     <div className="space-y-6 px-6 md:px-8 py-6">
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center">
-            <BookOpen className="h-5 w-5 text-indigo-500" />
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center">
+              <BookOpen className="h-6 w-6 text-indigo-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{course.title}</h1>
+              {course.description && (
+                <p className="mt-1 text-muted-foreground">{course.description}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">{course.title}</h1>
-            {course.description && (
-              <p className="mt-1 text-muted-foreground">{course.description}</p>
-            )}
+          <Link href={`/teacher/courses/${course.id}/modules/create`}>
+            <Button 
+              size="lg" 
+              className="flex items-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <Plus className="h-5 w-5" />
+              Nytt Arbeidskrav
+            </Button>
+          </Link>
+        </div>
+
+        {/* Semester Selection */}
+        <div className="flex items-center gap-2 border-b pb-4">
+          <span className="text-sm font-medium text-muted-foreground">Semester:</span>
+          <div className="flex gap-2">
+            <Button
+              variant={selectedSemester === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedSemester('all')}
+              className="rounded-full"
+            >
+              All Semesters
+            </Button>
+            {semesters.map((sem) => (
+              <Button
+                key={sem.id}
+                variant={selectedSemester === sem.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedSemester(sem.id)}
+                className="rounded-full"
+              >
+                {sem.label}
+              </Button>
+            ))}
           </div>
         </div>
-        <Link href={`/teacher/courses/${course.id}/modules/create`}>
-          <Button 
-            size="lg" 
-            className="flex items-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg"
-          >
-            <Plus className="h-5 w-5" />
-            Nytt Arbeidskrav
-          </Button>
-        </Link>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs 
       <div className="border-b">
         <nav className="flex gap-6 -mb-px">
           <div 
             role="tab"
             aria-selected="true"
-            className="px-1 py-4 text-sm font-medium text-indigo-500 border-b-2 border-indigo-500 cursor-pointer"
+            className="group px-1 py-4 text-sm font-medium border-b-2 border-indigo-500 text-indigo-500 cursor-pointer"
           >
-            Modules
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Modules
+            </div>
           </div>
           <div 
             role="tab"
             aria-selected="false"
-            className="px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer"
+            className="group px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors"
           >
-            Statistics
+            <div className="flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              Statistics
+            </div>
           </div>
           <div 
             role="tab"
             aria-selected="false"
-            className="px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground group cursor-pointer"
+            className="group px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
               Settings
               <div className="hidden group-hover:flex items-center gap-2 ml-4 pl-4 border-l">
                 <Link href={`/teacher/courses/${course.id}/edit`}>
@@ -230,14 +274,14 @@ export default function CourseDetailPage() {
           </div>
         </nav>
       </div>
-
+      */}
       {/* Search and Controls */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search modules..."
-            className="pl-10"
+            className="pl-10 bg-white dark:bg-gray-800"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -246,11 +290,12 @@ export default function CourseDetailPage() {
         <div className="flex items-center gap-2 ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                Sort by: {sortBy === 'date' ? 'Date Created' : 
-                         sortBy === 'name' ? 'Name' : 
-                         sortBy === 'enrolled' ? 'Enrollment' : 
-                         'Completion Rate'}
+              <Button variant="outline" className="flex items-center gap-2 bg-white dark:bg-gray-800">
+                <Filter className="h-4 w-4" />
+                {sortBy === 'date' ? 'Date Created' : 
+                 sortBy === 'name' ? 'Name' : 
+                 sortBy === 'enrolled' ? 'Enrollment' : 
+                 'Completion Rate'}
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -270,7 +315,7 @@ export default function CourseDetailPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="bg-background border rounded-lg p-1 flex gap-1">
+          <div className="bg-background border rounded-lg p-1 flex gap-1 bg-white dark:bg-gray-800">
             <Button 
               variant={viewMode === 'grid' ? 'default' : 'ghost'} 
               size="sm"
@@ -293,8 +338,13 @@ export default function CourseDetailPage() {
 
       {/* Modules Grid */}
       {modules.length === 0 ? (
-        <div className="text-center p-8 border rounded-md bg-muted/50">
-          <p className="text-muted-foreground">No modules in this course yet.</p>
+        <div className="text-center p-12 border-2 border-dashed rounded-xl bg-muted/50">
+          <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">No modules yet</h3>
+          <p className="text-muted-foreground mb-4">Get started by creating your first module for this course.</p>
+          <Link href={`/teacher/courses/${course.id}/modules/create`}>
+            <Button>Create Module</Button>
+          </Link>
         </div>
       ) : (
         <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
@@ -323,7 +373,6 @@ export default function CourseDetailPage() {
                 createdAt={module.created_at}
                 href={`/teacher/courses/${course.id}/modules/${module.id}`}
                 enrolled={module.enrolled}
-                accuracy={module.accuracy}
                 completion_rate={module.completion_rate}
                 viewMode={viewMode}
               />

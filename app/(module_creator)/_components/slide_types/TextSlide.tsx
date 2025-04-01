@@ -13,7 +13,7 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
   return (
     <Textarea
       placeholder="Enter slide content"
-      className="min-h-[200px] resize-none"
+      className="min-h-[200px] resize-none bg-white"
       value={config.content || ''}
       onChange={(e) => onConfigChange({ content: e.target.value })}
     />

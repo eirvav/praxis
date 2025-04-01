@@ -187,13 +187,7 @@ export default function CourseModuleDetailPage() {
           </Button>
         </div>
       </div>
-      
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{module.title}</h1>
-        {module.description && (
-          <p className="text-muted-foreground mt-2">{module.description}</p>
-        )}
-      </div>
+
 
       {/* Display thumbnail if available */}
       {module.thumbnail_url && (

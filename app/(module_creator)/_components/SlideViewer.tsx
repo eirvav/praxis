@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Slide } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
@@ -111,6 +111,12 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
             <ListTodo className="h-3 w-3 mr-1" /> Quiz
           </Badge>
         );
+      case 'student_response':
+        return (
+          <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
+            <MessageSquare className="h-3 w-3 mr-1" /> Response
+          </Badge>
+        );
       default:
         return null;
     }
@@ -179,7 +185,9 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                 {currentSlide.config.videoUrl ? (
                   <>
                     <video 
-                      ref={el => videoRefs.current[currentSlideIndex] = el}
+                      ref={(el: HTMLVideoElement | null) => {
+                        videoRefs.current[currentSlideIndex] = el;
+                      }}
                       src={currentSlide.config.videoUrl} 
                       className="w-full h-full"
                       controls={!isVideoPlayed || allowReplay}
@@ -282,6 +290,51 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
           </Card>
         );
       
+      case 'student_response':
+        return (
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle>Video Response Required</CardTitle>
+                {getSlideTypeBadge('student_response')}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <div className="bg-rose-50 border border-rose-200 rounded-md p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center">
+                    <Video className="h-5 w-5 text-rose-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-rose-900">Record Your Response</h3>
+                    <p className="text-sm text-rose-700">
+                      {currentSlide.config.severalResponses 
+                        ? "You can submit multiple video responses to this prompt."
+                        : "Please record a single video response to this prompt."}
+                    </p>
+                    {currentSlide.config.instantResponse && (
+                      <p className="text-sm text-rose-600 mt-1 font-medium">
+                        You must respond immediately after the previous video ends.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Video recording interface will be implemented here */}
+              <div className="aspect-video bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <div className="text-center p-6">
+                  <MessageSquare className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+                  <h3 className="text-slate-900 font-medium mb-1">Video Response</h3>
+                  <p className="text-sm text-slate-500">
+                    The recording interface will appear here when viewing as a student
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      
       default:
         return <p>Unknown slide type</p>;
     }
@@ -347,7 +400,11 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                             (slide.config.content?.slice(0, 20) || 'Text slide') : 
                            slide.slide_type === 'video' ? 
                             (slide.config.title || 'Video slide') : 
-                            (slide.config.question || 'Quiz slide')}
+                           slide.slide_type === 'quiz' ? 
+                            (slide.config.question || 'Quiz slide') :
+                           slide.slide_type === 'student_response' ?
+                            'Video Response' :
+                            'Unknown slide'}
                         </p>
                       </div>
                       <div className="flex-shrink-0">

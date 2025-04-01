@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera, FileText, Clock, Calendar, Users2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -22,6 +22,7 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
 import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
@@ -74,6 +75,7 @@ export default function CreateModulePage() {
   const [searchTeachers, setSearchTeachers] = useState('');
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   
   // Mock teacher data - in production this would come from your API
   const mockTeachers = [
@@ -463,6 +465,7 @@ export default function CreateModulePage() {
       
       // Since we don't have a published field, just consider the module published when it has slides
       if (slides.length > 0) {
+        setIsPublishModalOpen(false); // Close the modal
         toast.success('Module published successfully!');
         // Redirect to course page
         router.push(`/teacher/courses/${selectedCourseId}`);
@@ -546,12 +549,12 @@ export default function CreateModulePage() {
         <Popover open={teacherSearchOpen} onOpenChange={setTeacherSearchOpen}>
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
+              variant="outline" 
               role="combobox"
               aria-expanded={teacherSearchOpen}
-              className="w-full justify-between"
+              className="w-full justify-between bg-white"
             >
-              <span>Search for teachers to share with...</span>
+              <span>Search for teachers...</span>
               <Users2 className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -585,13 +588,14 @@ export default function CreateModulePage() {
           </PopoverContent>
         </Popover>
         <p className="text-sm text-gray-500">
-          Share this module with other teachers to allow them to use it in their courses
+          <Users2 className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
+          Share module with other teachers
         </p>
       </div>
     </div>
   );
 
-  // Update the bottom continue button section with better styling
+  // bottom continue button section styling
   const bottomContinueButton = (
     <div className="px-8 py-6 mt-8 border-t bg-gray-50">
       <div className="max-w-xl mx-auto">
@@ -719,14 +723,14 @@ export default function CreateModulePage() {
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                Save Changes
+                Next Step
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
             
             {step === 3 && (
               <Button 
-                onClick={handlePublishModule}
+                onClick={() => setIsPublishModalOpen(true)}
                 disabled={isPublishing || slides.length === 0}
                 className="bg-green-600 hover:bg-green-700"
               >
@@ -747,7 +751,7 @@ export default function CreateModulePage() {
       </div>
       
       {/* Content area with dynamic width based on step */}
-      <div className={`mx-auto py-8 px-4 ${step === 1 ? 'max-w-3xl' : 'max-w-full container'} mt-[57px]`}>
+      <div className={`mx-auto py-8 px-4 ${step === 2 ? 'max-w-full container' : 'max-w-3xl'} mt-[57px]`}>
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
             {error}
@@ -813,7 +817,7 @@ export default function CreateModulePage() {
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title..."
+                    placeholder="Module Title... *"
                     disabled={isSubmitting}
                     className="text-6xl leading-tight font-semibold w-full p-0 h-auto border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent placeholder:text-gray-400/70 outline-none"
                     style={{
@@ -821,6 +825,7 @@ export default function CreateModulePage() {
                     }}
                   />
                 </div>
+                <span className="text-red-500"></span>
                 
                 {/* Course Selection - Second most important */}
                 <div className="grid grid-cols-4 gap-6 items-start">
@@ -828,6 +833,7 @@ export default function CreateModulePage() {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <BookOpen className="h-4 w-4" />
                       <span className="font-medium">Select Course</span>
+                      <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3">
@@ -876,43 +882,75 @@ export default function CreateModulePage() {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
                       <span className="font-medium">Module Timing</span>
+                      <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3 space-y-6">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">
-                          Module Deadline<span className="text-red-500 ml-1">*</span>
-                        </label>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">Module Deadline</label>                        
                       </div>
-                      <div className="relative">
+                      <div 
+                        className="relative cursor-pointer"
+                        onClick={() => {
+                          const input = document.querySelector('input[name="deadline"]') as HTMLInputElement;
+                          if (input) input.showPicker();
+                        }}
+                      >
                         <input
                           type="datetime-local"
+                          name="deadline"
                           value={deadline}
-                          onChange={(e) => setDeadline(e.target.value)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          onChange={(e) => {
+                            const selectedDate = new Date(e.target.value);
+                            const now = new Date();
+                            
+                            // Set time of now to start of the minute for accurate comparison
+                            now.setSeconds(0);
+                            now.setMilliseconds(0);
+                            
+                            if (selectedDate <= now) {
+                              toast.error("Deadline must be in the future");
+                              return;
+                            }
+                            
+                            setDeadline(e.target.value);
+                          }}
+                          min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
                           required
                         />
                       </div>
-                      <p className="text-sm text-gray-500">Set when this module needs to be completed by students</p>
+                      <p className="text-sm text-gray-500">
+                        <Clock className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
+                        Set when students need to complete this module
+                      </p>
                     </div>
                     
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">
-                          Publish Date
-                          <span className="ml-2 text-xs text-gray-500 font-normal">(Optional)</span>
-                        </label>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">Publish Date</label>
+                        <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                       </div>
-                      <div className="relative">
+                      <div 
+                        className="relative cursor-pointer"
+                        onClick={() => {
+                          const input = document.querySelector('input[name="publish_date"]') as HTMLInputElement;
+                          if (input) input.showPicker();
+                        }}
+                      >
                         <input
                           type="datetime-local"
+                          name="publish_date"
                           value={publishDate}
                           onChange={(e) => setPublishDate(e.target.value)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
                         />
                       </div>
-                      <p className="text-sm text-gray-500">Schedule when this module becomes available to students</p>
+                      <p className="text-sm text-gray-500">
+                        <Calendar className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
+                        Schedule when this module becomes available
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -929,18 +967,22 @@ export default function CreateModulePage() {
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">Description</span>
                   </div>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Let your learner know a little about the module"
-                    rows={5}
-                    disabled={isSubmitting}
-                    className="resize-none p-0 text-base border-0 focus-visible:ring-0 placeholder:text-gray-400 font-normal"
-                  />
-                  <p className="text-sm text-gray-400 flex justify-end">
-                    {description.length}/400
-                  </p>
+                  <div className="group relative flex items-start gap-2 max-w-full">
+                    <div className="prose max-w-full flex-grow overflow-hidden">
+                      <p className="text-gray-600 break-words">{description}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('step', '1');
+                        router.push(`/teacher/modules/create?${params.toString()}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0 mt-1"
+                    >
+                      <Edit2 className="h-4 w-4 text-gray-600" />
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -973,88 +1015,387 @@ export default function CreateModulePage() {
         
         {/* Step 3: Review & Publish */}
         {step === 3 && moduleId && (
-          <div className="space-y-8">
-            <div className="bg-white border rounded-xl overflow-hidden">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+              {/* Cover Image */}
               {thumbnailUrl ? (
-                <div className="relative w-full h-48 md:h-64">
+                <div className="relative w-full h-64">
                   <Image 
                     src={thumbnailUrl} 
                     alt="Module thumbnail" 
                     fill 
                     style={{ objectFit: 'cover' }}
+                    className="transition-all duration-200"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </div>
               ) : (
-                <div className="w-full h-32 md:h-48 bg-amber-100 flex items-center justify-center">
+                <div className="w-full h-64 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
                   <div className="text-center">
-                    <FileImage className="h-10 w-10 text-amber-600 mx-auto mb-2" />
-                    <p className="text-amber-800">No cover image</p>
+                    <FileImage className="h-12 w-12 text-amber-600/80 mx-auto mb-3" />
+                    <p className="text-amber-900/80 font-medium">No cover image</p>
                   </div>
                 </div>
               )}
               
-              <div className="p-6 space-y-4">
-                <h2 className="text-xl font-bold">Module Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Title</p>
-                    <p className="text-lg font-medium">{title}</p>
+              {/* Module Details */}
+              <div className="p-8 space-y-8">
+                {/* Title and Course */}
+                <div className="space-y-4">
+                  <div className="group relative inline-flex items-center gap-2">
+                    <h1 className="text-3xl font-semibold text-gray-900">{title}</h1>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('step', '1');
+                        router.push(`/teacher/modules/create?${params.toString()}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      <Edit2 className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Course</p>
-                    <p className="text-lg font-medium">
-                      {courses.find(c => c.id === selectedCourseId)?.title || 'Unknown Course'}
-                    </p>
+                  
+                  <div className="group relative inline-flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <BookOpen className="h-5 w-5 text-indigo-600" />
+                      <span className="font-medium">
+                        {courses.find(c => c.id === selectedCourseId)?.title || 'Unknown Course'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('step', '1');
+                        router.push(`/teacher/modules/create?${params.toString()}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      <Edit2 className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Deadline</p>
-                    <p className="text-lg font-medium">
-                      {new Date(deadline).toLocaleString('en-US', {
-                        dateStyle: 'long',
-                        timeStyle: 'short'
-                      })}
-                    </p>
+                </div>
+
+                {/* Description */}
+                {description && (
+                  <div className="group relative flex items-start gap-2 max-w-full">
+                    <div className="prose max-w-full flex-grow overflow-hidden">
+                      <p className="text-gray-600 break-words">{description}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('step', '1');
+                        router.push(`/teacher/modules/create?${params.toString()}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0 mt-1"
+                    >
+                      <Edit2 className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
-                  {publishDate && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Publish Date</p>
-                      <p className="text-lg font-medium">
-                        {new Date(publishDate).toLocaleString('en-US', {
+                )}
+
+                {/* Timing Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                  <div className="group relative inline-flex items-start gap-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-medium">Deadline</span>
+                      </div>
+                      <p className="text-base text-gray-900">
+                        {new Date(deadline).toLocaleString('en-US', {
                           dateStyle: 'long',
                           timeStyle: 'short'
                         })}
                       </p>
                     </div>
-                  )}
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500">Description</p>
-                    <p className="text-base">{description}</p>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('step', '1');
+                        router.push(`/teacher/modules/create?${params.toString()}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
+                    >
+                      <Edit2 className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
+
+                  {publishDate && (
+                    <div className="group relative inline-flex items-start gap-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="h-4 w-4" />
+                          <span className="font-medium">Publish Date</span>
+                        </div>
+                        <p className="text-base text-gray-900">
+                          {new Date(publishDate).toLocaleString('en-US', {
+                            dateStyle: 'long',
+                            timeStyle: 'short'
+                          })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setStep(1);
+                          const params = new URLSearchParams(searchParams.toString());
+                          params.set('step', '1');
+                          router.push(`/teacher/modules/create?${params.toString()}`);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
+                      >
+                        <Edit2 className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Summary */}
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between border-b pb-4">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-indigo-600" />
+                      <h2 className="text-lg font-semibold text-gray-900">Module Content</h2>
+                    </div>
+                    <Badge variant="secondary" className="text-base font-medium px-3 py-1">
+                      {slides.length} {slides.length === 1 ? 'slide' : 'slides'}
+                    </Badge>
+                  </div>
+
+                  {slides.length === 0 ? (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <AlertCircle className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-amber-800">No Content Added</h3>
+                          <p className="mt-1 text-sm text-amber-700">
+                            This module doesn't have any content yet. Go back to step 2 to add slides.
+                          </p>
+                          <div className="mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleBack}
+                              className="text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                            >
+                              <ArrowLeft className="h-4 w-4 mr-1" />
+                              Back to Content Editor
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg divide-y bg-white">
+                      {slides.map((slide, index) => (
+                        <div
+                          key={index}
+                          className={`
+                            flex items-center gap-4 p-4 transition-all duration-200 ease-in-out
+                            hover:bg-slate-50 cursor-grab active:cursor-grabbing group
+                          `}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.currentTarget.classList.add('opacity-50', 'bg-slate-100');
+                            // Store the index being dragged
+                            e.dataTransfer.setData('text/plain', index.toString());
+                          }}
+                          onDragEnd={(e) => {
+                            e.currentTarget.classList.remove('opacity-50', 'bg-slate-100');
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            const target = e.currentTarget as HTMLElement;
+                            target.classList.add('bg-slate-100');
+                          }}
+                          onDragLeave={(e) => {
+                            const target = e.currentTarget as HTMLElement;
+                            target.classList.remove('bg-slate-100');
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const target = e.currentTarget as HTMLElement;
+                            target.classList.remove('bg-slate-100');
+                            
+                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                            const dropIndex = index;
+                            
+                            if (draggedIndex === dropIndex) return;
+                            
+                            // Create a copy of the slides array
+                            const newSlides = [...slides];
+                            // Remove the dragged item
+                            const [draggedSlide] = newSlides.splice(draggedIndex, 1);
+                            // Insert it at the new position
+                            newSlides.splice(dropIndex, 0, draggedSlide);
+                            
+                            // Update positions
+                            const reorderedSlides = newSlides.map((slide, idx) => ({
+                              ...slide,
+                              position: idx
+                            }));
+                            
+                            // Animate the change
+                            const container = target.parentElement;
+                            if (container) {
+                              container.style.transition = 'all 0.2s ease-in-out';
+                            }
+                            
+                            // Update state
+                            setSlides(reorderedSlides);
+                            
+                            // Save to database
+                            if (supabase && moduleId) {
+                              supabase
+                                .from('slides')
+                                .upsert(reorderedSlides)
+                                .then(({ error }) => {
+                                  if (error) {
+                                    console.error('Error saving slide order:', error);
+                                    toast.error('Failed to save slide order');
+                                  }
+                                });
+                            }
+                          }}
+                        >
+                          {/* Drag Handle */}
+                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Grip className="h-5 w-5 text-slate-400" />
+                          </div>
+                          
+                          {/* Slide Number */}
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-slate-600">{index + 1}</span>
+                          </div>
+                          
+                          {/* Slide Type Icon */}
+                          <div className="flex-shrink-0">
+                            {slide.slide_type === 'text' && (
+                              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <AlignLeft className="h-4 w-4 text-blue-600" />
+                              </div>
+                            )}
+                            {slide.slide_type === 'video' && (
+                              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                                <Video className="h-4 w-4 text-purple-600" />
+                              </div>
+                            )}
+                            {slide.slide_type === 'quiz' && (
+                              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                                <ListTodo className="h-4 w-4 text-amber-600" />
+                              </div>
+                            )}
+                            {slide.slide_type === 'student_response' && (
+                              <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+                                <MessageSquare className="h-4 w-4 text-rose-600" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Slide Content Preview */}
+                          <div className="flex-grow min-w-0">
+                            <h3 className="font-medium text-slate-900 truncate">
+                              {slide.slide_type === 'text' ? 
+                                (slide.config.content?.slice(0, 50) || 'Text slide') : 
+                               slide.slide_type === 'video' ? 
+                                (slide.config.title || 'Video slide') : 
+                               slide.slide_type === 'quiz' ? 
+                                (slide.config.question || 'Quiz slide') :
+                               slide.slide_type === 'student_response' ?
+                                'Video Response' :
+                                'Unknown slide'}
+                              {slide.config.content?.length > 50 && '...'}
+                            </h3>
+                            <p className="text-sm text-slate-500">
+                              {slide.slide_type.charAt(0).toUpperCase() + slide.slide_type.slice(1)} Slide
+                            </p>
+                          </div>
+                          
+                          {/* Edit Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setStep(2);
+                              const params = new URLSearchParams(searchParams.toString());
+                              params.set('step', '2');
+                              router.push(`/teacher/modules/create?${params.toString()}`);
+                            }}
+                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Module Content</h2>
-                <div className="text-sm text-gray-500">
-                  {slides.length} {slides.length === 1 ? 'slide' : 'slides'}
+
+              {/* Publishing Section */}
+              <div className="bg-gray-50 border-t px-8 py-6">
+                <div className="max-w-xl mx-auto">
+                  <Button
+                    onClick={() => setIsPublishModalOpen(true)}
+                    disabled={isPublishing || slides.length === 0}
+                    className="bg-green-600 hover:bg-green-700 text-white w-full py-6 text-lg relative group transition-all duration-200"
+                  >
+                    <span className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                    {isPublishing ? 'Publishing...' : 'Publish Module'}
+                    <CheckCircle className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                  </Button>
+                  <p className="text-sm text-gray-500 text-center mt-3">
+                    Review all content before publishing
+                  </p>
                 </div>
               </div>
-              
-              {slides.length === 0 ? (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
-                  <p>No slides have been added to this module yet. Go back to add content.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-6">
-                  <SlideViewer moduleId={moduleId} />
-                </div>
-              )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Publish Confirmation Modal */}
+      <Dialog open={isPublishModalOpen} onOpenChange={setIsPublishModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Publish Module</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to publish this module{publishDate ? ' on ' + new Date(publishDate).toLocaleDateString() : ' now'}?
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsPublishModalOpen(false)}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePublishModule}
+              disabled={isPublishing || slides.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isPublishing ? 'Publishing...' : 'Yes, Publish Module'}
+              <CheckCircle className="ml-2 h-4 w-4" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <CreateCourseModal 
         isOpen={isCourseModalOpen} 
         onClose={async () => {

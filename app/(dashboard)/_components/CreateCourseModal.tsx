@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useSupabase } from './SupabaseProvider';
 import { toast } from 'sonner';
 
@@ -94,19 +93,6 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
               placeholder="Enter course title"
               disabled={isSubmitting}
               className="h-11"
-            />
-          </div>
-          
-          <div className="space-y-3">
-            <Label htmlFor="description" className="text-base">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter course description"
-              rows={4}
-              disabled={isSubmitting}
-              className="resize-none min-h-[120px]"
             />
           </div>
 

@@ -24,11 +24,12 @@ import { Separator } from '@/components/ui/separator';
 import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig } from './slide_types/TextSlide';
 import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig } from './slide_types/VideoSlide';
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
+import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
 
 export interface Slide {
   id?: string;
   module_id: string;
-  slide_type: 'text' | 'video' | 'quiz';
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response';
   position: number;
   config: any;
   created_at?: string;
@@ -320,7 +321,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   // Handle slide type change
   const handleSlideTypeChange = (value: string, index: number) => {
     const updatedSlides = [...slides];
-    const slideType = value as 'text' | 'video' | 'quiz';
+    const slideType = value as 'text' | 'video' | 'quiz' | 'student_response';
     
     // Set default config based on type
     let config = {};
@@ -330,7 +331,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         config = createDefaultTextSlideConfig();
         break;
       case 'video':
-        // Ensure we preserve any existing video URL if changing back to video type
         config = { 
           ...createDefaultVideoSlideConfig(),
           url: updatedSlides[index].config?.url || '', 
@@ -341,6 +341,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         break;
       case 'quiz':
         config = createDefaultQuizSlideConfig();
+        break;
+      case 'student_response':
+        config = createDefaultStudentResponseConfig();
         break;
     }
     
@@ -485,6 +488,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         return <VideoSlideTypeBadge />;
       case 'quiz':
         return <QuizSlideTypeBadge />;
+      case 'student_response':
+        return <StudentResponseSlideTypeBadge />;
       default:
         return null;
     }
@@ -508,20 +513,24 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       case 'quiz':
         return <QuizSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
       
+      case 'student_response':
+        return <StudentResponseSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+      
       default:
         return <p>Unknown slide type</p>;
     }
   };
 
   // Create a new slide of a specific type
-  const createSlideOfType = (type: 'text' | 'video' | 'quiz') => {
+  const createSlideOfType = (type: 'text' | 'video' | 'quiz' | 'student_response') => {
     const newSlide: Slide = {
       module_id: moduleId,
       slide_type: type,
       position: slides.length > 0 ? Math.max(...slides.map(slide => slide.position)) + 1 : 0,
       config: type === 'text' ? createDefaultTextSlideConfig() : 
               type === 'video' ? createDefaultVideoSlideConfig() : 
-              createDefaultQuizSlideConfig()
+              type === 'quiz' ? createDefaultQuizSlideConfig() :
+              createDefaultStudentResponseConfig()
     };
     
     const newSlides = [...slides, newSlide];
@@ -597,7 +606,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       
       {/* Slide Type Selector Modal */}
       <Dialog open={showSlideTypeSelector} onOpenChange={setShowSlideTypeSelector}>
-        <DialogContent className="sm:max-w-[720px]">
+        <DialogContent className="sm:max-w-[720px] bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl">Select slide type</DialogTitle>
           </DialogHeader>
@@ -630,7 +639,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-800">Video</h3>
-                  <p className="text-xs text-gray-500">Embed video content</p>
+                  <p className="text-xs text-gray-500">Add video content</p>
                 </div>
               </div>
             </div>
@@ -669,15 +678,15 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             
             <div 
               className="border rounded-lg p-4 hover:border-rose-500 cursor-pointer hover:bg-rose-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
+              onClick={() => createSlideOfType('student_response')}
             >
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
                   <MessageSquare className="h-6 w-6 text-rose-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-800">Q&A</h3>
-                  <p className="text-xs text-gray-500">Question and answer format</p>
+                  <h3 className="font-medium text-gray-800">Response to Video</h3>
+                  <p className="text-xs text-gray-500">Video Responses</p>
                 </div>
               </div>
             </div>
@@ -769,7 +778,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                     key={index} 
                     className="flex items-center gap-2"
                   >
-                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-xs font-medium">
+                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium">
                       {index + 1}
                     </div>
                     <ContextMenu>
@@ -818,6 +827,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             )}
                             {slide.slide_type === 'quiz' && (
                               <ListTodo className="h-6 w-6 text-amber-500" />
+                            )}
+                            {slide.slide_type === 'student_response' && (
+                              <MessageSquare className="h-6 w-6 text-rose-500" />
                             )}
                           </div>
                         </div>
@@ -925,6 +937,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       <SelectItem value="text">Text</SelectItem>
                       <SelectItem value="video">Video</SelectItem>
                       <SelectItem value="quiz">Quiz</SelectItem>
+                      <SelectItem value="student_response">Student Response</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -955,16 +968,58 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   </>
                 )}
                 
+                {/* Student Response-specific settings */}
+                {slides[activeSlideIndex].slide_type === 'student_response' && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium">Response Settings</h3>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="severalResponses" 
+                          checked={slides[activeSlideIndex].config.severalResponses ?? false}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { severalResponses: checked });
+                          }}
+                        />
+                        <Label htmlFor="severalResponses" className="text-sm cursor-pointer">
+                          Allow multiple responses
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-7">
+                        If enabled, students can submit multiple responses
+                      </p>
+
+                      <div className="flex items-center space-x-2 mt-4">
+                        <Switch 
+                          id="instantResponse" 
+                          checked={slides[activeSlideIndex].config.instantResponse ?? false}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { instantResponse: checked });
+                          }}
+                        />
+                        <Label htmlFor="instantResponse" className="text-sm cursor-pointer">
+                          Force instant response
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-7">
+                        If enabled, students must respond immediately after the video ends
+                      </p>
+                    </div>
+                  </>
+                )}
+                
                 <div className="pt-2">
                   <Button 
                     variant="outline"
                     size="sm"
                     onClick={() => removeSlide(activeSlideIndex)}
-                    className="w-full text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="w-full text-red-500 hover:text-red-700 hover:bg-red-50 bg-white"
                     disabled={slides.length <= 1}
                   >
-                    <Trash className="h-4 w-4 mr-1" />
-                    Remove Slide
+                    <Trash className="h-4 w-4 mr-1 bg-white" />
+                    Delete Slide
                   </Button>
                 </div>
               </CardContent>
