@@ -11,11 +11,6 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-interface ModuleData {
-  title: string;
-  description?: string;
-}
-
 export default function ModuleLayout({ children }: LayoutProps) {
   const params = useParams();
   const moduleId = params.moduleId as string;

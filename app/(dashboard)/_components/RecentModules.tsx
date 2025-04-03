@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ArrowRight, Ban, GraduationCap } from 'lucide-react';
-import ModuleCard, { ModuleCardProps } from './ModuleCard';
+import ModuleCard from './ModuleCard';
 import { useSupabase } from './SupabaseProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 

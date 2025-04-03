@@ -15,7 +15,6 @@ interface CourseCardProps {
 }
 
 export function CourseCard({
-  id,
   title,
   description,
   moduleCount = 0,

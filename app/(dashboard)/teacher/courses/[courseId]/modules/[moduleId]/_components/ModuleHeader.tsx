@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar, Edit, MoreVertical, Share2, Trash2, Radio, Layers } from "lucide-react";
 import Image from "next/image";
-import { Progress } from "@/components/ui/progress";
 import { ModuleStats } from "./ModuleStats";
 import { format } from "date-fns";
 

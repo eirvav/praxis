@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, BarChart2, Cloud, Gauge, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser } from '@clerk/nextjs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   ContextMenu,
@@ -50,7 +49,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
   const initialFetchDoneRef = useRef(false);
   const supabase = useSupabase();
-  const { user } = useUser();
   const [showSlideTypeSelector, setShowSlideTypeSelector] = useState(false);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   

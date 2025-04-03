@@ -1,6 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
-import { setRole, deleteUser, refreshUserList } from "./actions";
 import { SearchUsers } from "./_components/SearchUsers";
 import {
   Table,
@@ -19,24 +18,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
-  ShieldCheck, 
   Users,
-  Trash2
 } from "lucide-react";
 import { User } from "@clerk/nextjs/server";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Suspense } from "react";
 import { RefreshButton } from "./_components/RefreshButton";
 import { UserRoleCell } from "./_components/UserRoleCell";

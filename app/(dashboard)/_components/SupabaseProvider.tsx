@@ -87,7 +87,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         },
       }
     );
-  }, [session?.id]); // Only depend on session.id instead of entire session object
+  }, [session]); // Only depend on session.id instead of entire session object
 
   const value = {
     supabase,

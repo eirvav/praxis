@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -28,7 +28,6 @@ export default function StudentCourseModuleDetailPage() {
   
   const { user } = useUser();
   const supabase = useSupabase();
-  const router = useRouter();
   const params = useParams();
   const moduleId = params.moduleId as string;
   const courseId = params.courseId as string;

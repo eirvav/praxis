@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, LogOut, ChevronDown } from "lucide-react";
+import { Ellipsis, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useAuth, useClerk, useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -18,12 +18,6 @@ import {
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { UserButton } from "@clerk/nextjs";
 
 interface MenuProps {
@@ -32,7 +26,6 @@ interface MenuProps {
 
 export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
-  const { userId } = useAuth();
   const { signOut } = useClerk();
   const { user } = useUser();
   
@@ -46,11 +39,6 @@ export function Menu({ isOpen }: MenuProps) {
   
   // Get the menu list based on user role
   const menuList = getMenuList(pathname, userRole);
-
-  // Handle sign out
-  const handleSignOut = () => {
-    signOut();
-  };
 
   return (
     <ScrollArea className="[&>div>div[style]]:!block">

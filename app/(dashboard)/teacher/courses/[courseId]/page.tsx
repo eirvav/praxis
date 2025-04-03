@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Edit, Trash2, Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus, BarChart2, Settings } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';

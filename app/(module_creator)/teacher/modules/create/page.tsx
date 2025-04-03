@@ -6,8 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Upload, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -22,10 +21,9 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
-import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 
 interface Course {
@@ -33,19 +31,8 @@ interface Course {
   title: string;
 }
 
-interface ModuleData {
-  id: string;
-  title: string;
-  description: string;
-  course_id: string;
-  thumbnail_url?: string;
-  deadline: string;
-  publish_date?: string;
-}
-
 export default function CreateModulePage() {
   console.log('[CreateModulePage] RENDERING component');
-  
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

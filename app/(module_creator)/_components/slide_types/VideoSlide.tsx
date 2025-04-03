@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, Upload, Info, Replace } from 'lucide-react';
+import { Video, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser } from '@clerk/nextjs';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -41,7 +41,7 @@ export const VideoSlideContent = ({ config, onConfigChange, slideIndex }: VideoS
       console.log(`[VideoSlide] Uploading video file '${fileName}' to path '${filePath}'`);
       
       // Upload the video to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('module-videos')
         .upload(filePath, file, {
           cacheControl: '3600',

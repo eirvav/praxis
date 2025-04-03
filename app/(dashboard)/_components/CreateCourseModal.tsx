@@ -41,7 +41,7 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         throw new Error('Authentication required');
       }
 
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('courses')
         .insert({
           title: title.trim(),
@@ -59,11 +59,13 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
       onClose();
       setTitle('');
       setDescription('');
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create course. Please try again.';
       console.error('Error creating course:', err);
-      setError(err.message || 'Failed to create course. Please try again.');
+      setError(message);
       toast.error('Failed to create course');
-    } finally {
+    }
+     finally {
       setIsSubmitting(false);
     }
   }
