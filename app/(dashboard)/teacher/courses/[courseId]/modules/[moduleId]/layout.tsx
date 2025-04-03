@@ -39,9 +39,13 @@ export default function ModuleLayout({ children }: LayoutProps) {
         if (data) {
           setModuleName(data.title);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error loading module:', err);
-        setError(err.message || 'Failed to load module');
+        setError(
+          err instanceof Error 
+            ? err.message 
+            : 'Failed to load module'
+        );
       } finally {
         setIsLoading(false);
       }

@@ -22,6 +22,14 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const hasLoggedInstance = useRef(false);
   const clientInstanceId = useRef(Math.random().toString(36).substring(7));
   
+  // Store session in ref to avoid dependency issues
+  const sessionRef = useRef(session);
+  
+  // Update the ref when session changes
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+  
   // Only log session state once to reduce noise
   if (!hasLoggedInstance.current) {
     console.log('[SupabaseProvider] Initial session state:', !!session);
@@ -59,8 +67,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Create the Supabase client with Clerk token - now with session.id as dependency
-  // instead of the full session object to prevent unnecessary recreation
+  // Create the Supabase client with Clerk token
   const supabase = useMemo(() => {
     console.log(`[SupabaseProvider] Creating Supabase client instance ID: ${clientInstanceId.current}`);
     
@@ -70,7 +77,8 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       {
         global: {
           fetch: async (url, options = {}) => {
-            const clerkToken = await session?.getToken({
+            // Use the ref to always get the latest session without causing dependency issues
+            const clerkToken = await sessionRef.current?.getToken({
               template: 'supabase',
             });
 
@@ -87,7 +95,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         },
       }
     );
-  }, [session]); // Only depend on session.id instead of entire session object
+  }, []); // Empty dependency array since we're using the ref
 
   const value = {
     supabase,

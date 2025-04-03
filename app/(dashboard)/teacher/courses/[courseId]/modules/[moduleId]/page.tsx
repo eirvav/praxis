@@ -71,9 +71,13 @@ export default function CourseModuleDetailPage() {
         
         setModule(moduleData);
         setTotalSlides(slidesCount || 0);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error loading module:', err);
-        setError(err.message || 'Failed to load module.');
+        setError(
+          err instanceof Error 
+            ? err.message 
+            : 'Failed to load module.'
+        );
       } finally {
         setLoading(false);
       }
@@ -100,9 +104,13 @@ export default function CourseModuleDetailPage() {
       toast.success('Module deleted successfully');
       router.push(`/teacher/courses/${courseId}`);
       router.refresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting module:', err);
-      toast.error('Failed to delete module');
+      toast.error(
+        err instanceof Error 
+          ? err.message 
+          : 'Failed to delete module'
+      );
     } finally {
       setIsDeleting(false);
     }

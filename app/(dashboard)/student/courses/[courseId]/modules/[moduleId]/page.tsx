@@ -55,9 +55,9 @@ export default function StudentCourseModuleDetailPage() {
         }
         
         setModule(data);
-      } catch (err: any) {
+      } catch (err: Error | unknown) {
         console.error('Error loading module:', err);
-        setError(err.message || 'Failed to load module.');
+        setError(err instanceof Error ? err.message : 'Failed to load module.');
       } finally {
         setLoading(false);
       }
