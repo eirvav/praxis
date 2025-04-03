@@ -21,7 +21,7 @@ export const ModuleNavigation = ({
 
   const tabs = [
     {
-      label: "Module",
+      label: "Overview",
       icon: BookOpen,
       href: "",
     },

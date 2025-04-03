@@ -967,22 +967,12 @@ export default function CreateModulePage() {
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">Description</span>
                   </div>
-                  <div className="group relative flex items-start gap-2 max-w-full">
-                    <div className="prose max-w-full flex-grow overflow-hidden">
-                      <p className="text-gray-600 break-words">{description}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setStep(1);
-                        const params = new URLSearchParams(searchParams.toString());
-                        params.set('step', '1');
-                        router.push(`/teacher/modules/create?${params.toString()}`);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0 mt-1"
-                    >
-                      <Edit2 className="h-4 w-4 text-gray-600" />
-                    </button>
-                  </div>
+                  <Textarea
+                    placeholder="Enter a description for this module..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="min-h-[120px] resize-none bg-white"
+                  />
                 </div>
               </div>
               
