@@ -36,6 +36,7 @@ export default function TeacherDashboard() {
         const { data, error } = await supabase
           .from('modules')
           .select('id, title, description, thumbnail_url, updated_at, course_id')
+          .eq('teacher_id', user.id)
           .order('updated_at', { ascending: false });
           
         if (error) throw error;

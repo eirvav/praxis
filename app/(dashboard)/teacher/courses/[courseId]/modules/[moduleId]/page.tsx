@@ -61,6 +61,15 @@ export default function CourseModuleDetailPage() {
           setError('Module not found or you might not have permission to view it.');
           return;
         }
+        
+        // Check if the module belongs to the current teacher
+        if (!user?.id || moduleData.teacher_id !== user.id) {
+          setError('You do not have permission to view this module.');
+          toast.error('You do not have permission to view this module.');
+          router.push('/teacher');
+          return;
+        }
+        
         // Load slides count
         const { count: slidesCount, error: slidesError } = await supabase!
           .from('slides')
@@ -84,7 +93,7 @@ export default function CourseModuleDetailPage() {
     }
 
     loadModule();
-  }, [user, supabase, moduleId, courseId]);
+  }, [user, supabase, moduleId, courseId, router]);
 
   async function deleteModule() {
     if (!confirm('Are you sure you want to delete this module?')) return;

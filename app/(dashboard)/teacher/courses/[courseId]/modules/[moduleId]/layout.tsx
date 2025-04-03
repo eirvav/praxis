@@ -6,6 +6,9 @@ import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { ModuleNavigation } from './_components/ModuleNavigation';
 import { ModuleBreadcrumbs } from './_components/ModuleBreadcrumbs';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,10 +22,12 @@ export default function ModuleLayout({ children }: LayoutProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const supabase = useSupabase();
+  const { user } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadModuleData() {
-      if (!supabase || !moduleId) return;
+      if (!supabase || !moduleId || !user) return;
 
       try {
         setIsLoading(true);
@@ -30,11 +35,24 @@ export default function ModuleLayout({ children }: LayoutProps) {
 
         const { data, error } = await supabase
           .from('modules')
-          .select('title')
+          .select('title, teacher_id')
           .eq('id', moduleId)
           .single();
 
         if (error) throw error;
+        
+        if (!data) {
+          setError('Module not found');
+          return;
+        }
+
+        // Check if the module belongs to the current teacher
+        if (!user.id || data.teacher_id !== user.id) {
+          setError('You do not have permission to view this module.');
+          toast.error('You do not have permission to view this course');
+          router.push('/teacher');
+          return;
+        }
         
         if (data) {
           setModuleName(data.title);
@@ -52,7 +70,7 @@ export default function ModuleLayout({ children }: LayoutProps) {
     }
 
     loadModuleData();
-  }, [supabase, moduleId]);
+  }, [supabase, moduleId, user, router]);
 
   if (error) {
     return (
