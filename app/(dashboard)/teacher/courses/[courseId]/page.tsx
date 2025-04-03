@@ -170,7 +170,7 @@ export default function CourseDetailPage() {
   );
 
   return (
-    <div className="space-y-6 px-6 md:px-8 py-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-6">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">

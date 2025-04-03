@@ -3,16 +3,54 @@
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
-import RecentCourses from "../_components/RecentCourses";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BookOpen, PlusCircle, Users, BookOpenCheck } from "lucide-react";
+import { BookOpen, PlusCircle } from "lucide-react";
 import { CreateCourseModal } from "../_components/CreateCourseModal";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ModuleCard from "../_components/ModuleCard";
+import { useSupabase } from "../_components/SupabaseProvider";
+
+interface Module {
+  id: string;
+  title: string;
+  description?: string;
+  thumbnail_url?: string;
+  updated_at: string;
+  course_id: string;
+}
 
 export default function TeacherDashboard() {
   const { user, isLoaded } = useUser();
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = useSupabase();
+  
+  useEffect(() => {
+    async function fetchAllModules() {
+      if (!supabase || !user) return;
+      
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('modules')
+          .select('id, title, description, thumbnail_url, updated_at, course_id')
+          .order('updated_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        setModules(data || []);
+      } catch (err) {
+        console.error('Error fetching modules:', err);
+        setModules([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchAllModules();
+  }, [supabase, user]);
   
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -33,51 +71,35 @@ export default function TeacherDashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4">
-        <Button 
-          size="lg"
-          variant="outline" //slette denne mulig
-          className="flex items-center gap-2 bg-indigo-600 text-white"
-          onClick={() => setIsCourseModalOpen(true)}
-        >
-          <BookOpen className="h-5 w-5" />
-          Create New Course
-        </Button>
-        <Link href="/teacher/modules/create">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">
+            Welcome back, {user.firstName || user.username || 'Teacher'}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your courses and modules from your dashboard
+          </p>
+        </div>
+        
+        <div className="flex gap-4">
           <Button 
             size="lg"
-            variant="outline" 
             className="flex items-center gap-2 bg-indigo-600 text-white"
+            onClick={() => setIsCourseModalOpen(true)}
           >
-            <PlusCircle className="h-5 w-5" />
-            Create New Module
+            <BookOpen className="h-5 w-5" />
+            Create New Course
           </Button>
-        </Link>
-      </div>
-
-      {/* Overview Statistics */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">25</div>
-            <p className="text-xs text-muted-foreground">Across all courses</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
-            <BookOpenCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Currently running</p>
-          </CardContent>
-        </Card>
+          <Link href="/teacher/modules/create">
+            <Button 
+              size="lg"
+              className="flex items-center gap-2 bg-indigo-600 text-white"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Create New Module
+            </Button>
+          </Link>
+        </div>
       </div>
       
       <CreateCourseModal 
@@ -85,20 +107,40 @@ export default function TeacherDashboard() {
         onClose={() => setIsCourseModalOpen(false)} 
       />
       
-      {/* Recent Courses */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Recent Courses</CardTitle>
-            <Link href="/teacher/courses">
-              <Button variant="ghost" size="sm">View all</Button>
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Your Modules</h2>
+        
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-[300px] animate-pulse bg-muted rounded-xl" />
+            ))}
+          </div>
+        ) : modules.length === 0 ? (
+          <div className="text-center py-10 bg-muted/20 rounded-xl">
+            <p className="text-muted-foreground mb-4">You haven't created any modules yet.</p>
+            <Link href="/teacher/modules/create">
+              <Button>Create your first module</Button>
             </Link>
           </div>
-        </CardHeader>
-        <CardContent>
-          <RecentCourses isTeacher={true} limit={3} />
-        </CardContent>
-      </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {modules.map((module) => (
+              <ModuleCard
+                key={module.id}
+                id={module.id}
+                title={module.title}
+                description={module.description}
+                thumbnail_url={module.thumbnail_url}
+                updated_at={module.updated_at}
+                courseId={module.course_id}
+                isTeacher={true}
+                viewMode="grid"
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

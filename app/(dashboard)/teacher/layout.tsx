@@ -14,7 +14,9 @@ export default function TeacherLayout({
   return (
     <ClerkProvider>
       <div className="min-h-screen">
-        {children}
+        <div className="space-y-6 px-6 md:px-8 py-6">
+          {children}
+        </div>
       </div>
     </ClerkProvider>
   )

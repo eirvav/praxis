@@ -57,7 +57,7 @@ export default function ModuleLayout({ children }: LayoutProps) {
   if (error) {
     return (
       <ContentLayout title="Error" hideNavbar={true}>
-        <div className="space-y-6 px-6 md:px-8 py-6">
+        <div className="space-y-6">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
@@ -69,7 +69,7 @@ export default function ModuleLayout({ children }: LayoutProps) {
   if (isLoading) {
     return (
       <ContentLayout title="Loading..." hideNavbar={true}>
-        <div className="space-y-6 px-6 md:px-8 py-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-center h-32">
             <p className="text-muted-foreground">Loading module...</p>
           </div>
@@ -80,7 +80,7 @@ export default function ModuleLayout({ children }: LayoutProps) {
 
   return (
     <ContentLayout title={moduleName || 'Module'} hideNavbar={true}>
-      <div className="space-y-6 px-6 md:px-8 py-6">
+      <div className="space-y-6">
         <div className="flex flex-col gap-6">
           <ModuleBreadcrumbs courseId={courseId} moduleName={moduleName} />
           <ModuleNavigation moduleId={moduleId} courseId={courseId} />
