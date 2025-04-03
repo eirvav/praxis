@@ -1,12 +1,11 @@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlignLeft } from 'lucide-react';
+import { TextSlideConfig } from '../SlideEditor';
 
 interface TextSlideProps {
-  config: {
-    content: string;
-  };
-  onConfigChange: (configUpdate: { content: string }) => void;
+  config: TextSlideConfig;
+  onConfigChange: (configUpdate: Partial<TextSlideConfig>) => void;
 }
 
 export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => {
@@ -28,8 +27,8 @@ export const TextSlideTypeBadge = () => {
   );
 };
 
-export const createDefaultTextSlideConfig = () => {
-  return { content: '' };
+export const createDefaultTextSlideConfig = (): TextSlideConfig => {
+  return { type: 'text', content: '' };
 };
 
 export default TextSlideContent;

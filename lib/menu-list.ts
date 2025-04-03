@@ -14,6 +14,7 @@ type MenuItem = {
   label: string;
   icon: LucideIcon;
   injectComponent?: boolean;
+  submenus?: { href: string; label: string; active?: boolean; }[];
 };
 
 type MenuGroup = {

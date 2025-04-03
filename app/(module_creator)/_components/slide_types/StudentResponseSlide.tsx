@@ -1,13 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Video, Info } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { StudentResponseSlideConfig } from '../SlideEditor';
 
 interface StudentResponseSlideProps {
-  config: {
-    severalResponses: boolean;
-    instantResponse: boolean;
-  };
-  onConfigChange: (configUpdate: any) => void;
+  config: StudentResponseSlideConfig;
+  onConfigChange: (configUpdate: Partial<StudentResponseSlideConfig>) => void;
 }
 
 export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProps) => {
@@ -52,8 +50,9 @@ export const StudentResponseSlideTypeBadge = () => {
   );
 };
 
-export const createDefaultStudentResponseConfig = () => {
+export const createDefaultStudentResponseConfig = (): StudentResponseSlideConfig => {
   return {
+    type: 'student_response',
     severalResponses: false,
     instantResponse: false
   };

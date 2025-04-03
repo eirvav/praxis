@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
-import { Slide } from './SlideEditor';
+import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
 
 interface SlideViewerProps {
@@ -22,6 +22,19 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
   const [videoPlayedOnce, setVideoPlayedOnce] = useState<Record<number, boolean>>({});
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const supabase = useSupabase();
+
+  // Type guards for slide configurations
+  const isTextSlide = (slide: Slide): slide is Slide & { config: TextSlideConfig } => 
+    slide.slide_type === 'text' && slide.config.type === 'text';
+  
+  const isVideoSlide = (slide: Slide): slide is Slide & { config: VideoSlideConfig } => 
+    slide.slide_type === 'video' && slide.config.type === 'video';
+  
+  const isQuizSlide = (slide: Slide): slide is Slide & { config: QuizSlideConfig } => 
+    slide.slide_type === 'quiz' && slide.config.type === 'quiz';
+  
+  const isStudentResponseSlide = (slide: Slide): slide is Slide & { config: StudentResponseSlideConfig } => 
+    slide.slide_type === 'student_response' && slide.config.type === 'student_response';
 
   // Load slides
   useEffect(() => {
@@ -40,7 +53,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         
         console.log('[SlideViewer] Loaded slides from database:', data);
         setSlides(data || []);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading slides:', err);
         toast.error('Failed to load slides');
       } finally {
@@ -75,6 +88,8 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
   // Check quiz answer
   const checkQuizAnswer = (slideIndex: number) => {
     const slide = slides[slideIndex];
+    if (!isQuizSlide(slide)) return;
+    
     const selectedAnswer = quizAnswers[slideIndex];
     const isCorrect = selectedAnswer === slide.config.correctOptionIndex;
     
@@ -142,6 +157,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
 
     switch (currentSlide.slide_type) {
       case 'text':
+        if (!isTextSlide(currentSlide)) return <p>Invalid text slide configuration</p>;
         return (
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -161,6 +177,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         );
       
       case 'video':
+        if (!isVideoSlide(currentSlide)) return <p>Invalid video slide configuration</p>;
         console.log('[SlideViewer] Video slide config:', currentSlide.config);
         const isVideoPlayed = videoPlayedOnce[currentSlideIndex] || false;
         const allowReplay = currentSlide.config.allowReplay !== false; // Default to true if not specified
@@ -227,6 +244,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         );
       
       case 'quiz':
+        if (!isQuizSlide(currentSlide)) return <p>Invalid quiz slide configuration</p>;
         return (
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -291,6 +309,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         );
       
       case 'student_response':
+        if (!isStudentResponseSlide(currentSlide)) return <p>Invalid student response slide configuration</p>;
         return (
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -381,38 +400,43 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
             </div>
             <div className="p-2 max-h-[500px] overflow-y-auto">
               <div className="space-y-1">
-                {slides.map((slide, index) => (
-                  <div
-                    key={index}
-                    className={`
-                      flex items-center p-2 rounded-md cursor-pointer text-sm 
-                      ${currentSlideIndex === index ? 'bg-muted/80 border border-muted-foreground/20' : 'hover:bg-muted/50'}
-                    `}
-                    onClick={() => setCurrentSlideIndex(index)}
-                  >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded bg-background border text-xs">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate">
-                          {slide.slide_type === 'text' ? 
-                            (slide.config.content?.slice(0, 20) || 'Text slide') : 
-                           slide.slide_type === 'video' ? 
-                            (slide.config.title || 'Video slide') : 
-                           slide.slide_type === 'quiz' ? 
-                            (slide.config.question || 'Quiz slide') :
-                           slide.slide_type === 'student_response' ?
-                            'Video Response' :
-                            'Unknown slide'}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        {getSlideTypeBadge(slide.slide_type)}
+                {slides.map((slide, index) => {
+                  // Safe content extraction based on slide type
+                  let slideContent = 'Unknown slide';
+                  
+                  if (slide.slide_type === 'text' && isTextSlide(slide)) {
+                    slideContent = slide.config.content?.slice(0, 20) || 'Text slide';
+                  } else if (slide.slide_type === 'video' && isVideoSlide(slide)) {
+                    slideContent = slide.config.title || 'Video slide';
+                  } else if (slide.slide_type === 'quiz' && isQuizSlide(slide)) {
+                    slideContent = slide.config.question || 'Quiz slide';
+                  } else if (slide.slide_type === 'student_response') {
+                    slideContent = 'Video Response';
+                  }
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`
+                        flex items-center p-2 rounded-md cursor-pointer text-sm 
+                        ${currentSlideIndex === index ? 'bg-muted/80 border border-muted-foreground/20' : 'hover:bg-muted/50'}
+                      `}
+                      onClick={() => setCurrentSlideIndex(index)}
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded bg-background border text-xs">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate">{slideContent}</p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {getSlideTypeBadge(slide.slide_type)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

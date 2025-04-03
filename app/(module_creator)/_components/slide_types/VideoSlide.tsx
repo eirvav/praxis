@@ -7,20 +7,14 @@ import { toast } from 'sonner';
 import { useUser } from '@clerk/nextjs';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { Textarea } from '@/components/ui/textarea';
+import { VideoSlideConfig } from '../SlideEditor';
 
 interface VideoSlideProps {
-  config: {
-    title?: string;
-    videoUrl?: string;
-    videoFileName?: string;
-    context?: string;
-    allowReplay?: boolean;
-  };
-  onConfigChange: (configUpdate: any) => void;
-  slideIndex: number;
+  config: VideoSlideConfig;
+  onConfigChange: (configUpdate: Partial<VideoSlideConfig>) => void;
 }
 
-export const VideoSlideContent = ({ config, onConfigChange, slideIndex }: VideoSlideProps) => {
+export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useSupabase();
@@ -85,7 +79,7 @@ export const VideoSlideContent = ({ config, onConfigChange, slideIndex }: VideoS
     }
     
     // Check file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
+    if (file.size > 200 * 1024 * 1024) {
       toast.error('File size should not exceed 100MB');
       return;
     }
@@ -195,8 +189,9 @@ export const VideoSlideTypeBadge = () => {
   );
 };
 
-export const createDefaultVideoSlideConfig = () => {
+export const createDefaultVideoSlideConfig = (): VideoSlideConfig => {
   return { 
+    type: 'video',
     title: '', 
     videoUrl: '', 
     videoFileName: '',

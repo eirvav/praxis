@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,32 @@ interface Course {
   title: string;
 }
 
-export default function CreateModulePage() {
+interface Slide {
+  id?: string;
+  module_id: string;
+  position: number;
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response';
+  config: SlideConfig;
+}
+
+interface SlideConfig {
+  content?: string;
+  title?: string;
+  question?: string;
+  options?: Array<{
+    id: string;
+    text: string;
+    isCorrect?: boolean;
+  }>;
+  videoUrl?: string;
+  duration?: number;
+  thumbnail?: string;
+  responseType?: string;
+  [key: string]: unknown;
+}
+
+// This is the client component that uses useSearchParams
+function CreateModulePageContent() {
   console.log('[CreateModulePage] RENDERING component');
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
@@ -44,12 +69,11 @@ export default function CreateModulePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [slides, setSlides] = useState<any[]>([]);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const initialLoadDoneRef = useRef(false);
-  const pageInitializedRef = useRef(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -63,6 +87,28 @@ export default function CreateModulePage() {
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  
+  // Function to fetch slides wrapped in useCallback
+  const fetchSlides = useCallback(async () => {
+    if (!moduleId || !supabase) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('slides')
+        .select('*')
+        .eq('module_id', moduleId)
+        .order('position', { ascending: true });
+        
+      if (error) throw error;
+      
+      if (data) {
+        setSlides(data);
+      }
+    } catch (err) {
+      console.error('Error fetching slides:', err);
+      toast.error('Failed to load slides');
+    }
+  }, [moduleId, supabase]);
   
   // Mock teacher data - in production this would come from your API
   const mockTeachers = [
@@ -101,19 +147,19 @@ export default function CreateModulePage() {
       console.log('[CreateModulePage] Router event: before history change', url);
     };
     
-    // @ts-ignore - Next.js types might be incomplete
+    // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('routeChangeStart', handleRouteChangeStart);
-    // @ts-ignore
+    // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('routeChangeComplete', handleRouteChangeComplete);
-    // @ts-ignore
+    // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('beforeHistoryChange', handleBeforeHistoryChange);
     
     return () => {
-      // @ts-ignore
+      // @ts-expect-error - Next.js types might be incomplete
       router.events?.off('routeChangeStart', handleRouteChangeStart);
-      // @ts-ignore
+      // @ts-expect-error - Next.js types might be incomplete
       router.events?.off('routeChangeComplete', handleRouteChangeComplete);
-      // @ts-ignore
+      // @ts-expect-error - Next.js types might be incomplete
       router.events?.off('beforeHistoryChange', handleBeforeHistoryChange);
     };
   }, [router]);
@@ -191,28 +237,6 @@ export default function CreateModulePage() {
     fileInputRef.current?.click();
   };
   
-  // Function to fetch slides
-  const fetchSlides = async () => {
-    if (!moduleId || !supabase) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('slides')
-        .select('*')
-        .eq('module_id', moduleId)
-        .order('position', { ascending: true });
-        
-      if (error) throw error;
-      
-      if (data) {
-        setSlides(data);
-      }
-    } catch (err) {
-      console.error('Error fetching slides:', err);
-      toast.error('Failed to load slides');
-    }
-  };
-  
   // Initialize state from URL parameters only once
   useEffect(() => {
     if (initialLoadDoneRef.current) return;
@@ -248,7 +272,7 @@ export default function CreateModulePage() {
         fetchSlides();
       }
     }
-  }, [searchParams, moduleId, supabase]);
+  }, [searchParams, moduleId, supabase, fetchSlides]);
   
   // Fetch module data if editing an existing module
   useEffect(() => {
@@ -429,9 +453,9 @@ export default function CreateModulePage() {
       
       router.push(`/teacher/modules/create?${params.toString()}`);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating/updating module:', err);
-      const errorMessage = err.message || 'Failed to save module. Please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save module. Please try again.';
       console.log('Detailed error:', JSON.stringify(err));
       setError(errorMessage);
       toast.error(errorMessage);
@@ -450,7 +474,7 @@ export default function CreateModulePage() {
     try {
       setIsPublishing(true);
       
-      // Since we don't have a published field, just consider the module published when it has slides
+      // Since we don&apos;t have a published field, just consider the module published when it has slides
       if (slides.length > 0) {
         setIsPublishModalOpen(false); // Close the modal
         toast.success('Module published successfully!');
@@ -596,17 +620,11 @@ export default function CreateModulePage() {
           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </Button>
         <p className="text-sm text-gray-500 text-center mt-3">
-          You'll be able to add slides and content in the next step
+          You&apos;ll be able to add slides and content in the next step
         </p>
       </div>
     </div>
   );
-
-  // Add this function to handle course creation
-  const handleCreateCourseClick = () => {
-    setTeacherSearchOpen(false); // Close any open popovers
-    setIsCourseModalOpen(true);
-  };
 
   if (isLoading) {
     return (
@@ -1153,7 +1171,7 @@ export default function CreateModulePage() {
                         <div>
                           <h3 className="text-sm font-medium text-amber-800">No Content Added</h3>
                           <p className="mt-1 text-sm text-amber-700">
-                            This module doesn't have any content yet. Go back to step 2 to add slides.
+                            This module doesn&apos;t have any content yet. Go back to step 2 to add slides.
                           </p>
                           <div className="mt-3">
                             <Button
@@ -1290,7 +1308,7 @@ export default function CreateModulePage() {
                                slide.slide_type === 'student_response' ?
                                 'Video Response' :
                                 'Unknown slide'}
-                              {slide.config.content?.length > 50 && '...'}
+                              {slide.config.content && slide.config.content.length > 50 && '...'}
                             </h3>
                             <p className="text-sm text-slate-500">
                               {slide.slide_type.charAt(0).toUpperCase() + slide.slide_type.slice(1)} Slide
@@ -1349,7 +1367,7 @@ export default function CreateModulePage() {
           
           <div className="py-4 space-y-4">
             <p className="text-sm text-muted-foreground">
-              Are you sure you want to publish this module{publishDate ? ' on ' + new Date(publishDate).toLocaleDateString() : ' now'}?
+              Are you sure you want to publish this module{publishDate ? ` on ${new Date(publishDate).toLocaleDateString()}` : " now"}?
             </p>
           </div>
 
@@ -1401,5 +1419,14 @@ export default function CreateModulePage() {
         }} 
       />
     </div>
+  );
+}
+
+// Export the page with Suspense boundary
+export default function CreateModulePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <CreateModulePageContent />
+    </Suspense>
   );
 } 

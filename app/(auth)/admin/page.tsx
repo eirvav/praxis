@@ -27,22 +27,23 @@ import { RefreshButton } from "./_components/RefreshButton";
 import { UserRoleCell } from "./_components/UserRoleCell";
 import { DeleteUserButton } from "./_components/DeleteUserButton";
 
-// Type for search params that need to be awaited
+// Type for search params
 interface SearchParams {
   search?: string;
 }
 
 export default async function Admin({
-  searchParams: rawSearchParams,
+  searchParams,
 }: {
-  searchParams: SearchParams | Promise<SearchParams>;
+  searchParams: Promise<SearchParams>;
 }) {
-  // Properly await searchParams before accessing properties
-  const searchParams = await Promise.resolve(rawSearchParams);
+  // Resolve searchParams Promise
+  const resolvedSearchParams = await searchParams;
+  
   const client = await clerkClient();
   
-  // Now we can safely access search after awaiting searchParams
-  const searchQuery = searchParams?.search;
+  // Now we can safely access search
+  const searchQuery = resolvedSearchParams?.search;
   
   let users: User[] = [];
   try {

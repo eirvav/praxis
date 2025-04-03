@@ -134,8 +134,8 @@ export default function TeacherCoursesPage() {
             ) : (
               <div>
                 <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">You haven't created any courses yet</h3>
-                <p className="text-muted-foreground mt-2">Click the "Create Course" button to get started</p>
+                <h3 className="text-lg font-medium">You haven&apos;t created any courses yet</h3>
+                <p className="text-muted-foreground mt-2">Click the &quot;Create Course&quot; button to get started</p>
                 <Button 
                   className="mt-4"
                   onClick={() => setIsCourseModalOpen(true)}

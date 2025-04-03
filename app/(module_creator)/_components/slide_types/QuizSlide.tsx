@@ -2,14 +2,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ListTodo, Plus, Trash } from 'lucide-react';
+import { QuizSlideConfig } from '../SlideEditor';
 
 interface QuizSlideProps {
-  config: {
-    question: string;
-    options: string[];
-    correctOptionIndex: number;
-  };
-  onConfigChange: (configUpdate: any) => void;
+  config: QuizSlideConfig;
+  onConfigChange: (configUpdate: Partial<QuizSlideConfig>) => void;
 }
 
 export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => {
@@ -133,8 +130,8 @@ export const QuizSlideTypeBadge = () => {
   );
 };
 
-export const createDefaultQuizSlideConfig = () => {
-  return { question: '', options: [''], correctOptionIndex: 0 };
+export const createDefaultQuizSlideConfig = (): QuizSlideConfig => {
+  return { type: 'quiz', question: '', options: [''], correctOptionIndex: 0 };
 };
 
 export default QuizSlideContent;

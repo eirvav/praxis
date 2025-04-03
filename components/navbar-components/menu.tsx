@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Ellipsis, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -26,7 +26,6 @@ interface MenuProps {
 
 export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
-  const { signOut } = useClerk();
   const { user } = useUser();
   
   // Determine user role from pathname
@@ -39,6 +38,17 @@ export function Menu({ isOpen }: MenuProps) {
   
   // Get the menu list based on user role
   const menuList = getMenuList(pathname, userRole);
+  
+  // Create a state object for tracking expanded state of menus with injectComponent
+  const [expandedMenus, setExpandedMenus] = useState<{[key: string]: boolean}>({});
+  
+  // Handler for toggling expanded state
+  const toggleExpanded = (menuId: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuId]: !prev[menuId]
+    }));
+  };
 
   return (
     <ScrollArea className="[&>div>div[style]]:!block">
@@ -67,11 +77,15 @@ export function Menu({ isOpen }: MenuProps) {
                 <p className="pb-2"></p>
               )}
               {menus.map(
-                ({ href, label, icon: Icon, active, submenus, injectComponent }, index) => {
+                ({ href, label, icon: Icon, active, submenus, injectComponent }, menuIndex) => {
+                  // Create a unique ID for this menu item
+                  const menuId = `${index}-${menuIndex}`;
+                  const isExpanded = expandedMenus[menuId] !== undefined ? expandedMenus[menuId] : true;
+
                   // Regular menu item without submenus or injection
                   if (!submenus && !injectComponent) {
                     return (
-                      <div className="w-full" key={index}>
+                      <div className="w-full" key={menuIndex}>
                         <TooltipProvider disableHoverableContent>
                           <Tooltip delayDuration={100}>
                             <TooltipTrigger asChild>
@@ -119,10 +133,8 @@ export function Menu({ isOpen }: MenuProps) {
                   
                   // Item with injection (CourseNavigation)
                   if (injectComponent) {
-                    const [isExpanded, setIsExpanded] = useState(true);
-                    
                     return (
-                      <div className="w-full" key={index}>
+                      <div className="w-full" key={menuIndex}>
                         <TooltipProvider disableHoverableContent>
                           <Tooltip delayDuration={100}>
                             <TooltipTrigger asChild>
@@ -135,7 +147,7 @@ export function Menu({ isOpen }: MenuProps) {
                                     : "ghost"
                                 }
                                 className="w-full justify-start h-10 mb-1"
-                                onClick={() => setIsExpanded(!isExpanded)}
+                                onClick={() => toggleExpanded(menuId)}
                               >
                                 <div className="w-full flex justify-between items-center">
                                   <div className="flex items-center">
@@ -184,7 +196,7 @@ export function Menu({ isOpen }: MenuProps) {
                   
                   // Item with submenus
                   return (
-                    <div className="w-full" key={index}>
+                    <div className="w-full" key={menuIndex}>
                       <CollapseMenuButton
                         icon={Icon}
                         label={label}
@@ -193,7 +205,7 @@ export function Menu({ isOpen }: MenuProps) {
                             ? pathname.startsWith(href)
                             : active
                         }
-                        submenus={submenus}
+                        submenus={submenus || []}
                         isOpen={isOpen}
                       />
                     </div>

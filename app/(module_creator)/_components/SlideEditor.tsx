@@ -30,9 +30,61 @@ export interface Slide {
   module_id: string;
   slide_type: 'text' | 'video' | 'quiz' | 'student_response';
   position: number;
-  config: any;
+  config: SlideConfig;
   created_at?: string;
   updated_at?: string;
+}
+
+// Define the individual slide config types
+export interface TextSlideConfig {
+  type: 'text';
+  content: string;
+}
+
+export interface VideoSlideConfig {
+  type: 'video';
+  title?: string;
+  videoUrl?: string;
+  videoFileName?: string;
+  context?: string;
+  allowReplay?: boolean;
+}
+
+export interface QuizSlideConfig {
+  type: 'quiz';
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+}
+
+export interface StudentResponseSlideConfig {
+  type: 'student_response';
+  severalResponses: boolean;
+  instantResponse: boolean;
+}
+
+// Define a union type for all possible slide configurations
+export type SlideConfig = 
+  | TextSlideConfig 
+  | VideoSlideConfig 
+  | QuizSlideConfig 
+  | StudentResponseSlideConfig;
+
+// Type guard functions to check the slide type
+function isTextSlide(config: SlideConfig): config is TextSlideConfig {
+  return config.type === 'text';
+}
+
+function isVideoSlide(config: SlideConfig): config is VideoSlideConfig {
+  return config.type === 'video';
+}
+
+function isQuizSlide(config: SlideConfig): config is QuizSlideConfig {
+  return config.type === 'quiz';
+}
+
+function isStudentResponseSlide(config: SlideConfig): config is StudentResponseSlideConfig {
+  return config.type === 'student_response';
 }
 
 interface SlideEditorProps {
@@ -72,7 +124,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       module_id: moduleId,
       slide_type: 'text',
       position: 0,
-      config: { content: '' }
+      config: { type: 'text', content: '' }
     };
   }, [moduleId]);
 
@@ -134,7 +186,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             setActiveSlideIndex(0);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error loading slides:', err);
         toast.error('Failed to load slides');
         // Create a default slide since both DB and cache failed
@@ -149,24 +201,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     
     loadSlides();
   }, [moduleId, supabase, createDefaultSlide]);
-
-  // Add a new slide
-  const addSlide = () => {
-    const newPosition = slides.length > 0 
-      ? Math.max(...slides.map(slide => slide.position)) + 1 
-      : 0;
-    
-    const newSlide: Slide = {
-      module_id: moduleId,
-      slide_type: 'text',
-      position: newPosition,
-      config: { content: '' }
-    };
-    
-    const newSlides = [...slides, newSlide];
-    setSlides(newSlides);
-    setActiveSlideIndex(newSlides.length - 1);
-  };
 
   // Remove a slide
   const removeSlide = (index: number) => {
@@ -322,19 +356,25 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     const slideType = value as 'text' | 'video' | 'quiz' | 'student_response';
     
     // Set default config based on type
-    let config = {};
+    let config: SlideConfig;
     
     switch (slideType) {
       case 'text':
         config = createDefaultTextSlideConfig();
         break;
       case 'video':
+        // Get any existing video fields if possible
+        const videoUrl = isVideoSlide(updatedSlides[index].config) ? updatedSlides[index].config.videoUrl : '';
+        const title = isVideoSlide(updatedSlides[index].config) ? updatedSlides[index].config.title : '';
+        const videoFileName = isVideoSlide(updatedSlides[index].config) ? updatedSlides[index].config.videoFileName : '';
+        
         config = { 
-          ...createDefaultVideoSlideConfig(),
-          url: updatedSlides[index].config?.url || '', 
-          title: updatedSlides[index].config?.title || '',
-          videoUrl: updatedSlides[index].config?.videoUrl || '',
-          videoFileName: updatedSlides[index].config?.videoFileName || '',
+          type: 'video',
+          title,
+          videoUrl,
+          videoFileName,
+          context: '',
+          allowReplay: true
         };
         break;
       case 'quiz':
@@ -364,14 +404,45 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   };
 
   // Handle slide config change
-  const updateSlideConfig = (index: number, configUpdate: any) => {
+  const updateSlideConfig = (index: number, configUpdate: Partial<SlideConfig>) => {
     const updatedSlides = [...slides];
+    const currentConfig = updatedSlides[index].config;
+    
+    // Create a type-safe updated config based on the current config type
+    let updatedConfig: SlideConfig;
+    
+    if (isTextSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<TextSlideConfig>,
+        type: 'text'
+      };
+    } else if (isVideoSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<VideoSlideConfig>,
+        type: 'video'
+      };
+    } else if (isQuizSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<QuizSlideConfig>,
+        type: 'quiz'
+      };
+    } else if (isStudentResponseSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<StudentResponseSlideConfig>,
+        type: 'student_response'
+      };
+    } else {
+      // Fallback to default type if for some reason we have an invalid config
+      updatedConfig = createDefaultTextSlideConfig();
+    }
+    
     updatedSlides[index] = {
       ...updatedSlides[index],
-      config: {
-        ...updatedSlides[index].config,
-        ...configUpdate
-      }
+      config: updatedConfig
     };
     
     console.log(`Updating slide ${index} config:`, configUpdate);
@@ -469,7 +540,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       if (onSave) {
         onSave();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving slides:', err);
       toast.error('Failed to save slides');
     } finally {
@@ -499,20 +570,39 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     
     switch (slide.slide_type) {
       case 'text':
-        return <TextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        if (isTextSlide(slide.config)) {
+          return <TextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        }
+        // Handle type mismatch
+        updateSlideConfig(index, createDefaultTextSlideConfig());
+        return null;
       
       case 'video':
-        return <VideoSlideContent 
-                 config={slide.config} 
-                 onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
-                 slideIndex={index}
-               />;
+        if (isVideoSlide(slide.config)) {
+          return <VideoSlideContent 
+                   config={slide.config} 
+                   onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
+                 />;
+        }
+        // Handle type mismatch
+        updateSlideConfig(index, createDefaultVideoSlideConfig());
+        return null;
       
       case 'quiz':
-        return <QuizSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        if (isQuizSlide(slide.config)) {
+          return <QuizSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        }
+        // Handle type mismatch
+        updateSlideConfig(index, createDefaultQuizSlideConfig());
+        return null;
       
       case 'student_response':
-        return <StudentResponseSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        if (isStudentResponseSlide(slide.config)) {
+          return <StudentResponseSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        }
+        // Handle type mismatch
+        updateSlideConfig(index, createDefaultStudentResponseConfig());
+        return null;
       
       default:
         return <p>Unknown slide type</p>;
@@ -941,7 +1031,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
                 
                 {/* Video-specific settings */}
-                {slides[activeSlideIndex].slide_type === 'video' && (
+                {slides[activeSlideIndex].slide_type === 'video' && isVideoSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-2" />
                     <div className="space-y-3">
@@ -967,7 +1057,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 )}
                 
                 {/* Student Response-specific settings */}
-                {slides[activeSlideIndex].slide_type === 'student_response' && (
+                {slides[activeSlideIndex].slide_type === 'student_response' && isStudentResponseSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-2" />
                     <div className="space-y-3">
