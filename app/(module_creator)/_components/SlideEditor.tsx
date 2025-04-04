@@ -18,6 +18,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 
 // Import slide type components
 import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig } from './slide_types/TextSlide';
@@ -48,6 +49,7 @@ export interface VideoSlideConfig {
   videoFileName?: string;
   context?: string;
   allowReplay?: boolean;
+  maxReplays?: number;
 }
 
 export interface QuizSlideConfig {
@@ -61,6 +63,8 @@ export interface StudentResponseSlideConfig {
   type: 'student_response';
   severalResponses: boolean;
   instantResponse: boolean;
+  maxResponses: number;
+  responseMaxDuration: number; // in seconds
 }
 
 // Define a union type for all possible slide configurations
@@ -103,6 +107,22 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const supabase = useSupabase();
   const [showSlideTypeSelector, setShowSlideTypeSelector] = useState(false);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
+  
+  // Helper function to format duration in seconds to a readable format
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes === 0) {
+      return `${remainingSeconds} seconds`;
+    } else if (minutes === 1 && remainingSeconds === 0) {
+      return `1 minute`;
+    } else if (remainingSeconds === 0) {
+      return `${minutes} minutes`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
   
   // Log the current slide state for debugging
   useEffect(() => {
@@ -374,7 +394,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
           videoUrl,
           videoFileName,
           context: '',
-          allowReplay: true
+          allowReplay: false,
+          maxReplays: 3
         };
         break;
       case 'quiz':
@@ -1052,6 +1073,31 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       <p className="text-xs text-muted-foreground pl-7">
                         If disabled, students will only be able to play the video once
                       </p>
+                      
+                      {slides[activeSlideIndex].config.allowReplay && (
+                        <div className="mt-3 pl-7 space-y-2">
+                          <label htmlFor="maxReplays" className="text-sm font-medium">Maximum replays allowed</label>
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              id="maxReplays"
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={slides[activeSlideIndex].config.maxReplays ?? 1}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                const validValue = isNaN(value) ? 1 : Math.max(1, Math.min(99, value));
+                                updateSlideConfig(activeSlideIndex, { maxReplays: validValue });
+                              }}
+                              className="w-20"
+                            />
+                            <span className="text-sm text-gray-500">times</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Set how many times students can replay this video
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -1078,8 +1124,96 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       <p className="text-xs text-muted-foreground pl-7">
                         If enabled, students can submit multiple responses
                       </p>
+                      
+                      {slides[activeSlideIndex].config.severalResponses && (
+                        <div className="mt-3 pl-7 space-y-2">
+                          <label htmlFor="maxResponses" className="text-sm font-medium">Maximum responses allowed</label>
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              id="maxResponses"
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={slides[activeSlideIndex].config.maxResponses ?? 1}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                const validValue = isNaN(value) ? 1 : Math.max(1, Math.min(99, value));
+                                updateSlideConfig(activeSlideIndex, { maxResponses: validValue });
+                              }}
+                              className="w-20"
+                            />
+                            <span className="text-sm text-gray-500">responses</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Set how many times students can record a response
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 space-y-2">
+                        <label htmlFor="responseMaxDuration" className="text-sm font-medium">Maximum response duration</label>
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="range"
+                              id="responseMaxDuration"
+                              min="10"
+                              max="600"
+                              step="10"
+                              value={isStudentResponseSlide(slides[activeSlideIndex].config) ? 
+                                slides[activeSlideIndex].config.responseMaxDuration ?? 120 : 120}
+                              onChange={(e) => {
+                                if (isStudentResponseSlide(slides[activeSlideIndex].config)) {
+                                  const value = parseInt(e.target.value);
+                                  updateSlideConfig(activeSlideIndex, { responseMaxDuration: value });
+                                }
+                              }}
+                              className="flex-1"
+                            />
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-medium">
+                              {formatDuration(isStudentResponseSlide(slides[activeSlideIndex].config) ? 
+                                slides[activeSlideIndex].config.responseMaxDuration ?? 120 : 120)}
+                            </span>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  if (isStudentResponseSlide(slides[activeSlideIndex].config)) {
+                                    const currentValue = slides[activeSlideIndex].config.responseMaxDuration ?? 120;
+                                    updateSlideConfig(activeSlideIndex, { 
+                                      responseMaxDuration: Math.max(10, currentValue - 30) 
+                                    });
+                                  }
+                                }}
+                              >
+                                -30s
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  if (isStudentResponseSlide(slides[activeSlideIndex].config)) {
+                                    const currentValue = slides[activeSlideIndex].config.responseMaxDuration ?? 120;
+                                    updateSlideConfig(activeSlideIndex, { 
+                                      responseMaxDuration: Math.min(600, currentValue + 30) 
+                                    });
+                                  }
+                                }}
+                              >
+                                +30s
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Set the maximum length of student video responses (10 seconds to 10 minutes)
+                        </p>
+                      </div>
 
-                      <div className="flex items-center space-x-2 mt-3">
+                      <div className="flex items-center space-x-2 mt-4">
                         <Switch 
                           id="instantResponse" 
                           checked={slides[activeSlideIndex].config.instantResponse ?? false}
@@ -1087,7 +1221,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             updateSlideConfig(activeSlideIndex, { instantResponse: checked });
                           }}
                         />
-                        <Label htmlFor="instantResponse" className="text-sm cursor-pointer">
+                        <Label htmlFor="instantResponse" className="text-sm cursor-pointer text-red-500 font-bold">
                           Force instant response
                         </Label>
                       </div>

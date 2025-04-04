@@ -9,6 +9,22 @@ interface StudentResponseSlideProps {
 }
 
 export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProps) => {
+  // Function to format duration in seconds to a readable format
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes === 0) {
+      return `${remainingSeconds} seconds`;
+    } else if (minutes === 1 && remainingSeconds === 0) {
+      return `1 minute`;
+    } else if (remainingSeconds === 0) {
+      return `${minutes} minutes`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Alert>
@@ -27,9 +43,13 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
             <h3 className="font-medium text-slate-900">Student Video Response</h3>
             <p className="text-sm text-slate-500">
               {config.severalResponses 
-                ? "Students can retry recording their response" 
+                ? `Students can record up to ${config.maxResponses} response${config.maxResponses > 1 ? 's' : ''}` 
                 : "Students can record only once!"}
             </p>
+            <p className="text-sm text-slate-500 mt-1">
+              Maximum response length: {formatDuration(config.responseMaxDuration)}
+            </p>
+            
             {config.instantResponse && (
               <p className="text-sm text-rose-600 mt-1">
                 Response required immediately after video
@@ -54,7 +74,9 @@ export const createDefaultStudentResponseConfig = (): StudentResponseSlideConfig
   return {
     type: 'student_response',
     severalResponses: false,
-    instantResponse: false
+    instantResponse: false,
+    maxResponses: 1,
+    responseMaxDuration: 120 // default to 2 minutes (120 seconds)
   };
 };
 

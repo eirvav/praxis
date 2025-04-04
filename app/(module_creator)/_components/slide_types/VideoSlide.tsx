@@ -196,7 +196,8 @@ export const createDefaultVideoSlideConfig = (): VideoSlideConfig => {
     videoUrl: '', 
     videoFileName: '',
     context: '',
-    allowReplay: true
+    allowReplay: false,
+    maxReplays: 3
   };
 };
 
