@@ -55,6 +55,16 @@ interface SlideConfig {
   [key: string]: unknown;
 }
 
+// Helper function to strip HTML tags for preview text
+const stripHtmlTags = (html: string | undefined): string => {
+  if (!html) return '';
+  // Create a temporary DOM element
+  const tempElement = document.createElement('div');
+  tempElement.innerHTML = html;
+  // Get the text content
+  return tempElement.textContent || tempElement.innerText || '';
+};
+
 // This is the client component that uses useSearchParams
 function CreateModulePageContent() {
   console.log('[CreateModulePage] RENDERING component');
@@ -1300,7 +1310,7 @@ function CreateModulePageContent() {
                           <div className="flex-grow min-w-0">
                             <h3 className="font-medium text-slate-900 truncate">
                               {slide.slide_type === 'text' ? 
-                                (slide.config.content?.slice(0, 50) || 'Text slide') : 
+                                (stripHtmlTags(slide.config.content)?.slice(0, 50) || 'Text slide') : 
                                slide.slide_type === 'video' ? 
                                 (slide.config.title || 'Video slide') : 
                                slide.slide_type === 'quiz' ? 
@@ -1308,7 +1318,7 @@ function CreateModulePageContent() {
                                slide.slide_type === 'student_response' ?
                                 'Video Response' :
                                 'Unknown slide'}
-                              {slide.config.content && slide.config.content.length > 50 && '...'}
+                              {slide.config.content && stripHtmlTags(slide.config.content).length > 50 && '...'}
                             </h3>
                             <p className="text-sm text-slate-500">
                               {slide.slide_type.charAt(0).toUpperCase() + slide.slide_type.slice(1)} Slide

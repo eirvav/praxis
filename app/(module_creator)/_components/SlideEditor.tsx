@@ -972,8 +972,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         <div className="lg:col-span-7">
           {activeSlideIndex !== null && slides[activeSlideIndex] ? (
             <Card className="shadow-sm border-slate-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 pb-2 border-b">
-                <div className="space-y-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 py-3 border-b">
+                <div className="space-y-0">
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-base font-medium">
                       Slide {activeSlideIndex + 1}
@@ -982,7 +982,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 {renderSlideEditor(slides[activeSlideIndex], activeSlideIndex)}
               </CardContent>
             </Card>
@@ -1005,14 +1005,14 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         <div className="lg:col-span-3">
           {activeSlideIndex !== null && slides[activeSlideIndex] ? (
             <Card className="shadow-sm bg-white">
-              <CardHeader className="pb-2">
+              <CardHeader className="py-3 pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-medium">Slide Settings</CardTitle>
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="space-y-2">
+              <CardContent className="pt-2 space-y-3">
+                <div className="space-y-1">
                   <label className="text-sm font-medium">Slide Type</label>
                   <Select
                     value={slides[activeSlideIndex].slide_type}
@@ -1034,7 +1034,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {slides[activeSlideIndex].slide_type === 'video' && isVideoSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-2" />
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <h3 className="text-sm font-medium">Video Settings</h3>
                       
                       <div className="flex items-center space-x-2">
@@ -1060,7 +1060,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {slides[activeSlideIndex].slide_type === 'student_response' && isStudentResponseSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-2" />
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <h3 className="text-sm font-medium">Response Settings</h3>
                       
                       <div className="flex items-center space-x-2">
@@ -1079,7 +1079,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                         If enabled, students can submit multiple responses
                       </p>
 
-                      <div className="flex items-center space-x-2 mt-4">
+                      <div className="flex items-center space-x-2 mt-3">
                         <Switch 
                           id="instantResponse" 
                           checked={slides[activeSlideIndex].config.instantResponse ?? false}

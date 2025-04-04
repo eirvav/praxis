@@ -9,6 +9,19 @@ import { toast } from 'sonner';
 import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
 
+// Helper function to strip HTML tags for preview text
+const stripHtmlTags = (html: string | undefined): string => {
+  if (!html) return '';
+  // For server-side rendering safety
+  if (typeof window === 'undefined') return html.replace(/<[^>]*>?/gm, '');
+  
+  // Create a temporary DOM element
+  const tempElement = document.createElement('div');
+  tempElement.innerHTML = html;
+  // Get the text content
+  return tempElement.textContent || tempElement.innerText || '';
+};
+
 interface SlideViewerProps {
   moduleId: string;
 }
@@ -160,18 +173,17 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         if (!isTextSlide(currentSlide)) return <p>Invalid text slide configuration</p>;
         return (
           <Card className="shadow-sm">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 py-3">
               <div className="flex items-center gap-2">
                 <CardTitle>Text Slide</CardTitle>
                 {getSlideTypeBadge('text')}
               </div>
             </CardHeader>
-            <CardContent className="pt-4">
-              <div className="prose max-w-none">
-                {currentSlide.config.content.split('\n').map((paragraph: string, index: number) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-              </div>
+            <CardContent className="pt-3">
+              <div 
+                className="prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: currentSlide.config.content }}
+              />
             </CardContent>
           </Card>
         );
@@ -405,7 +417,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                   let slideContent = 'Unknown slide';
                   
                   if (slide.slide_type === 'text' && isTextSlide(slide)) {
-                    slideContent = slide.config.content?.slice(0, 20) || 'Text slide';
+                    slideContent = stripHtmlTags(slide.config.content)?.slice(0, 20) || 'Text slide';
                   } else if (slide.slide_type === 'video' && isVideoSlide(slide)) {
                     slideContent = slide.config.title || 'Video slide';
                   } else if (slide.slide_type === 'quiz' && isQuizSlide(slide)) {
