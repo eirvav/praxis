@@ -1,13 +1,12 @@
 "use client";
 import { Menu } from "@/components/navbar-components/menu";
-import { SidebarToggle } from "@/components/navbar-components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
-import { PanelsTopLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export function Sidebar() {
   const sidebar = useStore(useSidebar, (x) => x);
@@ -22,7 +21,7 @@ export function Sidebar() {
   }
   
   if (!sidebar) return null;
-  const { isOpen, toggleOpen, getOpenState, setIsHover, settings } = sidebar;
+  const { getOpenState, setIsHover, settings } = sidebar;
   
   return (
     <aside
@@ -33,13 +32,10 @@ export function Sidebar() {
         settings.disabled && "hidden"
       )}
     >
-      <SidebarToggle isOpen={isOpen} setIsOpen={toggleOpen} />
       <div
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
-        /*className="relative h-full flex flex-col px-3 py-4 overflow-y-auto"*/
-        className="relative h-full flex flex-col px-3 py-4 overflow-y-auto shadow-md dark:shadow-zinc-800"
-
+        className="relative h-full flex flex-col px-3 py-4 overflow-y-auto"
       >
         <Button
           className={cn(
@@ -50,7 +46,13 @@ export function Sidebar() {
           asChild
         >
           <Link href={dashboardLink} className="flex items-center gap-2">
-            <PanelsTopLeft className="w-6 h-6 mr-1" />
+            <Image 
+              src="/logo.svg" 
+              alt="praXis Logo" 
+              width={24} 
+              height={24} 
+              className="mr-1"
+            />
             <h1
               className={cn(
                 "font-bold text-lg whitespace-nowrap transition-[transform,opacity,display] ease-in-out duration-300",

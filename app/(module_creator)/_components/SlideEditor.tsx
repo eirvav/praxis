@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, BarChart2, Cloud, Gauge, Copy } from 'lucide-react';
+import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -57,6 +57,13 @@ export interface QuizSlideConfig {
   question: string;
   options: string[];
   correctOptionIndex: number;
+  explanations?: string[];
+  optionImages?: string[];
+  points?: number;
+  timeLimit?: number;
+  shuffleOptions?: boolean;
+  multipleCorrect?: boolean;
+  correctOptionIndices?: number[];
 }
 
 export interface StudentResponseSlideConfig {
@@ -768,6 +775,37 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
               </div>
             </div>
+
+            <div 
+              className="border rounded-lg p-4 hover:border-rose-500 cursor-pointer hover:bg-rose-50 transition-colors"
+              onClick={() => createSlideOfType('student_response')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Response to Video</h3>
+                  <p className="text-xs text-gray-500">Video Responses</p>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="border rounded-lg p-4 hover:border-primaryStyling cursor-pointer hover:bg-primaryStyling/10 transition-colors"
+              onClick={() => createSlideOfType('text')}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Slider</h3>
+                  <p className="text-xs text-gray-500">Scale-based feedback</p>
+                </div>
+              </div>
+            </div>
+
             
             {/* DECORATIVE OPTIONS (Creates text slides) */}
             <div 
@@ -784,37 +822,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
               </div>
             </div>
-            
-            <div 
-              className="border rounded-lg p-4 hover:border-rose-500 cursor-pointer hover:bg-rose-50 transition-colors"
-              onClick={() => createSlideOfType('student_response')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-rose-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Response to Video</h3>
-                  <p className="text-xs text-gray-500">Video Responses</p>
-                </div>
-              </div>
-            </div>
-            
-            <div 
-              className="border rounded-lg p-4 hover:border-primaryStyling cursor-pointer hover:bg-primaryStyling/10 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-primaryStyling rounded-full flex items-center justify-center">
-                  <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Slider</h3>
-                  <p className="text-xs text-gray-500">Scale-based feedback</p>
-                </div>
-              </div>
-            </div>
-            
+            {/* DECORATIVE OPTIONS (Creates text slides) *
             <div 
               className="border rounded-lg p-4 hover:border-sky-500 cursor-pointer hover:bg-sky-50 transition-colors"
               onClick={() => createSlideOfType('text')}
@@ -859,6 +867,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
               </div>
             </div>
+            DECORATIVE OPTIONS (Creates text slide) */}
           </div>
         </DialogContent>
       </Dialog>
@@ -1098,6 +1107,112 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           </p>
                         </div>
                       )}
+                    </div>
+                  </>
+                )}
+                
+                {/* Quiz-specific settings */}
+                {slides[activeSlideIndex].slide_type === 'quiz' && isQuizSlide(slides[activeSlideIndex].config) && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium">Quiz Settings</h3>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="multipleCorrect" 
+                          checked={slides[activeSlideIndex].config.multipleCorrect ?? false}
+                          onCheckedChange={(checked) => {
+                            const quizConfig = slides[activeSlideIndex].config;
+                            if (isQuizSlide(quizConfig)) {
+                              if (checked) {
+                                // Convert from single to multiple correct
+                                updateSlideConfig(activeSlideIndex, { 
+                                  multipleCorrect: true,
+                                  correctOptionIndices: [quizConfig.correctOptionIndex],
+                                });
+                              } else {
+                                // Convert from multiple to single correct
+                                const correctOptionIndices = quizConfig.correctOptionIndices || [];
+                                updateSlideConfig(activeSlideIndex, { 
+                                  multipleCorrect: false,
+                                  correctOptionIndex: correctOptionIndices.length > 0 ? correctOptionIndices[0] : 0,
+                                });
+                              }
+                            }
+                          }}
+                        />
+                        <Label htmlFor="multipleCorrect" className="text-sm cursor-pointer">
+                          Allow multiple correct answers
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-7">
+                        Students can select more than one correct answer
+                      </p>
+                      
+                      <div className="flex items-center space-x-2 mt-3">
+                        <Switch 
+                          id="shuffleOptions" 
+                          checked={slides[activeSlideIndex].config.shuffleOptions ?? false}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { shuffleOptions: checked });
+                          }}
+                        />
+                        <Label htmlFor="shuffleOptions" className="text-sm cursor-pointer">
+                          Shuffle options for students
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-7">
+                        Options will appear in random order for each student
+                      </p>
+                      
+                      <div className="mt-3 space-y-2">
+                        <label htmlFor="points" className="text-sm font-medium">Points</label>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            id="points"
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={slides[activeSlideIndex].config.points ?? 10}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              const validValue = isNaN(value) ? 10 : Math.max(1, Math.min(100, value));
+                              updateSlideConfig(activeSlideIndex, { points: validValue });
+                            }}
+                            className="w-20"
+                          />
+                          <span className="text-sm text-gray-500">points</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Points awarded for correct answer(s)
+                        </p>
+                      </div>
+                      
+                      <div className="mt-3 space-y-2">
+                        <label htmlFor="timeLimit" className="text-sm font-medium">Time Limit (seconds)</label>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            id="timeLimit"
+                            type="number"
+                            min="0"
+                            max="600"
+                            value={slides[activeSlideIndex].config.timeLimit ?? 0}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              const validValue = isNaN(value) ? 0 : Math.max(0, Math.min(600, value));
+                              updateSlideConfig(activeSlideIndex, { timeLimit: validValue });
+                            }}
+                            className="w-20"
+                          />
+                          <span className="text-sm text-gray-500">seconds</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {slides[activeSlideIndex].config.timeLimit ? 
+                            `Students have ${slides[activeSlideIndex].config.timeLimit} seconds to answer` : 
+                            'No time limit for this question'}
+                        </p>
+                      </div>
                     </div>
                   </>
                 )}

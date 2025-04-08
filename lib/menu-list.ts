@@ -1,5 +1,4 @@
 import {
-  Settings,
   LayoutGrid,
   LucideIcon,
   File,
@@ -43,10 +42,6 @@ const sharedMenuItems = {
   resources: {
     label: "Resources",
     icon: File,
-  },
-  settings: {
-    label: "Settings",
-    icon: Settings,
   },
 } as const;
 
@@ -95,15 +90,6 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
         ],
       },
-      {
-        label: "Account",
-        items: [
-          {
-            ...sharedMenuItems.settings,
-            href: "#",
-          },
-        ],
-      },
     ],
   },
   student: {
@@ -136,15 +122,6 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
         ],
       },
-      {
-        label: "Account",
-        items: [
-          {
-            ...sharedMenuItems.settings,
-            href: "#",
-          },
-        ],
-      },
     ],
   },
   default: {
@@ -168,10 +145,6 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
           {
             ...sharedMenuItems.resources,
-            href: "#",
-          },
-          {
-            ...sharedMenuItems.settings,
             href: "#",
           },
         ],

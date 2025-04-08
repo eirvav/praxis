@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ContentLayout } from '@/components/navbar-components/content-layout';
 
 interface Course {
   id: string;
@@ -43,7 +44,6 @@ export default function CourseDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'enrolled' | 'completion'>('date');
-  const [selectedSemester, setSelectedSemester] = useState<string>('all');
   
   const { user } = useUser();
   const supabase = useSupabase();
@@ -52,11 +52,11 @@ export default function CourseDetailPage() {
   const courseId = params.courseId as string;
 
   // Mock semesters for demonstration - in real app, fetch from database
-  const semesters = [
-    { id: 'spring2024', label: 'Spring 2024' },
-    { id: 'fall2023', label: 'Fall 2023' },
-    { id: 'spring2023', label: 'Spring 2023' },
-  ];
+  //const semesters = [
+  //  { id: 'spring2024', label: 'Spring 2024' },
+  //  { id: 'fall2023', label: 'Fall 2023' },
+  //  { id: 'spring2023', label: 'Spring 2023' },
+  //];
 
   useEffect(() => {
     async function fetchCourseAndModules() {
@@ -145,22 +145,26 @@ export default function CourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-center">
-          <p>Loading course details...</p>
+      <ContentLayout title="Loading...">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-pulse text-center">
+            <p>Loading course details...</p>
+          </div>
         </div>
-      </div>
+      </ContentLayout>
     );
   }
 
   if (!course) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <h1 className="text-2xl font-bold mb-4">Course not found</h1>
-        <Link href="/teacher/courses">
-          <Button>Go back to courses</Button>
-        </Link>
-      </div>
+      <ContentLayout title="Course Not Found">
+        <div className="flex flex-col items-center justify-center h-full">
+          <h1 className="text-2xl font-bold mb-4">Course not found</h1>
+          <Link href="/teacher/courses">
+            <Button>Go back to courses</Button>
+          </Link>
+        </div>
+      </ContentLayout>
     );
   }
 
@@ -170,225 +174,126 @@ export default function CourseDetailPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-indigo-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{course.title}</h1>
-              {course.description && (
-                <p className="mt-1 text-muted-foreground">{course.description}</p>
-              )}
-            </div>
+    <ContentLayout title={course.title}>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search modules..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <Link href={`/teacher/courses/${course.id}/modules/create`}>
-            <Button 
-              size="lg" 
-              className="flex items-center gap-3 bg-primaryStyling text-white hover:bg-primaryStyling/90 rounded-lg shadow-sm hover:shadow-md transition-all"
-            >
-              <Plus className="h-5 w-5" />
-              Nytt Arbeidskrav
-            </Button>
-          </Link>
-        </div>
-
-        {/* Semester Selection */}
-        <div className="flex items-center gap-2 border-b pb-4">
-          <span className="text-sm font-medium text-muted-foreground">Semester:</span>
-          <div className="flex gap-2">
+          
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Sort by: {sortBy}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setSortBy('date')}>Date</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('enrolled')}>Enrolled</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('completion')}>Completion Rate</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button
-              variant={selectedSemester === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedSemester('all')}
-              className="rounded-full"
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             >
-              All Semesters
+              {viewMode === 'grid' ? (
+                <List className="h-4 w-4" />
+              ) : (
+                <LayoutGrid className="h-4 w-4" />
+              )}
             </Button>
-            {semesters.map((sem) => (
+            
+            <Link href={`/teacher/courses/${course.id}/modules/create`}>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Module
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {modules.length === 0 ? (
+          <div className="text-center p-12 border-2 border-dashed rounded-xl bg-muted/50">
+            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No modules yet</h3>
+            <p className="text-muted-foreground mb-4">Get started by creating your first module for this course.</p>
+            <Link href={`/teacher/courses/${course.id}/modules/create`}>
+              <Button>Create Module</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+            {filteredModules
+              .sort((a, b) => {
+                switch (sortBy) {
+                  case 'date':
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                  case 'name':
+                    return a.title.localeCompare(b.title);
+                  case 'enrolled':
+                    return (b.enrolled || 0) - (a.enrolled || 0);
+                  case 'completion':
+                    return (b.completion_rate || 0) - (a.completion_rate || 0);
+                  default:
+                    return 0;
+                }
+              })
+              .map((module) => (
+                <ModuleCard
+                  key={module.id}
+                  id={module.id}
+                  title={module.title}
+                  description={module.description}
+                  thumbnail_url={module.thumbnail_url}
+                  createdAt={module.created_at}
+                  href={`/teacher/courses/${course.id}/modules/${module.id}`}
+                  enrolled={module.enrolled}
+                  completion_rate={module.completion_rate}
+                  viewMode={viewMode}
+                />
+              ))
+            }
+          </div>
+        )}
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Course</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to delete this course? This action cannot be undone.</p>
+            <DialogFooter>
               <Button
-                key={sem.id}
-                variant={selectedSemester === sem.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedSemester(sem.id)}
-                className="rounded-full"
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
               >
-                {sem.label}
+                Cancel
               </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 
-      <div className="border-b">
-        <nav className="flex gap-6 -mb-px">
-          <div 
-            role="tab"
-            aria-selected="true"
-            className="group px-1 py-4 text-sm font-medium border-b-2 border-indigo-500 text-indigo-500 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Modules
-            </div>
-          </div>
-          <div 
-            role="tab"
-            aria-selected="false"
-            className="group px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <BarChart2 className="h-4 w-4" />
-              Statistics
-            </div>
-          </div>
-          <div 
-            role="tab"
-            aria-selected="false"
-            className="group px-1 py-4 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
-            </div>
-          </div>
-        </nav>
-      </div>
-      */}
-      {/* Search and Controls */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search modules..."
-            className="pl-10 bg-white dark:bg-gray-800"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex items-center gap-2 ml-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2 bg-white dark:bg-gray-800">
-                <Filter className="h-4 w-4" />
-                {sortBy === 'date' ? 'Date Created' : 
-                 sortBy === 'name' ? 'Name' : 
-                 sortBy === 'enrolled' ? 'Enrollment' : 
-                 'Completion Rate'}
-                <ChevronDown className="h-4 w-4" />
+              <Button
+                variant="destructive"
+                onClick={handleDeleteCourse}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortBy('date')}>
-                Date Created
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('name')}>
-                Name
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('enrolled')}>
-                Enrollment
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('completion')}>
-                Completion Rate
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="bg-background border rounded-lg p-1 flex gap-1 bg-white dark:bg-gray-800">
-            <Button 
-              variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-              size="sm"
-              className={`h-8 w-8 p-0 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground'}`}
-              onClick={() => setViewMode('grid')}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'ghost'} 
-              size="sm"
-              className={`h-8 w-8 p-0 ${viewMode === 'list' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground'}`}
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Modules Grid */}
-      {modules.length === 0 ? (
-        <div className="text-center p-12 border-2 border-dashed rounded-xl bg-muted/50">
-          <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No modules yet</h3>
-          <p className="text-muted-foreground mb-4">Get started by creating your first module for this course.</p>
-          <Link href={`/teacher/courses/${course.id}/modules/create`}>
-            <Button>Create Module</Button>
-          </Link>
-        </div>
-      ) : (
-        <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-          {filteredModules
-            .sort((a, b) => {
-              switch (sortBy) {
-                case 'date':
-                  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                case 'name':
-                  return a.title.localeCompare(b.title);
-                case 'enrolled':
-                  return (b.enrolled || 0) - (a.enrolled || 0);
-                case 'completion':
-                  return (b.completion_rate || 0) - (a.completion_rate || 0);
-                default:
-                  return 0;
-              }
-            })
-            .map((module) => (
-              <ModuleCard
-                key={module.id}
-                id={module.id}
-                title={module.title}
-                description={module.description}
-                thumbnail_url={module.thumbnail_url}
-                createdAt={module.created_at}
-                href={`/teacher/courses/${course.id}/modules/${module.id}`}
-                enrolled={module.enrolled}
-                completion_rate={module.completion_rate}
-                viewMode={viewMode}
-              />
-            ))
-          }
-        </div>
-      )}
-      
-      {/* Delete confirmation dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Course</DialogTitle>
-          </DialogHeader>
-          <p>Are you sure you want to delete this course? This will also delete all modules in this course. This action cannot be undone.</p>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteCourse}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Course'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </ContentLayout>
   );
 } 

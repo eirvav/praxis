@@ -9,6 +9,7 @@ import { BookOpen, PlusCircle } from "lucide-react";
 import { CreateCourseModal } from "../_components/CreateCourseModal";
 import ModuleCard from "../_components/ModuleCard";
 import { useSupabase } from "../_components/SupabaseProvider";
+import { ContentLayout } from "@/components/navbar-components/content-layout";
 
 interface Module {
   id: string;
@@ -54,7 +55,11 @@ export default function TeacherDashboard() {
   }, [supabase, user]);
   
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return (
+      <ContentLayout>
+        <div>Loading...</div>
+      </ContentLayout>
+    );
   }
   
   // If no user is found, redirect to sign-in
@@ -71,77 +76,79 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            Welcome back, {user.firstName || user.username || 'Teacher'}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your courses and modules from your dashboard
-          </p>
-        </div>
-        
-        <div className="flex gap-4">
-          <Button 
-            size="lg"
-            className="flex items-center gap-2 bg-primaryStyling text-white"
-            onClick={() => setIsCourseModalOpen(true)}
-          >
-            <BookOpen className="h-5 w-5" />
-            Create New Course
-          </Button>
-          <Link href="/teacher/modules/create">
+    <ContentLayout>
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">
+              Welcome back, {user.firstName || user.username || 'Teacher'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your courses and modules from your dashboard
+            </p>
+          </div>
+          
+          <div className="flex gap-4">
             <Button 
               size="lg"
               className="flex items-center gap-2 bg-primaryStyling text-white"
+              onClick={() => setIsCourseModalOpen(true)}
             >
-              <PlusCircle className="h-5 w-5" />
-              Create New Module
+              <BookOpen className="h-5 w-5" />
+              Create New Course
             </Button>
-          </Link>
-        </div>
-      </div>
-      
-      <CreateCourseModal 
-        isOpen={isCourseModalOpen} 
-        onClose={() => setIsCourseModalOpen(false)} 
-      />
-      
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Your Modules</h2>
-        
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-[300px] animate-pulse bg-muted rounded-xl" />
-            ))}
-          </div>
-        ) : modules.length === 0 ? (
-          <div className="text-center py-10 bg-muted/20 rounded-xl">
-            <p className="text-muted-foreground mb-4">You haven't created any modules yet.</p>
             <Link href="/teacher/modules/create">
-              <Button>Create your first module</Button>
+              <Button 
+                size="lg"
+                className="flex items-center gap-2 bg-primaryStyling text-white"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Create New Module
+              </Button>
             </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modules.map((module) => (
-              <ModuleCard
-                key={module.id}
-                id={module.id}
-                title={module.title}
-                description={module.description}
-                thumbnail_url={module.thumbnail_url}
-                updated_at={module.updated_at}
-                courseId={module.course_id}
-                isTeacher={true}
-                viewMode="grid"
-              />
-            ))}
-          </div>
-        )}
+        </div>
+        
+        <CreateCourseModal 
+          isOpen={isCourseModalOpen} 
+          onClose={() => setIsCourseModalOpen(false)} 
+        />
+        
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Your Modules</h2>
+          
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-[300px] animate-pulse bg-muted rounded-xl" />
+              ))}
+            </div>
+          ) : modules.length === 0 ? (
+            <div className="text-center py-10 bg-muted/20 rounded-xl">
+              <p className="text-muted-foreground mb-4">You haven't created any modules yet.</p>
+              <Link href="/teacher/modules/create">
+                <Button>Create your first module</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {modules.map((module) => (
+                <ModuleCard
+                  key={module.id}
+                  id={module.id}
+                  title={module.title}
+                  description={module.description}
+                  thumbnail_url={module.thumbnail_url}
+                  updated_at={module.updated_at}
+                  courseId={module.course_id}
+                  isTeacher={true}
+                  viewMode="grid"
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </ContentLayout>
   );
 }
