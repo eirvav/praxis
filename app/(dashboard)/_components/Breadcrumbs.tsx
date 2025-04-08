@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useSupabase } from './SupabaseProvider';
-import { Separator } from '@/components/ui/separator';
 
 interface BreadcrumbItem {
   label: string;
@@ -83,7 +82,7 @@ export function Breadcrumbs() {
             <Link
               href={item.href}
               className={index === items.length - 1 
-                ? "font-medium text-foreground text-primaryStyling bg-primaryStyling/10 px-2 py-1 rounded-sm"
+                ? "font-medium text-foreground"
                 : "hover:text-foreground transition hover:underline"
               }
             >

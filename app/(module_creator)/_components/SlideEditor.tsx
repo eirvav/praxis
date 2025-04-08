@@ -837,7 +837,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-800">Slider</h3>
+                  <h3 className="font-medium text-gray-800">Opinion Scale</h3>
                   <p className="text-xs text-gray-500">Scale-based feedback</p>
                 </div>
               </div>

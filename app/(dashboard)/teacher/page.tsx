@@ -91,7 +91,7 @@ export default function TeacherDashboard() {
           <div className="flex gap-4">
             <Button 
               size="lg"
-              className="flex items-center gap-2 bg-primaryStyling text-white"
+              className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
               onClick={() => setIsCourseModalOpen(true)}
             >
               <BookOpen className="h-5 w-5" />
@@ -100,7 +100,7 @@ export default function TeacherDashboard() {
             <Link href="/teacher/modules/create">
               <Button 
                 size="lg"
-                className="flex items-center gap-2 bg-primaryStyling text-white"
+                className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
               >
                 <PlusCircle className="h-5 w-5" />
                 Create New Module

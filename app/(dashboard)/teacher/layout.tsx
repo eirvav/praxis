@@ -33,7 +33,7 @@ export default function TeacherLayout({
                     variant="ghost" 
                     size="icon"
                     onClick={toggleOpen}
-                    className="hover:bg-accent hover:text-accent-foreground"
+                    className="bg-accent hover:bg-primaryStyling hover:text-white"
                   >
                     <PanelLeft className="h-5 w-5" />
                   </Button>

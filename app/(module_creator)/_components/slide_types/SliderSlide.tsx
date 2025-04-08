@@ -50,7 +50,7 @@ export const SliderSlideTypeBadge = () => {
   return (
     <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">
       <MoveHorizontal className="w-3 h-3 mr-1" />
-      Slider
+    Slider
     </Badge>
   );
 };
@@ -93,7 +93,7 @@ const SliderItem = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Slider Labels</Label>
+          <Label>Labels</Label>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Input

@@ -82,7 +82,7 @@ export const ModuleHeader = ({
       <div className="flex items-start gap-8">
         <div className="flex-1 space-y-6">
           <div className="space-y-4">
-            <h1 className="text-3xl font-bold">{title}</h1>
+           {/*<h1 className="text-3xl font-bold">{title}</h1>*/} 
             {description && (
               <p className="text-muted-foreground">{description}</p>
             )}
