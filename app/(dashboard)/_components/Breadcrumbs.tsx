@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useSupabase } from './SupabaseProvider';
+import { Separator } from '@/components/ui/separator';
 
 interface BreadcrumbItem {
   label: string;
@@ -73,21 +74,24 @@ export function Breadcrumbs() {
   }, [pathname, supabase]);
 
   return (
-    <div className="flex items-center text-sm text-muted-foreground">
-      {items.map((item, index) => (
-        <div key={item.href} className="flex items-center">
-          {index > 0 && <ChevronRight className="h-4 w-4 mx-2" />}
-          <Link
-            href={item.href}
-            className={index === items.length - 1 
-              ? "font-medium text-foreground text-primaryStyling bg-primaryStyling/10 px-2 py-1 rounded-sm"
-              : "hover:text-foreground transition hover:underline"
-            }
-          >
-            {item.label}
-          </Link>
-        </div>
-      ))}
+    <div className="flex items-center">
+      <div className="h-6 w-[1px] bg-muted-foreground/25 mx-4" />
+      <div className="flex items-center text-sm text-muted-foreground">
+        {items.map((item, index) => (
+          <div key={item.href} className="flex items-center">
+            {index > 0 && <ChevronRight className="h-4 w-4 mx-2" />}
+            <Link
+              href={item.href}
+              className={index === items.length - 1 
+                ? "font-medium text-foreground text-primaryStyling bg-primaryStyling/10 px-2 py-1 rounded-sm"
+                : "hover:text-foreground transition hover:underline"
+              }
+            >
+              {item.label}
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 } 

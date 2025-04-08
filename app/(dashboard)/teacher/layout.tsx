@@ -5,7 +5,6 @@ import { Bell, PanelLeft, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { useStore } from '@/hooks/use-store'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { Breadcrumbs } from '../_components/Breadcrumbs'
 
@@ -38,7 +37,6 @@ export default function TeacherLayout({
                   >
                     <PanelLeft className="h-5 w-5" />
                   </Button>
-                  <Separator orientation="vertical" className="h-6 mx-2" />
                   <Breadcrumbs />
                 </div>
                 <div className="flex items-center space-x-2">
