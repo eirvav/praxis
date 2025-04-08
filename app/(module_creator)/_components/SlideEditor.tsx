@@ -25,11 +25,12 @@ import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig } fr
 import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig } from './slide_types/VideoSlide';
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
+import SliderSlideContent, { SliderSlideTypeBadge, createDefaultSliderConfig } from './slide_types/SliderSlide';
 
 export interface Slide {
   id?: string;
   module_id: string;
-  slide_type: 'text' | 'video' | 'quiz' | 'student_response';
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
   position: number;
   config: SlideConfig;
   created_at?: string;
@@ -74,12 +75,32 @@ export interface StudentResponseSlideConfig {
   responseMaxDuration: number; // in seconds
 }
 
+export interface SliderSlideConfig {
+  type: 'slider';
+  sliders: Array<{
+    id: string;
+    title: string;
+    description: string;
+    question: string;
+    minLabel: string;
+    midLabel: string;
+    maxLabel: string;
+    min: number;
+    max: number;
+    step: number;
+    required: boolean;
+    defaultValue: number;
+  }>;
+  isRequired: boolean;
+}
+
 // Define a union type for all possible slide configurations
 export type SlideConfig = 
   | TextSlideConfig 
   | VideoSlideConfig 
   | QuizSlideConfig 
-  | StudentResponseSlideConfig;
+  | StudentResponseSlideConfig
+  | SliderSlideConfig;
 
 // Type guard functions to check the slide type
 function isTextSlide(config: SlideConfig): config is TextSlideConfig {
@@ -96,6 +117,10 @@ function isQuizSlide(config: SlideConfig): config is QuizSlideConfig {
 
 function isStudentResponseSlide(config: SlideConfig): config is StudentResponseSlideConfig {
   return config.type === 'student_response';
+}
+
+function isSliderSlide(config: SlideConfig): config is SliderSlideConfig {
+  return config.type === 'slider';
 }
 
 interface SlideEditorProps {
@@ -380,7 +405,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   // Handle slide type change
   const handleSlideTypeChange = (value: string, index: number) => {
     const updatedSlides = [...slides];
-    const slideType = value as 'text' | 'video' | 'quiz' | 'student_response';
+    const slideType = value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
     
     // Set default config based on type
     let config: SlideConfig;
@@ -410,6 +435,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         break;
       case 'student_response':
         config = createDefaultStudentResponseConfig();
+        break;
+      case 'slider':
+        config = createDefaultSliderConfig();
         break;
     }
     
@@ -462,6 +490,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         ...currentConfig,
         ...configUpdate as Partial<StudentResponseSlideConfig>,
         type: 'student_response'
+      };
+    } else if (isSliderSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<SliderSlideConfig>,
+        type: 'slider'
       };
     } else {
       // Fallback to default type if for some reason we have an invalid config
@@ -587,6 +621,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         return <QuizSlideTypeBadge />;
       case 'student_response':
         return <StudentResponseSlideTypeBadge />;
+      case 'slider':
+        return <SliderSlideTypeBadge />;
       default:
         return null;
     }
@@ -601,18 +637,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         if (isTextSlide(slide.config)) {
           return <TextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
         }
-        // Handle type mismatch
         updateSlideConfig(index, createDefaultTextSlideConfig());
         return null;
       
       case 'video':
         if (isVideoSlide(slide.config)) {
-          return <VideoSlideContent 
-                   config={slide.config} 
-                   onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
-                 />;
+          return <VideoSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
         }
-        // Handle type mismatch
         updateSlideConfig(index, createDefaultVideoSlideConfig());
         return null;
       
@@ -620,7 +651,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         if (isQuizSlide(slide.config)) {
           return <QuizSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
         }
-        // Handle type mismatch
         updateSlideConfig(index, createDefaultQuizSlideConfig());
         return null;
       
@@ -628,8 +658,14 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         if (isStudentResponseSlide(slide.config)) {
           return <StudentResponseSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
         }
-        // Handle type mismatch
         updateSlideConfig(index, createDefaultStudentResponseConfig());
+        return null;
+      
+      case 'slider':
+        if (isSliderSlide(slide.config)) {
+          return <SliderSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        }
+        updateSlideConfig(index, createDefaultSliderConfig());
         return null;
       
       default:
@@ -638,7 +674,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   };
 
   // Create a new slide of a specific type
-  const createSlideOfType = (type: 'text' | 'video' | 'quiz' | 'student_response') => {
+  const createSlideOfType = (type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider') => {
     const newSlide: Slide = {
       module_id: moduleId,
       slide_type: type,
@@ -646,6 +682,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       config: type === 'text' ? createDefaultTextSlideConfig() : 
               type === 'video' ? createDefaultVideoSlideConfig() : 
               type === 'quiz' ? createDefaultQuizSlideConfig() :
+              type === 'slider' ? createDefaultSliderConfig() :
               createDefaultStudentResponseConfig()
     };
     
@@ -793,7 +830,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
 
             <div 
               className="border rounded-lg p-4 hover:border-primaryStyling cursor-pointer hover:bg-primaryStyling/10 transition-colors"
-              onClick={() => createSlideOfType('text')}
+              onClick={() => createSlideOfType('slider')}
             >
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -806,7 +843,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
               </div>
             </div>
 
-            
             {/* DECORATIVE OPTIONS (Creates text slides) */}
             <div 
               className="border rounded-lg p-4 hover:border-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors"
@@ -822,52 +858,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
               </div>
             </div>
-            {/* DECORATIVE OPTIONS (Creates text slides) *
-            <div 
-              className="border rounded-lg p-4 hover:border-sky-500 cursor-pointer hover:bg-sky-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
-                  <BarChart2 className="h-6 w-6 text-sky-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Ranking</h3>
-                  <p className="text-xs text-gray-500">Prioritize items</p>
-                </div>
-              </div>
-            </div>
-            
-            <div 
-              className="border rounded-lg p-4 hover:border-teal-500 cursor-pointer hover:bg-teal-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-                  <Gauge className="h-6 w-6 text-teal-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Scale</h3>
-                  <p className="text-xs text-gray-500">Rating on a scale</p>
-                </div>
-              </div>
-            </div>
-            
-            <div 
-              className="border rounded-lg p-4 hover:border-cyan-500 cursor-pointer hover:bg-cyan-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
-                  <Cloud className="h-6 w-6 text-cyan-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Word Cloud</h3>
-                  <p className="text-xs text-gray-500">Visualize text responses</p>
-                </div>
-              </div>
-            </div>
-            DECORATIVE OPTIONS (Creates text slide) */}
           </div>
         </DialogContent>
       </Dialog>
@@ -948,6 +938,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             )}
                             {slide.slide_type === 'student_response' && (
                               <MessageSquare className="h-6 w-6 text-rose-500" />
+                            )}
+                             {slide.slide_type === 'slider' && (
+                              <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
                             )}
                           </div>
                         </div>
@@ -1056,6 +1049,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       <SelectItem value="video">Video</SelectItem>
                       <SelectItem value="quiz">Quiz</SelectItem>
                       <SelectItem value="student_response">Student Response</SelectItem>
+                      <SelectItem value="slider">Slider</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1343,6 +1337,104 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       <p className="text-xs text-muted-foreground pl-7">
                         If enabled, students must respond immediately after the video ends
                       </p>
+                    </div>
+                  </>
+                )}
+                
+                {/* Slider-specific settings */}
+                {slides[activeSlideIndex].slide_type === 'slider' && isSliderSlide(slides[activeSlideIndex].config) && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium">Slider Settings</h3>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="isRequired" 
+                          checked={slides[activeSlideIndex].config.isRequired}
+                          onCheckedChange={(checked) => {
+                            if (isSliderSlide(slides[activeSlideIndex].config)) {
+                              updateSlideConfig(activeSlideIndex, {
+                                ...slides[activeSlideIndex].config,
+                                isRequired: checked
+                              } as SliderSlideConfig);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required slide
+                        </Label>
+                      </div>
+
+                      {slides[activeSlideIndex].config.sliders.map((slider, sliderIndex) => (
+                        <div key={slider.id} className="space-y-4 pt-2">
+                          <Separator />
+                          <h4 className="text-sm font-medium">Slider {sliderIndex + 1} Range</h4>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm">Minimum</Label>
+                              <Select
+                                value={slider.min.toString()}
+                                onValueChange={(value) => {
+                                  if (isSliderSlide(slides[activeSlideIndex].config)) {
+                                    const updatedSliders = [...slides[activeSlideIndex].config.sliders];
+                                    updatedSliders[sliderIndex] = {
+                                      ...slider,
+                                      min: parseInt(value),
+                                      defaultValue: Math.max(parseInt(value), slider.defaultValue || 0)
+                                    };
+                                    updateSlideConfig(activeSlideIndex, {
+                                      ...slides[activeSlideIndex].config,
+                                      sliders: updatedSliders
+                                    } as SliderSlideConfig);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select minimum" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0">0</SelectItem>
+                                  <SelectItem value="1">1</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-sm">Maximum</Label>
+                              <Select
+                                value={slider.max.toString()}
+                                onValueChange={(value) => {
+                                  if (isSliderSlide(slides[activeSlideIndex].config)) {
+                                    const updatedSliders = [...slides[activeSlideIndex].config.sliders];
+                                    updatedSliders[sliderIndex] = {
+                                      ...slider,
+                                      max: parseInt(value),
+                                      defaultValue: Math.min(parseInt(value), slider.defaultValue || slider.max)
+                                    };
+                                    updateSlideConfig(activeSlideIndex, {
+                                      ...slides[activeSlideIndex].config,
+                                      sliders: updatedSliders
+                                    } as SliderSlideConfig);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select maximum" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[5, 6, 7, 8, 9, 10].map((num) => (
+                                    <SelectItem key={num} value={num.toString()}>
+                                      {num}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}

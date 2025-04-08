@@ -80,8 +80,8 @@ export function Breadcrumbs() {
           <Link
             href={item.href}
             className={index === items.length - 1 
-              ? "font-medium text-foreground"
-              : "hover:text-foreground transition"
+              ? "font-medium text-foreground text-primaryStyling bg-primaryStyling/10 px-2 py-1 rounded-sm"
+              : "hover:text-foreground transition hover:underline"
             }
           >
             {item.label}

@@ -6,7 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -35,7 +35,7 @@ interface Slide {
   id?: string;
   module_id: string;
   position: number;
-  slide_type: 'text' | 'video' | 'quiz' | 'student_response';
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
   config: SlideConfig;
 }
 
@@ -1304,6 +1304,11 @@ function CreateModulePageContent() {
                                 <MessageSquare className="h-4 w-4 text-rose-600" />
                               </div>
                             )}
+                            {slide.slide_type === 'slider' && (
+                              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                <MoveHorizontal className="h-4 w-4 text-primaryStyling" />
+                              </div>
+                            )}
                           </div>
                           
                           {/* Slide Content Preview */}
@@ -1317,6 +1322,8 @@ function CreateModulePageContent() {
                                 (slide.config.question || 'Quiz slide') :
                                slide.slide_type === 'student_response' ?
                                 'Video Response' :
+                               slide.slide_type === 'slider' ?
+                                'Slider' :
                                 'Unknown slide'}
                               {slide.config.content && stripHtmlTags(slide.config.content).length > 50 && '...'}
                             </h3>

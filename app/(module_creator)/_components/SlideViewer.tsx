@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
-import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig } from './SlideEditor';
+import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 // Helper function to strip HTML tags for preview text
 const stripHtmlTags = (html: string | undefined): string => {
@@ -48,6 +49,9 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
   
   const isStudentResponseSlide = (slide: Slide): slide is Slide & { config: StudentResponseSlideConfig } => 
     slide.slide_type === 'student_response' && slide.config.type === 'student_response';
+
+  const isSliderSlide = (slide: Slide): slide is Slide & { config: SliderSlideConfig } => 
+    slide.slide_type === 'slider' && slide.config.type === 'slider';
 
   // Load slides
   useEffect(() => {
@@ -143,6 +147,12 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         return (
           <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
             <MessageSquare className="h-3 w-3 mr-1" /> Response
+          </Badge>
+        );
+      case 'slider':
+        return (
+          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
+            <MoveHorizontal className="h-3 w-3 mr-1" /> Slider
           </Badge>
         );
       default:
@@ -366,6 +376,66 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
           </Card>
         );
       
+
+      {/* Sjekk ut hvordan Slider ser ut på vieweren på siden, den er forskjellig fra de andre */}
+      case 'slider':
+        if (!isSliderSlide(currentSlide)) return <p>Invalid slider slide configuration</p>;
+        return (
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <MoveHorizontal className="h-5 w-5 text-indigo-600" />
+                  Scale Rating
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-8">
+                {currentSlide.config.sliders.map((slider) => {
+                  const boxCount = slider.max - slider.min + 1;
+                  return (
+                    <div key={slider.id} className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold">{slider.question}</h3>
+                        {slider.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {slider.description}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <div className="flex justify-between absolute -top-6 w-full text-sm text-muted-foreground">
+                            <span>{slider.minLabel}</span>
+                            <span>{slider.midLabel}</span>
+                            <span>{slider.maxLabel}</span>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            {Array.from({ length: boxCount }, (_, i) => (
+                              <div
+                                key={i}
+                                className={cn(
+                                  "flex-1 flex items-center justify-center h-12 rounded-md border text-sm font-medium",
+                                  "bg-white hover:bg-emerald-50 hover:border-emerald-200",
+                                  "text-gray-700 hover:text-emerald-700"
+                                )}
+                              >
+                                {slider.min + i}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      
       default:
         return <p>Unknown slide type</p>;
     }
@@ -424,6 +494,8 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
                     slideContent = slide.config.question || 'Quiz slide';
                   } else if (slide.slide_type === 'student_response') {
                     slideContent = 'Video Response';
+                  } else if (slide.slide_type === 'slider' && isSliderSlide(slide)) {
+                    slideContent = 'Scale Rating';
                   }
                   
                   return (
