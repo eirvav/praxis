@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { ModuleNavigation } from './_components/ModuleNavigation';
-import { ModuleBreadcrumbs } from './_components/ModuleBreadcrumbs';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -95,7 +94,6 @@ export default function ModuleLayout({ children }: LayoutProps) {
   return (
     <ContentLayout title={moduleName || 'Module'} hideNavbar={true}>
       <div className="space-y-6">
-        <ModuleBreadcrumbs courseId={courseId} moduleName={moduleName} />
         <ModuleNavigation moduleId={moduleId} courseId={courseId} />
         {children}
       </div>

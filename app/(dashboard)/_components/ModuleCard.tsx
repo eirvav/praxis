@@ -89,7 +89,7 @@ const ModuleCard = ({
     return (
       <div className="relative group">
         <Link href={route} className="block">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-primary/50 hover:shadow-md transition-all h-24">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-primary/50 hover:shadow-xl shadow-sm transition-all h-24">
             <div className="flex items-center gap-4 h-full">
               <div className="relative flex-shrink-0">
                 <div className="relative w-24 h-16 rounded-md overflow-hidden">
@@ -141,7 +141,7 @@ const ModuleCard = ({
   return (
     <div className="relative group h-full">
       <Link href={route} className="block h-full">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-primary/50 hover:shadow-md transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-primary/50 hover:shadow-xl shadow-sm transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
           <div className="relative w-full pt-[50%] flex-shrink-0">
             {thumbnail_url ? (
               <Image 
