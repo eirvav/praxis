@@ -623,7 +623,7 @@ function CreateModulePageContent() {
         <Button 
           onClick={handleCreateModule}
           disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-6 text-lg relative group transition-all duration-200"
+          className="bg-primaryStyling hover:bg-primaryStyling/90 text-white w-full py-6 text-lg relative group transition-all duration-200"
         >
           <span className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></span>
           Next Step
@@ -721,7 +721,7 @@ function CreateModulePageContent() {
               <Button 
                 onClick={handleCreateModule}
                 disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                className="bg-primaryStyling hover:bg-primaryStyling/90"
               >
                 Next Step
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -736,7 +736,7 @@ function CreateModulePageContent() {
                     slideEditorSaveButton.click();
                   }
                 }}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                className="bg-primaryStyling hover:bg-primaryStyling/90"
               >
                 Next Step
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -759,7 +759,7 @@ function CreateModulePageContent() {
         {/* Thin progress line */}
         <div className="h-1 bg-gray-200 w-full">
           <div 
-            className="h-1 bg-indigo-600 transition-all duration-300 ease-in-out"
+            className="h-1 bg-primaryStyling transition-all duration-300 ease-in-out"
             style={{ width: `${(step / 3) * 100}%` }}
           ></div>
         </div>
@@ -862,7 +862,7 @@ function CreateModulePageContent() {
                         }
                       }}
                     >
-                      <SelectTrigger className="h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base">
+                      <SelectTrigger className="h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling text-base">
                         <SelectValue placeholder="Select a course for this module" />
                       </SelectTrigger>
                       <SelectContent>
@@ -878,7 +878,7 @@ function CreateModulePageContent() {
                         <div className="px-2 py-2 border-t">
                           <SelectItem 
                             value="create_new"
-                            className="py-2.5 text-base text-indigo-600 font-medium cursor-pointer"
+                            className="py-2.5 text-base text-primaryStyling font-medium cursor-pointer"
                           >
                             <div className="flex items-center">
                               <Plus className="h-4 w-4 mr-2" />
@@ -932,7 +932,7 @@ function CreateModulePageContent() {
                             setDeadline(e.target.value);
                           }}
                           min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
                           required
                         />
                       </div>
@@ -959,7 +959,7 @@ function CreateModulePageContent() {
                           name="publish_date"
                           value={publishDate}
                           onChange={(e) => setPublishDate(e.target.value)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
                         />
                       </div>
                       <p className="text-sm text-gray-500">
@@ -1064,7 +1064,7 @@ function CreateModulePageContent() {
                   
                   <div className="group relative inline-flex items-center gap-2">
                     <div className="flex items-center gap-2 text-gray-600">
-                      <BookOpen className="h-5 w-5 text-indigo-600" />
+                      <BookOpen className="h-5 w-5 text-primaryStyling" />
                       <span className="font-medium">
                         {courses.find(c => c.id === selectedCourseId)?.title || 'Unknown Course'}
                       </span>
@@ -1164,7 +1164,7 @@ function CreateModulePageContent() {
                 <div className="space-y-4 pt-4">
                   <div className="flex items-center justify-between border-b pb-4">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-indigo-600" />
+                      <FileText className="h-5 w-5 text-primaryStyling" />
                       <h2 className="text-lg font-semibold text-gray-900">Module Content</h2>
                     </div>
                     <Badge variant="secondary" className="text-base font-medium px-3 py-1">

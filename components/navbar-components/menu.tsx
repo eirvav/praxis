@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, ChevronDown } from "lucide-react";
+import { Ellipsis, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CollapseMenuButton } from "@/components/navbar-components/collapse-menu-button";
 import { CourseNavigation } from "@/app/(dashboard)/_components/CourseNavigation";
+import { CreateCourseModal } from "@/app/(dashboard)/_components/CreateCourseModal";
 import {
   Tooltip,
   TooltipTrigger,
@@ -27,6 +28,7 @@ interface MenuProps {
 export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const { user } = useUser();
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   
   // Determine user role from pathname
   let userRole: string | undefined;
@@ -38,120 +40,79 @@ export function Menu({ isOpen }: MenuProps) {
   
   // Get the menu list based on user role
   const menuList = getMenuList(pathname, userRole);
-  
-  // Create a state object for tracking expanded state of menus with injectComponent
-  const [expandedMenus, setExpandedMenus] = useState<{[key: string]: boolean}>({});
-  
-  // Handler for toggling expanded state
-  const toggleExpanded = (menuId: string) => {
-    setExpandedMenus(prev => ({
-      ...prev,
-      [menuId]: !prev[menuId]
-    }));
-  };
 
   return (
-    <ScrollArea className="[&>div>div[style]]:!block">
-      <nav className="mt-8 h-full w-full">
-        <ul className="flex flex-col min-h-[calc(100vh-48px-36px-16px-32px)] lg:min-h-[calc(100vh-32px-40px-32px)] items-start space-y-1 px-2">
-          {menuList.map(({ groupLabel, menus }, index) => (
-            <li className={cn("w-full", groupLabel ? "pt-5" : "")} key={index}>
-              {(isOpen && groupLabel) || isOpen === undefined ? (
-                <p className="text-sm font-medium text-muted-foreground px-4 pb-2 max-w-[248px] truncate">
-                  {groupLabel}
-                </p>
-              ) : !isOpen && isOpen !== undefined && groupLabel ? (
-                <TooltipProvider>
-                  <Tooltip delayDuration={100}>
-                    <TooltipTrigger className="w-full">
-                      <div className="w-full flex justify-center items-center">
-                        <Ellipsis className="h-5 w-5" />
+    <>
+      <ScrollArea className="[&>div>div[style]]:!block">
+        <nav className="mt-8 h-full w-full">
+          <ul className="flex flex-col min-h-[calc(100vh-48px-36px-16px-32px)] lg:min-h-[calc(100vh-32px-40px-32px)] items-start space-y-1 px-2">
+            {menuList.map(({ groupLabel, menus }, index) => (
+              <li className={cn("w-full", groupLabel ? "pt-5" : "")} key={index}>
+                {(isOpen && groupLabel) || isOpen === undefined ? (
+                  <div className="flex justify-between items-center px-4 pb-2">
+                    <p className="text-sm font-medium text-muted-foreground max-w-[200px] truncate">
+                      {groupLabel}
+                    </p>
+                    {groupLabel === "Courses" && (
+                      <div
+                        className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer"
+                        onClick={() => setIsCourseModalOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 transition-transform group-hover:scale-125 group-hover:text-primary" />
                       </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>{groupLabel}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <p className="pb-2"></p>
-              )}
-              {menus.map(
-                ({ href, label, icon: Icon, active, submenus, injectComponent }, menuIndex) => {
-                  // Create a unique ID for this menu item
-                  const menuId = `${index}-${menuIndex}`;
-                  const isExpanded = expandedMenus[menuId] !== undefined ? expandedMenus[menuId] : true;
+                    )}
+                  </div>
+                ) : !isOpen && isOpen !== undefined && groupLabel ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={100}>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className="w-full flex justify-center items-center"
+                          onClick={groupLabel === "Courses" ? () => setIsCourseModalOpen(true) : undefined}
+                        >
+                          {groupLabel === "Courses" ? (
+                            <div className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer">
+                              <Plus className="h-4 w-4 transition-transform group-hover:scale-125 group-hover:text-primary" />
+                            </div>
+                          ) : (
+                            <Ellipsis className="h-5 w-5" />
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{groupLabel}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <p className="pb-2"></p>
+                )}
+                {menus.map(
+                  ({ href, label, icon: Icon, active, submenus, injectComponent, isCoursesSection }, menuIndex) => {
+                    // Create a unique ID for this menu item
+                    const menuId = `${index}-${menuIndex}`;
 
-                  // Regular menu item without submenus or injection
-                  if (!submenus && !injectComponent) {
-                    return (
-                      <div className="w-full" key={menuIndex}>
-                        <TooltipProvider disableHoverableContent>
-                          <Tooltip delayDuration={100}>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant={
-                                  (active === undefined &&
-                                    pathname.startsWith(href)) ||
-                                  active
-                                    ? "secondary"
-                                    : "ghost"
-                                }
-                                className="w-full justify-start h-10 mb-1"
-                                asChild
-                              >
-                                <Link href={href}>
-                                  <span
-                                    className={cn(isOpen === false ? "" : "mr-4")}
-                                  >
-                                    <Icon size={18} />
-                                  </span>
-                                  <p
-                                    className={cn(
-                                      "max-w-[200px] truncate",
-                                      isOpen === false
-                                        ? "-translate-x-96 opacity-0"
-                                        : "translate-x-0 opacity-100"
-                                    )}
-                                  >
-                                    {label}
-                                  </p>
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            {isOpen === false && (
-                              <TooltipContent side="right">
-                                {label}
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                      </div>
-                    );
-                  } 
-                  
-                  // Item with injection (CourseNavigation)
-                  if (injectComponent) {
-                    return (
-                      <div className="w-full" key={menuIndex}>
-                        <TooltipProvider disableHoverableContent>
-                          <Tooltip delayDuration={100}>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant={
-                                  (active === undefined &&
-                                    pathname.startsWith(href)) ||
-                                  active
-                                    ? "secondary"
-                                    : "ghost"
-                                }
-                                className="w-full justify-start h-10 mb-1"
-                                onClick={() => toggleExpanded(menuId)}
-                              >
-                                <div className="w-full flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <span className={cn(isOpen === false ? "" : "mr-4")}>
+                    // Regular menu item without submenus or injection
+                    if (!submenus && !injectComponent) {
+                      return (
+                        <div className="w-full" key={menuIndex}>
+                          <TooltipProvider disableHoverableContent>
+                            <Tooltip delayDuration={100}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className={cn(
+                                    "w-full justify-start h-10 mb-1",
+                                    label === "Quick Create" && "bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white",
+                                    ((active === undefined && pathname.startsWith(href)) || active) && 
+                                    "bg-indigo-100 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-foreground"
+                                  )}
+                                  asChild
+                                >
+                                  <Link href={href}>
+                                    <span
+                                      className={cn(isOpen === false ? "" : "mr-4")}
+                                    >
                                       <Icon size={18} />
                                     </span>
                                     <p
@@ -164,82 +125,87 @@ export function Menu({ isOpen }: MenuProps) {
                                     >
                                       {label}
                                     </p>
-                                  </div>
-                                  <ChevronDown
-                                    size={18}
-                                    className={cn(
-                                      "transition-transform duration-200",
-                                      isExpanded ? "rotate-180" : ""
-                                    )}
-                                  />
-                                </div>
-                              </Button>
-                            </TooltipTrigger>
-                            {isOpen === false && (
-                              <TooltipContent side="right">
-                                {label}
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        {/* Injected component */}
-                        <div className={cn(
-                          "transition-all",
-                          !isExpanded || isOpen === false ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
-                        )}>
+                                  </Link>
+                                </Button>
+                              </TooltipTrigger>
+                              {isOpen === false && (
+                                <TooltipContent side="right">
+                                  {label}
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      );
+                    } 
+                    
+                    // Item with injection (CourseNavigation)
+                    if (injectComponent && isCoursesSection) {
+                      return (
+                        <div 
+                          key={menuId}
+                          className={cn(
+                            "transition-all",
+                            isOpen === false ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
+                          )}
+                        >
                           <CourseNavigation isTeacher={userRole === "teacher"} />
                         </div>
+                      );
+                    }
+                    
+                    // Item with submenus
+                    return (
+                      <div className="w-full" key={menuIndex}>
+                        <CollapseMenuButton
+                          icon={Icon}
+                          label={label}
+                          active={
+                            active === undefined
+                              ? pathname.startsWith(href)
+                              : active
+                          }
+                          submenus={submenus || []}
+                          isOpen={isOpen}
+                        />
                       </div>
                     );
                   }
-                  
-                  // Item with submenus
-                  return (
-                    <div className="w-full" key={menuIndex}>
-                      <CollapseMenuButton
-                        icon={Icon}
-                        label={label}
-                        active={
-                          active === undefined
-                            ? pathname.startsWith(href)
-                            : active
-                        }
-                        submenus={submenus || []}
-                        isOpen={isOpen}
-                      />
-                    </div>
-                  );
-                }
-              )}
-            </li>
-          ))}
-          <li className="w-full grow flex items-end">
-            <div className="w-full border-t pt-4">
-              <div className="flex items-center gap-3 px-2">
-                <UserButton 
-                  afterSignOutUrl="/"
-                  appearance={{
-                    elements: {
-                      avatarBox: "h-10 w-10"
-                    }
-                  }}
-                />
-                {isOpen && (
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium truncate">
-                      {user?.fullName || user?.username}
-                    </span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {user?.primaryEmailAddress?.emailAddress}
-                    </span>
-                  </div>
                 )}
+              </li>
+            ))}
+            <li className="w-full grow flex items-end">
+              <div className="w-full border-t pt-4">
+                <div className="flex items-center gap-3 px-2">
+                  <UserButton 
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        avatarBox: "h-10 w-10"
+                      }
+                    }}
+                  />
+                  {isOpen && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium truncate">
+                        {user?.fullName || user?.username}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user?.primaryEmailAddress?.emailAddress}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </li>
-        </ul>
-      </nav>
-    </ScrollArea>
+            </li>
+          </ul>
+        </nav>
+      </ScrollArea>
+      
+      <CreateCourseModal 
+        isOpen={isCourseModalOpen} 
+        onClose={() => setIsCourseModalOpen(false)} 
+      />
+    </>
   );
 }

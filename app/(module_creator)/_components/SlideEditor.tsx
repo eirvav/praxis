@@ -706,7 +706,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         <Button 
           onClick={saveSlides} 
           disabled={saving || slides.length === 0}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="bg-primaryStyling hover:bg-primaryStyling/90 text-white"
           data-slide-editor-save
         >
           {saving ? 'Saving...' : 'Save Changes'}
@@ -801,12 +801,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             </div>
             
             <div 
-              className="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer hover:bg-indigo-50 transition-colors"
+              className="border rounded-lg p-4 hover:border-primaryStyling cursor-pointer hover:bg-primaryStyling/10 transition-colors"
               onClick={() => createSlideOfType('text')}
             >
               <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <MoveHorizontal className="h-6 w-6 text-indigo-600" />
+                <div className="w-12 h-12 bg-primaryStyling rounded-full flex items-center justify-center">
+                  <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-800">Slider</h3>
@@ -1013,7 +1013,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 <p className="text-gray-500 mb-4">Select a slide to edit or create a new slide</p>
                 <Button 
                   onClick={() => setShowSlideTypeSelector(true)} 
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="bg-primaryStyling hover:bg-primaryStyling/90 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" /> Add Slide
                 </Button>

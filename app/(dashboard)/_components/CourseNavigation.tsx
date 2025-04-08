@@ -81,9 +81,8 @@ export function CourseNavigation({ isTeacher = false }) {
   }
 
   return (
-    <div className="ml-6 space-y-1 mt-1">
+    <div className="space-y-1">
       {courses.map((course) => {
-        // Get a random color for each course
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
         
         return (
@@ -91,17 +90,17 @@ export function CourseNavigation({ isTeacher = false }) {
             key={course.id}
             href={`${baseUrl}/${course.id}`}
             className={cn(
-              "flex items-center gap-2 rounded-md pl-3 pr-3 py-2 text-sm relative",
+              "flex items-center py-2 px-3 text-sm relative rounded-md",
               pathname.includes(`${baseUrl}/${course.id}`) 
-                ? "bg-accent text-accent-foreground font-medium" 
+                ? "bg-indigo-100 text-foreground font-medium hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30" 
                 : "hover:bg-accent/50"
             )}
           >
             <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4" 
+              className="absolute left-3 h-4 w-[3px] rounded-full" 
               style={{ backgroundColor: randomColor }}
             />
-            <span className="truncate">{course.title}</span>
+            <span className="pl-4 truncate">{course.title}</span>
           </Link>
         );
       })}

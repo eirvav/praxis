@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   BookOpen,
   GraduationCap,
+  PlusCircle,
 } from "lucide-react";
 
 // Types
@@ -14,6 +15,7 @@ type MenuItem = {
   label: string;
   icon: LucideIcon;
   injectComponent?: boolean;
+  isCoursesSection?: boolean;
   submenus?: { href: string; label: string; active?: boolean; }[];
 };
 
@@ -57,17 +59,18 @@ const menuConfigs: Record<string, RoleConfig> = {
         label: "",
         items: [
           {
-            ...sharedMenuItems.dashboard,
-            href: "/teacher",
+            label: "Quick Create",
+            href: "/teacher/modules/create",
+            icon: PlusCircle,
           },
         ],
       },
       {
-        label: "Teaching",
+        label: "Content",
         items: [
           {
-            ...sharedMenuItems.courses,
-            href: "/teacher/courses",
+            ...sharedMenuItems.dashboard,
+            href: "/teacher",
           },
           {
             ...sharedMenuItems.resources,
@@ -77,6 +80,18 @@ const menuConfigs: Record<string, RoleConfig> = {
             label: "Grading",
             href: "/teacher/grading",
             icon: ClipboardCheck,
+          },
+        ],
+      },
+      {
+        label: "Courses",
+        items: [
+          {
+            label: "Course List",
+            href: "/teacher/courses",
+            icon: BookOpen,
+            injectComponent: true,
+            isCoursesSection: true,
           },
         ],
       },

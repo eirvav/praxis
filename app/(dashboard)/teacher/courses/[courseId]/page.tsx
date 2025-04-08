@@ -187,7 +187,7 @@ export default function CourseDetailPage() {
           <Link href={`/teacher/courses/${course.id}/modules/create`}>
             <Button 
               size="lg" 
-              className="flex items-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow-sm hover:shadow-md transition-all"
+              className="flex items-center gap-3 bg-primaryStyling text-white hover:bg-primaryStyling/90 rounded-lg shadow-sm hover:shadow-md transition-all"
             >
               <Plus className="h-5 w-5" />
               Nytt Arbeidskrav

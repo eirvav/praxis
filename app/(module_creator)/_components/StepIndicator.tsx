@@ -30,7 +30,7 @@ export function StepIndicator({
               <div className="relative">
                 <div 
                   className={`h-10 w-10 rounded-full flex items-center justify-center
-                    ${currentStep > index ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                    ${currentStep > index ? 'bg-primaryStyling text-white' : 'bg-gray-200 text-gray-500'}`}
                 >
                   {index + 1}
                 </div>
@@ -41,7 +41,7 @@ export function StepIndicator({
                     <div className="h-[2px] w-full mx-2">
                       <div 
                         className={`h-full transition-all duration-300 ease-in-out
-                          ${currentStep > index + 1 ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                          ${currentStep > index + 1 ? 'bg-primaryStyling' : 'bg-gray-200'}`}
                       />
                     </div>
                   </div>
