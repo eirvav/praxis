@@ -74,11 +74,11 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
           {
             ...sharedMenuItems.resources,
-            href: "/teacher/resources",
+            href: "#",
           },
           {
             label: "Grading",
-            href: "/teacher/grading",
+            href: "#",
             icon: ClipboardCheck,
           },
         ],
@@ -100,7 +100,7 @@ const menuConfigs: Record<string, RoleConfig> = {
         items: [
           {
             ...sharedMenuItems.settings,
-            href: "/teacher/settings",
+            href: "#",
           },
         ],
       },
@@ -127,11 +127,11 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
           {
             ...sharedMenuItems.resources,
-            href: "/student/resources",
+            href: "#",
           },
           {
             label: "My Progress",
-            href: "/student/progress",
+            href: "#",
             icon: GraduationCap,
           },
         ],
@@ -141,7 +141,7 @@ const menuConfigs: Record<string, RoleConfig> = {
         items: [
           {
             ...sharedMenuItems.settings,
-            href: "/student/settings",
+            href: "#",
           },
         ],
       },
@@ -168,11 +168,11 @@ const menuConfigs: Record<string, RoleConfig> = {
           },
           {
             ...sharedMenuItems.resources,
-            href: "/resources",
+            href: "#",
           },
           {
             ...sharedMenuItems.settings,
-            href: "/settings",
+            href: "#",
           },
         ],
       },
