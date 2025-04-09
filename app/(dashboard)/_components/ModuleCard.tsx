@@ -34,7 +34,6 @@ const ModuleCard = ({
   isTeacher = false,
   href,
   enrolled = 0,
-  completion_rate = 0,
   viewMode = 'grid'
 }: ModuleCardProps) => {
   const lastUpdated = updated_at || createdAt || '';
@@ -44,46 +43,6 @@ const ModuleCard = ({
       ? `/${isTeacher ? 'teacher' : 'student'}/courses/${courseId}/modules/${id}`
       : `/${isTeacher ? 'teacher' : 'student'}/modules/${id}`
   );
-
-  const CircularProgress = ({ value }: { value: number }) => {
-    const radius = 12;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (value / 100) * circumference;
-    
-    return (
-      <div className="flex items-center gap-1">
-        <span className="text-sm font-medium text-muted-foreground">In Progress</span>
-        <div className="flex items-center gap-2">
-          <div className="relative inline-flex items-center justify-center">
-            <svg className="transform -rotate-90 w-10 h-10">
-              <circle
-                className="text-gray-100"
-                strokeWidth="3"
-                stroke="currentColor"
-                fill="transparent"
-                r={radius}
-                cx="20"
-                cy="20"
-              />
-              <circle
-                className="text-green-500 transition-all duration-500 ease-in-out"
-                strokeWidth="3"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="transparent"
-                r={radius}
-                cx="20"
-                cy="20"
-              />
-            </svg>
-          </div>
-          <span className="text-sm font-medium">{value}%</span>
-        </div>
-      </div>
-    );
-  };
   
   if (viewMode === 'list') {
     return (
@@ -94,12 +53,19 @@ const ModuleCard = ({
               <div className="relative flex-shrink-0">
                 <div className="relative w-24 h-16 rounded-md overflow-hidden">
                   {thumbnail_url ? (
-                    <Image 
-                      src={thumbnail_url} 
-                      alt={`${title} thumbnail`}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
+                    thumbnail_url.startsWith('#') ? (
+                      <div 
+                        className="absolute inset-0" 
+                        style={{ backgroundColor: thumbnail_url }}
+                      />
+                    ) : (
+                      <Image 
+                        src={thumbnail_url} 
+                        alt={`${title} thumbnail`}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                      />
+                    )
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200" />
                   )}
@@ -112,9 +78,6 @@ const ModuleCard = ({
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">{title}</h2>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <CircularProgress value={completion_rate} />
-                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-1">{displayText}</p>
               </div>
@@ -142,15 +105,23 @@ const ModuleCard = ({
     <div className="relative group h-full">
       <Link href={route} className="block h-full">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-primary/50 hover:shadow-xl shadow-sm transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
+        {/*<div className="bg-transparent rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">*/}
           <div className="relative w-full pt-[50%] flex-shrink-0">
             {thumbnail_url ? (
-              <Image 
-                src={thumbnail_url} 
-                alt={`${title} thumbnail`}
-                fill
-                style={{ objectFit: 'cover' }}
-                className="group-hover:scale-105 transition-transform duration-500"
-              />
+              thumbnail_url.startsWith('#') ? (
+                <div 
+                  className="absolute inset-0"
+                  style={{ backgroundColor: thumbnail_url }}
+                />
+              ) : (
+                <Image 
+                  src={thumbnail_url} 
+                  alt={`${title} thumbnail`}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="group-hover:scale-105 transition-transform duration-500"
+                />
+              )
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200" />
             )}
@@ -162,11 +133,8 @@ const ModuleCard = ({
           </div>
           
           <div className="p-3 flex flex-col flex-1">
-            <div className="space-y-2">
-              <h2 className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">{title}</h2>
-              <div className="flex items-center justify-between">
-                <CircularProgress value={completion_rate} />
-              </div>
+            <div>
+              <h2 className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">{title}</h2>
             </div>
             
             <div className="mt-auto pt-2">

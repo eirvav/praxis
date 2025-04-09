@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, Camera, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal, ImageIcon, PencilLine } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -23,8 +23,10 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
+
 import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
+import ThumbnailPopover from '@/app/(module_creator)/_components/ThumbnailPopover';
 
 interface Course {
   id: string;
@@ -84,6 +86,9 @@ function CreateModulePageContent() {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const initialLoadDoneRef = useRef(false);
+  const [isLoadingPredefinedThumbnails, setIsLoadingPredefinedThumbnails] = useState(false);
+  const [predefinedThumbnails, setPredefinedThumbnails] = useState<Array<{type: 'color' | 'illustration', url: string}>>([]);
+  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -98,6 +103,181 @@ function CreateModulePageContent() {
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   
+  // Predefined solid colors for thumbnails
+  const predefinedColors = useMemo(() => [
+    "#4F39F6", // Purple
+    "#3B82F6", // Blue
+    "#10B981", // Green
+    "#F59E0B", // Amber
+    "#EF4444", // Red
+    "#EC4899", // Pink
+    "#06B6D4", // Cyan
+    "#F97316", // Orange
+    "#6366F1", // Indigo
+    "#14B8A6", // Teal
+  ], []);
+
+  // Function to select a predefined thumbnail
+  const selectPredefinedThumbnail = async (item: {type: 'color' | 'illustration', url: string}) => {
+    setSelectedThumbnail(item.url);
+  };
+  
+  // Create memoized color thumbnails
+  const colorThumbnails = useMemo(() => 
+    predefinedColors.map(color => ({
+      type: 'color' as const,
+      url: color
+    }))
+  , [predefinedColors]);
+
+  // Memoize fallback illustrations
+  const fallbackIllustrations = useMemo(() => [
+    "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZWR1Y2F0aW9ufGVufDB8fDB8fHww",
+    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGVkdWNhdGlvbnxlbnwwfHwwfHx8MA%3D%3D",
+    "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c2NpZW5jZXxlbnwwfHwwfHx8MA%3D%3D"
+  ], []);
+
+  // Load predefined thumbnails
+  useEffect(() => {
+    const loadPredefinedThumbnails = async () => {
+      if (!supabase) return;
+
+      console.log('[Thumbnails] Starting to load thumbnails...');
+      setIsLoadingPredefinedThumbnails(true);
+      try {
+        console.log('[Thumbnails] Loading predefined thumbnails...');
+        
+        // Always include colors - these don't need to be in Supabase
+        console.log('[Thumbnails] Loaded color thumbnails:', colorThumbnails.length);
+
+        try {
+          // First, check if the bucket exists
+          console.log('[Thumbnails] Checking if module-thumbnails bucket exists...');
+          const { data: buckets, error: bucketsError } = await supabase
+            .storage
+            .listBuckets();
+
+          if (bucketsError) {
+            console.error('[Thumbnails] Error checking buckets:', bucketsError);
+            throw bucketsError;
+          }
+
+          const bucketExists = buckets?.some(bucket => bucket.name === 'module-thumbnails');
+          console.log('[Thumbnails] Bucket exists:', bucketExists);
+
+          // Try to list the contents of the thumbnails subfolder in module-thumbnails bucket
+          console.log('[Thumbnails] Attempting to list contents from thumbnails subfolder...');
+          const { data: thumbnailFiles, error: thumbnailError } = await supabase.storage
+            .from('module-thumbnails')
+            .list('thumbnails', {
+              limit: 20,
+              sortBy: { column: 'name', order: 'asc' }
+            });
+
+          if (thumbnailError) {
+            console.error('[Thumbnails] Error listing thumbnails subfolder:', thumbnailError);
+            throw thumbnailError;
+          }
+
+          console.log('[Thumbnails] Files found in thumbnails subfolder:', thumbnailFiles?.length || 0);
+          console.log('[Thumbnails] Files details:', thumbnailFiles);
+
+          let illustrationUrls: Array<{type: 'illustration', url: string}> = [];
+
+          // If we have images in the thumbnails subfolder, use those
+          if (thumbnailFiles && thumbnailFiles.length > 0) {
+            console.log('[Thumbnails] Using images from thumbnails subfolder');
+            
+            // Check each file more thoroughly
+            thumbnailFiles.forEach(file => {
+              console.log(`[Thumbnails] File: ${file.name}, type:`, file);
+            });
+            
+            const imageFiles = thumbnailFiles.filter(file => {
+              const lowerName = file.name.toLowerCase();
+              const isImageByExtension = 
+                lowerName.endsWith('.jpg') || 
+                lowerName.endsWith('.jpeg') || 
+                lowerName.endsWith('.png') || 
+                lowerName.endsWith('.webp') || 
+                lowerName.endsWith('.gif');
+              
+              // Consider folders as potential container for images too
+              const isFolder = file.metadata?.mimetype === null || file.metadata?.mimetype === undefined;
+              
+              return isImageByExtension || isFolder;
+            });
+            
+            console.log('[Thumbnails] Filtered image files:', imageFiles.length);
+            
+            // If filtering found no images, try using all files as a fallback
+            const filesToUse = imageFiles.length > 0 ? imageFiles : thumbnailFiles;
+            console.log('[Thumbnails] Files to use for thumbnails:', filesToUse.length);
+            
+            illustrationUrls = await Promise.all(
+              filesToUse.map(async (file) => {
+                const { data: urlData } = supabase.storage
+                  .from('module-thumbnails')
+                  .getPublicUrl(`thumbnails/${file.name}`);
+                  
+                console.log(`[Thumbnails] Generated public URL for thumbnails/${file.name}:`, urlData.publicUrl);
+                  
+                return {
+                  type: 'illustration' as const,
+                  url: urlData.publicUrl
+                };
+              })
+            );
+            
+            console.log('[Thumbnails] Final illustration URLs:', illustrationUrls.length);
+          }
+          // If no images found, use fallback for testing
+          else {
+            console.log('[Thumbnails] No images found in thumbnails subfolder, using fallback illustrations');
+            
+            illustrationUrls = fallbackIllustrations.map(url => ({
+              type: 'illustration' as const,
+              url
+            }));
+            
+            console.log('[Thumbnails] Using fallback illustration URLs:', illustrationUrls.length);
+          }
+
+          // Combine colors and illustrations
+          const allThumbnails = [...colorThumbnails, ...illustrationUrls];
+          console.log('[Thumbnails] Setting all thumbnails:', allThumbnails.length);
+          setPredefinedThumbnails(allThumbnails);
+          
+        } catch (err) {
+          console.error('[Thumbnails] Error with Supabase storage operations:', err);
+          
+          // Use fallback illustrations for testing
+          console.log('[Thumbnails] Using fallback illustrations due to error');
+          const fallbackUrls = fallbackIllustrations.map(url => ({
+            type: 'illustration' as const,
+            url
+          }));
+          
+          setPredefinedThumbnails([...colorThumbnails, ...fallbackUrls]);
+        }
+      } catch (err) {
+        console.error('[Thumbnails] Error loading predefined thumbnails:', err);
+        // Fallback to colors only
+        setPredefinedThumbnails(colorThumbnails);
+      } finally {
+        setIsLoadingPredefinedThumbnails(false);
+        console.log('[Thumbnails] Finished loading thumbnails');
+      }
+    };
+
+    loadPredefinedThumbnails();
+  }, [supabase, colorThumbnails, fallbackIllustrations]);
+
+  // Initialize selectedThumbnail when thumbnailUrl changes
+  useEffect(() => {
+    setSelectedThumbnail(thumbnailUrl);
+  }, [thumbnailUrl]);
+
   // Function to fetch slides wrapped in useCallback
   const fetchSlides = useCallback(async () => {
     if (!moduleId || !supabase) return;
@@ -201,6 +381,7 @@ function CreateModulePageContent() {
         
       // Update thumbnail URL state
       setThumbnailUrl(data.publicUrl);
+      setSelectedThumbnail(data.publicUrl);
       
       // If we already have a module ID, update it with the thumbnail
       if (moduleId) {
@@ -241,11 +422,7 @@ function CreateModulePageContent() {
       uploadThumbnail(file);
     }
   };
-  
-  // Trigger file input click
-  const handleThumbnailClick = () => {
-    fileInputRef.current?.click();
-  };
+
   
   // Initialize state from URL parameters only once
   useEffect(() => {
@@ -484,7 +661,7 @@ function CreateModulePageContent() {
     try {
       setIsPublishing(true);
       
-      // Since we don&apos;t have a published field, just consider the module published when it has slides
+      // Since we&apos;re not using a published field, just consider the module published when it has slides
       if (slides.length > 0) {
         setIsPublishModalOpen(false); // Close the modal
         toast.success('Module published successfully!');
@@ -635,6 +812,67 @@ function CreateModulePageContent() {
       </div>
     </div>
   );
+
+  // Fix the thumbnail display in both the main UI and step 3
+  const renderThumbnail = (url: string | null, showDefault: boolean = true) => {
+    if (!url) {
+      if (showDefault) {
+        return (
+          <ThumbnailPopover 
+            trigger={
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-primaryStyling cursor-pointer">
+               {/*<div className="flex flex-col items-center space-y-2">
+                  <Camera className="h-10 w-10 text-white" />
+                  <span className="text-white font-medium">Click to add a cover image</span>
+                  <span className="text-white text-sm">Recommended size: 1280×720</span>
+                </div>*/}
+              </div>
+            }
+            thumbnailUrl={thumbnailUrl}
+            selectedThumbnail={selectedThumbnail}
+            setSelectedThumbnail={setSelectedThumbnail}
+            setThumbnailUrl={setThumbnailUrl}
+            moduleId={moduleId}
+            predefinedThumbnails={predefinedThumbnails}
+            isLoadingPredefinedThumbnails={isLoadingPredefinedThumbnails}
+            selectPredefinedThumbnail={selectPredefinedThumbnail}
+            fileInputRef={fileInputRef}
+            align="center"
+          />
+        );
+      }
+      
+      return (
+        <div className="w-full h-64 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+          <div className="text-center">
+            <FileImage className="h-12 w-12 text-amber-600/80 mx-auto mb-3" />
+            <p className="text-amber-900/80 font-medium">No cover image</p>
+          </div>
+        </div>
+      );
+    }
+    
+    if (url.startsWith('#')) {
+      console.log('[Thumbnail] Rendering color thumbnail:', url);
+      return (
+        <div 
+          className="absolute inset-0" 
+          style={{ backgroundColor: url }}
+        />
+      );
+    }
+    
+    console.log('[Thumbnail] Rendering image thumbnail:', url);
+    return (
+      <Image 
+        src={url} 
+        alt="Module thumbnail" 
+        fill 
+        style={{ objectFit: 'cover' }}
+        className="transition-opacity group-hover:opacity-80"
+      />
+    );
+  };
 
   if (isLoading) {
     return (
@@ -787,33 +1025,40 @@ function CreateModulePageContent() {
                   accept="image/*"
                 />
                 
-                <div 
-                  onClick={handleThumbnailClick}
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-                >
-                  {thumbnailUrl ? (
-                    <>
-                      <Image 
-                        src={thumbnailUrl} 
-                        alt="Module thumbnail" 
-                        fill 
-                        style={{ objectFit: 'cover' }}
-                        className="transition-opacity group-hover:opacity-80"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                        <div className="bg-white p-3 rounded-full">
-                          <Edit2 className="h-6 w-6 text-gray-800" />
+                <div className="absolute inset-0 flex items-center justify-center group">
+                  {renderThumbnail(thumbnailUrl)}
+                  
+                  {/* Overlay for existing thumbnails */}
+                  {thumbnailUrl && (
+                    <ThumbnailPopover 
+                      trigger={
+                        <div className="absolute inset-0 cursor-pointer">
+                          {thumbnailUrl.startsWith('#') ? (
+                            <div style={{ backgroundColor: thumbnailUrl }} className="w-full h-full"/>
+                          ) : (
+                            <Image 
+                              src={thumbnailUrl} 
+                              alt="Module thumbnail" 
+                              fill 
+                              style={{ objectFit: 'cover' }}
+                            />
+                          )}
+                          <div className="absolute top-3 right-3 bg-black/80 text-white p-1 rounded-md">
+                            <PencilLine className="h-4 w-4" />
+                          </div>
                         </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Camera className="h-10 w-10 text-slate-400" />
-                        <span className="text-slate-600 font-medium">Click to add a cover image</span>
-                        <span className="text-slate-500 text-sm">Recommended size: 1280×720</span>
-                      </div>
-                    </div>
+                      }
+                      thumbnailUrl={thumbnailUrl}
+                      selectedThumbnail={selectedThumbnail}
+                      setSelectedThumbnail={setSelectedThumbnail}
+                      setThumbnailUrl={setThumbnailUrl}
+                      moduleId={moduleId}
+                      predefinedThumbnails={predefinedThumbnails}
+                      isLoadingPredefinedThumbnails={isLoadingPredefinedThumbnails}
+                      selectPredefinedThumbnail={selectPredefinedThumbnail}
+                      fileInputRef={fileInputRef}
+                      align="center"
+                    />
                   )}
                   
                   {isUploading && (
@@ -821,7 +1066,32 @@ function CreateModulePageContent() {
                       <div className="animate-pulse text-white">Uploading...</div>
                     </div>
                   )}
-                </div>
+
+                  {/* Update Thumbnail button */}
+                  <div className="absolute bottom-4 right-4">
+                    <ThumbnailPopover 
+                      trigger={
+                        <Button
+                          className="shadow-md bg-white text-gray-800 border border-gray-200 cursor-pointer"
+                          variant="secondary"
+                        >
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Update Thumbnail
+                        </Button>
+                      }
+                      thumbnailUrl={thumbnailUrl}
+                      selectedThumbnail={selectedThumbnail}
+                      setSelectedThumbnail={setSelectedThumbnail}
+                      setThumbnailUrl={setThumbnailUrl}
+                      moduleId={moduleId}
+                      predefinedThumbnails={predefinedThumbnails}
+                      isLoadingPredefinedThumbnails={isLoadingPredefinedThumbnails}
+                      selectPredefinedThumbnail={selectPredefinedThumbnail}
+                      fileInputRef={fileInputRef}
+                      align="start"
+                                              />
+                                            </div>
+                                      </div>
               </div>
               
               {/* Form Fields with improved hierarchy */}
@@ -1023,25 +1293,36 @@ function CreateModulePageContent() {
           <div className="max-w-3xl mx-auto">
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
               {/* Cover Image */}
-              {thumbnailUrl ? (
-                <div className="relative w-full h-64">
-                  <Image 
-                    src={thumbnailUrl} 
-                    alt="Module thumbnail" 
-                    fill 
-                    style={{ objectFit: 'cover' }}
-                    className="transition-all duration-200"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                </div>
-              ) : (
-                <div className="w-full h-64 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <FileImage className="h-12 w-12 text-amber-600/80 mx-auto mb-3" />
-                    <p className="text-amber-900/80 font-medium">No cover image</p>
+              <div className="relative w-full h-64">
+                {thumbnailUrl ? (
+                  <>
+                    {thumbnailUrl.startsWith('#') ? (
+                      // Render solid color
+                      <div className="absolute inset-0" style={{ backgroundColor: thumbnailUrl }}></div>
+                    ) : (
+                      // Render image
+                      <>
+                        <Image 
+                          src={thumbnailUrl} 
+                          alt="Module thumbnail" 
+                          fill 
+                          style={{ objectFit: 'cover' }}
+                          className="transition-all duration-200"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  // Render default (no thumbnail)
+                  <div className="w-full h-64 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <FileImage className="h-12 w-12 text-amber-600/80 mx-auto mb-3" />
+                      <p className="text-amber-900/80 font-medium">No cover image</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
               
               {/* Module Details */}
               <div className="p-8 space-y-8">
