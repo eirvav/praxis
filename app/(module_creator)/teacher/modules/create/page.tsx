@@ -935,7 +935,9 @@ function CreateModulePageContent() {
             >
               <X className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-semibold">Create Module</h1>
+            <h1 className="text-lg font-semibold">
+              {step === 1 ? "Create Module" : title || "Module"}
+            </h1>
           </div>
           
           <div className="flex items-center text-lg">
