@@ -104,13 +104,12 @@ const ModuleCard = ({
   return (
     <div className="relative group h-full">
       <Link href={route} className="block h-full">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-primary/50 hover:shadow-xl shadow-sm transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
-        {/*<div className="bg-transparent rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">*/}
-          <div className="relative w-full pt-[50%] flex-shrink-0">
+        <div className="bg-transparent rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
+          <div className="relative w-full pt-[50%] flex-shrink-0 rounded-xl overflow-hidden">
             {thumbnail_url ? (
               thumbnail_url.startsWith('#') ? (
                 <div 
-                  className="absolute inset-0"
+                  className="absolute inset-0 rounded-xl"
                   style={{ backgroundColor: thumbnail_url }}
                 />
               ) : (
@@ -119,13 +118,13 @@ const ModuleCard = ({
                   alt={`${title} thumbnail`}
                   fill
                   style={{ objectFit: 'cover' }}
-                  className="group-hover:scale-105 transition-transform duration-500"
+                  className="group-hover:scale-105 transition-transform duration-500 rounded-xl"
                 />
               )
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200" />
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl" />
             <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-sm rounded-md px-2 py-0.5 text-white text-xs flex items-center gap-1 font-medium">
               <Users className="h-3 w-3" />
               {enrolled}
