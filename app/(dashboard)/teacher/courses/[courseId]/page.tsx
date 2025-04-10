@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus, Trash2, MoreVertical, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 
 interface Course {
@@ -174,17 +174,33 @@ export default function CourseDetailPage() {
   );
 
   return (
-    <ContentLayout title={course.title}>
+    <ContentLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search modules..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{course.title}</h1>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Course actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Course
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-500 focus:text-red-500 cursor-pointer"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Course
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           <div className="flex items-center gap-2">
@@ -216,22 +232,38 @@ export default function CourseDetailPage() {
               )}
             </Button>
             
-            <Link href={`/teacher/courses/${course.id}/modules/create`}>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Module
-              </Button>
-            </Link>
+            {/* Only show Create Module button when modules already exist */}
+            {modules.length > 0 && (
+              <Link href={`/teacher/modules/create?preselectedCourseId=${course.id}`}>
+                <Button className="gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer">
+                  <Plus className="h-4 w-4" />
+                  Create Module
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search modules..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
         {modules.length === 0 ? (
-          <div className="text-center p-12 border-2 border-dashed rounded-xl bg-muted/50">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No modules yet</h3>
-            <p className="text-muted-foreground mb-4">Get started by creating your first module for this course.</p>
-            <Link href={`/teacher/courses/${course.id}/modules/create`}>
-              <Button>Create Module</Button>
+          <div className="text-center p-15">
+            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-medium mb-2">No modules yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">Get started by creating your first module for this course.</p>
+            <Link href={`/teacher/modules/create?preselectedCourseId=${course.id}`}>
+              <Button className="bg-primaryStyling text-white hover:bg-indigo-700">
+                <Plus className="h-5 w-5 mr-2" />
+                Create Your First Module
+              </Button>
             </Link>
           </div>
         ) : (
@@ -270,16 +302,25 @@ export default function CourseDetailPage() {
         )}
 
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Delete Course</DialogTitle>
+              <DialogTitle className="text-xl">Delete Course</DialogTitle>
+              <DialogDescription className="pt-2 text-base">
+                Are you sure you want to delete <span className="font-semibold">{course.title}</span>? This action cannot be undone and all modules within this course will be inaccessible.
+              </DialogDescription>
             </DialogHeader>
-            <p>Are you sure you want to delete this course? This action cannot be undone.</p>
-            <DialogFooter>
+            <div className="pt-2 pb-4">
+              <p className="text-sm text-amber-600 flex items-center gap-2">
+                <Trash2 className="h-4 w-4" /> 
+                This will delete all course data permanently.
+              </p>
+            </div>
+            <DialogFooter className="flex sm:justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
                 disabled={isDeleting}
+                className="sm:w-auto flex-1 sm:flex-initial"
               >
                 Cancel
               </Button>
@@ -287,8 +328,9 @@ export default function CourseDetailPage() {
                 variant="destructive"
                 onClick={handleDeleteCourse}
                 disabled={isDeleting}
+                className="sm:w-auto flex-1 sm:flex-initial"
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? 'Deleting...' : 'Delete Course'}
               </Button>
             </DialogFooter>
           </DialogContent>

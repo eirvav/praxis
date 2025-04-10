@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal, ImageIcon, PencilLine } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
 import { 
@@ -519,7 +518,7 @@ function CreateModulePageContent() {
   // Fetch teacher's courses only once
   useEffect(() => {
     async function fetchCourses() {
-      if (!user || !supabase || courses.length > 0) return;
+      if (!user || !supabase) return;
       
       try {
         setIsLoading(true);
@@ -534,9 +533,13 @@ function CreateModulePageContent() {
         
         setCourses(data || []);
         
-        // Only auto-select first course if no course is selected and no preselectedCourseId
+        // Check for preselectedCourseId
         const preselectedCourseId = searchParams.get('preselectedCourseId');
-        if (data && data.length > 0 && !selectedCourseId && !preselectedCourseId) {
+        if (preselectedCourseId) {
+          setSelectedCourseId(preselectedCourseId);
+        }
+        // If no preselected course and no course is currently selected, select the first one
+        else if (data && data.length > 0 && !selectedCourseId) {
           setSelectedCourseId(data[0].id);
         }
       } catch (err) {
@@ -548,7 +551,7 @@ function CreateModulePageContent() {
     }
     
     fetchCourses();
-  }, [user, supabase, selectedCourseId, searchParams, courses.length]);
+  }, [user, supabase, searchParams]);
 
   // Step 1: Create initial module
   async function handleCreateModule() {
@@ -910,13 +913,44 @@ function CreateModulePageContent() {
               <h2 className="text-xl font-bold">No Courses Available</h2>
               <p className="text-muted-foreground">You need to create a course before adding modules.</p>
               <div className="pt-4">
-                <Link href="/teacher/courses">
-                  <Button>Create Your First Course</Button>
-                </Link>
+                <Button 
+                  onClick={() => setIsCourseModalOpen(true)}
+                  className="bg-primaryStyling text-white hover:bg-indigo-700"
+                >
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  Create Your First Course
+                </Button>
               </div>
             </div>
           </div>
         </div>
+        
+        <CreateCourseModal 
+          isOpen={isCourseModalOpen} 
+          onClose={() => {
+            setIsCourseModalOpen(false);
+            // Only refresh courses list without page reload
+            if (user && supabase) {
+              supabase
+                .from('courses')
+                .select('id, title')
+                .eq('teacher_id', user.id)
+                .order('title', { ascending: true })
+                .then(({ data, error }) => {
+                  if (error) {
+                    console.error('Error fetching updated courses:', error);
+                    toast.error('Failed to refresh courses list');
+                    return;
+                  }
+                  
+                  setCourses(data || []);
+                  if (data && data.length > 0) {
+                    setSelectedCourseId(data[data.length - 1].id);
+                  }
+                });
+            }
+          }}
+        />
       </div>
     );
   }
@@ -1693,30 +1727,29 @@ function CreateModulePageContent() {
 
       <CreateCourseModal 
         isOpen={isCourseModalOpen} 
-        onClose={async () => {
+        onClose={() => {
           setIsCourseModalOpen(false);
-          // Fetch updated courses list
+          // Only refresh courses list without page reload
           if (user && supabase) {
-            try {
-              const { data, error } = await supabase
-                .from('courses')
-                .select('id, title')
-                .eq('teacher_id', user.id)
-                .order('title', { ascending: true });
+            supabase
+              .from('courses')
+              .select('id, title')
+              .eq('teacher_id', user.id)
+              .order('title', { ascending: true })
+              .then(({ data, error }) => {
+                if (error) {
+                  console.error('Error fetching updated courses:', error);
+                  toast.error('Failed to refresh courses list');
+                  return;
+                }
                 
-              if (error) throw error;
-              
-              setCourses(data || []);
-              // Select the most recently created course
-              if (data && data.length > 0) {
-                setSelectedCourseId(data[data.length - 1].id);
-              }
-            } catch (err) {
-              console.error('Error fetching updated courses:', err);
-              toast.error('Failed to refresh courses list');
-            }
+                setCourses(data || []);
+                if (data && data.length > 0) {
+                  setSelectedCourseId(data[data.length - 1].id);
+                }
+              });
           }
-        }} 
+        }}
       />
     </div>
   );

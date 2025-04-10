@@ -25,6 +25,11 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
   const supabase = useSupabase();
   const router = useRouter();
 
+  // Handle modal close without refresh
+  const handleClose = () => {
+    onClose();
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     
@@ -41,7 +46,7 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         throw new Error('Authentication required');
       }
 
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('courses')
         .insert({
           title: title.trim(),
@@ -55,8 +60,23 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
       }
 
       toast.success('Course created successfully');
-      router.refresh();
-      onClose();
+      
+      // Redirect to the course page instead of module creation
+      if (data && data.length > 0) {
+        const courseId = data[0].id;
+        
+        // Navigate to the new course page
+        router.push(`/teacher/courses/${courseId}`);
+        
+        // Refresh the page after a short delay to update the sidebar
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        router.refresh();
+        onClose();
+      }
+      
       setTitle('');
       setDescription('');
     } catch (err) {
@@ -71,7 +91,7 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[550px] p-6">
         <DialogHeader className="space-y-4">
           <DialogTitle className="text-2xl font-semibold text-center">
@@ -86,8 +106,11 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-3">
+        <div className="space-y-2">
+          <div>
             <Label htmlFor="title" className="text-base">Course Title</Label>
+          </div>
+          <div>
             <Input
               id="title"
               value={title}
@@ -97,21 +120,22 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
               className="h-11"
             />
           </div>
+        </div>
+
 
           <DialogFooter className="gap-4 pt-4">
             <Button 
               type="button" 
-              variant="outline" 
-              onClick={onClose} 
+              onClick={handleClose} 
               disabled={isSubmitting}
-              className="min-w-[100px]"
+              className="min-w-[100px] bg-transparent text-red-500 hover:bg-white hover:text-red-600 cursor-pointer shadow-none"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="min-w-[100px]"
+              className="min-w-[100px] bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
             >
               {isSubmitting ? 'Creating...' : 'Create Course'}
             </Button>

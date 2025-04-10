@@ -72,7 +72,7 @@ const menuConfigs: Record<string, RoleConfig> = {
             href: "#",
           },
           {
-            label: "Grading",
+            label: "Course List (temp)",
             href: "#",
             icon: ClipboardCheck,
           },
