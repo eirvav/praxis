@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // Helper function to strip HTML tags for preview text
 const stripHtmlTags = (html: string | undefined): string => {
@@ -36,6 +37,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
   const [videoPlayedOnce, setVideoPlayedOnce] = useState<Record<number, boolean>>({});
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const supabase = useSupabase();
+  const t = useTranslations();
 
   // Type guards for slide configurations
   const isTextSlide = (slide: Slide): slide is Slide & { config: TextSlideConfig } => 
@@ -167,8 +169,8 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
         <Card>
           <CardContent className="py-10">
             <div className="text-center">
-              <p className="text-muted-foreground mb-4">No slides available for this module.</p>
-              <span className="text-sm text-gray-500">The instructor has not added any content yet.</span>
+              <p className="text-muted-foreground mb-4">{t('slides.viewer.noSlides.title')}</p>
+              <span className="text-sm text-gray-500">{t('slides.viewer.noSlides.subtitle')}</span>
             </div>
           </CardContent>
         </Card>
@@ -185,7 +187,7 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
           <Card className="shadow-sm">
             <CardHeader className="pb-2 py-3">
               <div className="flex items-center gap-2">
-                <CardTitle>Text Slide</CardTitle>
+                <CardTitle>{t('slides.text.title')}</CardTitle>
                 {getSlideTypeBadge('text')}
               </div>
             </CardHeader>
@@ -484,18 +486,18 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
               <div className="space-y-1">
                 {slides.map((slide, index) => {
                   // Safe content extraction based on slide type
-                  let slideContent = 'Unknown slide';
+                  let slideContent = t('slides.common.unknownSlide');
                   
                   if (slide.slide_type === 'text' && isTextSlide(slide)) {
-                    slideContent = stripHtmlTags(slide.config.content)?.slice(0, 20) || 'Text slide';
+                    slideContent = stripHtmlTags(slide.config.content)?.slice(0, 20) || t('slides.common.textSlide');
                   } else if (slide.slide_type === 'video' && isVideoSlide(slide)) {
-                    slideContent = slide.config.title || 'Video slide';
+                    slideContent = slide.config.title || t('slides.common.videoSlide');
                   } else if (slide.slide_type === 'quiz' && isQuizSlide(slide)) {
-                    slideContent = slide.config.question || 'Quiz slide';
+                    slideContent = slide.config.question || t('slides.common.quizSlide');
                   } else if (slide.slide_type === 'student_response') {
-                    slideContent = 'Video Response';
+                    slideContent = t('slides.common.videoResponse');
                   } else if (slide.slide_type === 'slider' && isSliderSlide(slide)) {
-                    slideContent = 'Scale Rating';
+                    slideContent = t('slides.common.scaleRating');
                   }
                   
                   return (

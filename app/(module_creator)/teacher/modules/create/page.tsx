@@ -551,7 +551,7 @@ function CreateModulePageContent() {
     }
     
     fetchCourses();
-  }, [user, supabase, searchParams]);
+  }, [user, supabase, searchParams, selectedCourseId]);
 
   // Step 1: Create initial module
   async function handleCreateModule() {

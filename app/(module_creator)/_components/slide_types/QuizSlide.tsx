@@ -6,6 +6,7 @@ import { QuizSlideConfig } from '../SlideEditor';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslations } from 'next-intl';
 
 interface QuizSlideProps {
   config: QuizSlideConfig;
@@ -76,6 +77,8 @@ const SortableOption = ({
 };
 
 export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => {
+  const t = useTranslations();
+  
   // Sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -283,8 +286,8 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
         
         <p className="text-xs text-muted-foreground">
           {config.multipleCorrect 
-            ? "Select one or more options as correct for the quiz" 
-            : "Mark one option as correct for the quiz"}
+            ? t('slides.quiz.selectMultiple')
+            : t('slides.quiz.selectOne')}
         </p>
       </div>
     </div>

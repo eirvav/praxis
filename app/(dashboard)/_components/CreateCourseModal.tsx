@@ -71,7 +71,7 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         // Refresh the page after a short delay to update the sidebar
         setTimeout(() => {
           window.location.reload();
-        }, 500);
+        }, 1500);
       } else {
         router.refresh();
         onClose();

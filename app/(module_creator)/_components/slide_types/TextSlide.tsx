@@ -7,6 +7,7 @@ import { useSupabase } from '../../../(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
 import 'react-quill-new/dist/quill.snow.css';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslations } from 'next-intl';
 
 // Define type for ReactQuill props
 interface ReactQuillProps {
@@ -47,6 +48,7 @@ interface QuillEditorElement extends HTMLElement {
 
 export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => {
   const supabase = useSupabase();
+  const t = useTranslations();
   const [editorValue, setEditorValue] = useState(config.content || '');
   
   // Make sure to sync our local state with props when they change
@@ -170,7 +172,7 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
           theme="snow"
           value={editorValue}
           onChange={handleChange}
-          placeholder="Enter rich text content for this slide..."
+          placeholder={t('slides.text.placeholder')}
           modules={modules}
         />
       </div>
@@ -179,7 +181,7 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
       <Alert className="bg-blue-50 border-blue-200">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-700">
-          This text will be presented to students. They will be able to view and interact with this content during the module.
+          {t('slides.text.info')}
         </AlertDescription>
       </Alert>
     </div>
@@ -187,9 +189,10 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
 };
 
 export const TextSlideTypeBadge = () => {
+  const t = useTranslations();
   return (
     <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-      <AlignLeft className="h-3 w-3 mr-1" /> Rich Text
+      <AlignLeft className="h-3 w-3 mr-1" /> {t('slides.text.title')}
     </Badge>
   );
 };

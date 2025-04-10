@@ -10,6 +10,7 @@ import { CreateCourseModal } from "../_components/CreateCourseModal";
 import ModuleCard from "../_components/ModuleCard";
 import { useSupabase } from "../_components/SupabaseProvider";
 import { ContentLayout } from "@/components/navbar-components/content-layout";
+import { useTranslations } from 'next-intl';
 
 interface Module {
   id: string;
@@ -34,6 +35,7 @@ export default function TeacherDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = useSupabase();
+  const t = useTranslations();
   
   useEffect(() => {
     async function fetchUserData() {
@@ -111,10 +113,10 @@ export default function TeacherDashboard() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
           <div>
             <h1 className="text-5xl font-bold tracking-tight">
-              Welcome back,
+              {t('teacher.dashboard.welcomeBack')},
               <br />
               <span className="block mt-2 text-primaryStyling">
-                {(user.firstName || user.username || 'Teacher')
+                {(user.firstName || user.username || t('teacher.dashboard.teacher'))
                   .toLowerCase()
                   .replace(/^./, str => str.toUpperCase())}
               </span>
@@ -131,7 +133,7 @@ export default function TeacherDashboard() {
                   onClick={() => setIsCourseModalOpen(true)}
                 >
                   <BookOpen className="h-5 w-5" />
-                  Create Course
+                  {t('common.buttons.createCourse')}
                 </Button>
                 <Link href="/teacher/modules/create">
                   <Button 
@@ -139,7 +141,7 @@ export default function TeacherDashboard() {
                     className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
                   >
                     <PlusCircle className="h-5 w-5" />
-                    Create Module
+                    {t('common.buttons.createModule')}
                   </Button>
                 </Link>
               </>

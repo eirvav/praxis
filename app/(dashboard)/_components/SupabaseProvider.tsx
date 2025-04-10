@@ -16,8 +16,6 @@ const SupabaseContext = createContext<SupabaseContextType>({
 
 // Provider component
 export function SupabaseProvider({ children }: { children: ReactNode }) {
-  console.log('[SupabaseProvider] Rendering provider');
-  
   const { session } = useSession();
   const hasLoggedInstance = useRef(false);
   const clientInstanceId = useRef(Math.random().toString(36).substring(7));

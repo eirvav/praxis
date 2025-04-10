@@ -1,0 +1,72 @@
+{
+  "common": {
+    "buttons": {
+      "createCourse": "Opprett Kurs",
+      "createModule": "Opprett Modul",
+      "backToContentEditor": "Tilbake til Innholdsredigering"
+    },
+    "loading": {
+      "textEditor": "Laster inn tekstredigering..."
+    },
+    "navigation": {
+      "quickCreate": "Hurtigoppsett",
+      "dashboard": "Dashbord",
+      "courses": "Kurs",
+      "resources": "Ressurser",
+      "courseList": "Kursliste",
+      "courseListTemp": "Kursliste (midlertidig)",
+      "content": "Innhold",
+      "learning": "Læring",
+      "myProgress": "Min Fremgang",
+      "contents": "Innhold"
+    }
+  },
+  "teacher": {
+    "dashboard": {
+      "welcomeBack": "Velkommen tilbake",
+      "teacher": "Lærer"
+    },
+    "modules": {
+      "create": {
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Skriv inn en beskrivelse for denne modulen..."
+        },
+        "content": {
+          "title": "Modulinnhold",
+          "slides": "lysbilde",
+          "slides_plural": "lysbilder",
+          "noContent": {
+            "title": "Ingen Innhold Lagt Til",
+            "message": "Denne modulen har ikke noe innhold ennå. Gå tilbake til trinn 2 for å legge til lysbilder."
+          }
+        }
+      }
+    }
+  },
+  "slides": {
+    "common": {
+      "unknownSlide": "Ukjent lysbilde",
+      "textSlide": "Tekstlysbilde",
+      "videoSlide": "Videolysbilde",
+      "quizSlide": "Quizlysbilde",
+      "videoResponse": "Videorespons",
+      "scaleRating": "Skalarangering"
+    },
+    "text": {
+      "title": "Tekstlysbilde",
+      "placeholder": "Skriv inn rikt tekstinnhold for dette lysbildet...",
+      "info": "Denne teksten vil bli presentert for studentene. De vil kunne se og samhandle med dette innholdet under modulen."
+    },
+    "quiz": {
+      "selectOne": "Merk ett alternativ som riktig for quizen",
+      "selectMultiple": "Velg ett eller flere alternativer som riktige for quizen"
+    },
+    "viewer": {
+      "noSlides": {
+        "title": "Ingen lysbilder tilgjengelig for denne modulen.",
+        "subtitle": "Instruktøren har ikke lagt til noe innhold ennå."
+      }
+    }
+  }
+}

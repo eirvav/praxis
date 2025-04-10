@@ -1,0 +1,72 @@
+{
+  "common": {
+    "buttons": {
+      "createCourse": "Create Course",
+      "createModule": "Create Module",
+      "backToContentEditor": "Back to Content Editor"
+    },
+    "loading": {
+      "textEditor": "Loading text editor..."
+    },
+    "navigation": {
+      "quickCreate": "Quick Create",
+      "dashboard": "Dashboard",
+      "courses": "Courses",
+      "resources": "Resources",
+      "courseList": "Course List",
+      "courseListTemp": "Course List (temp)",
+      "content": "Content",
+      "learning": "Learning",
+      "myProgress": "My Progress",
+      "contents": "Contents"
+    }
+  },
+  "teacher": {
+    "dashboard": {
+      "welcomeBack": "Welcome back",
+      "teacher": "Teacher"
+    },
+    "modules": {
+      "create": {
+        "description": {
+          "label": "Description",
+          "placeholder": "Enter a description for this module..."
+        },
+        "content": {
+          "title": "Module Content",
+          "slides": "slide",
+          "slides_plural": "slides",
+          "noContent": {
+            "title": "No Content Added",
+            "message": "This module doesn't have any content yet. Go back to step 2 to add slides."
+          }
+        }
+      }
+    }
+  },
+  "slides": {
+    "common": {
+      "unknownSlide": "Unknown slide",
+      "textSlide": "Text slide",
+      "videoSlide": "Video slide",
+      "quizSlide": "Quiz slide",
+      "videoResponse": "Video Response",
+      "scaleRating": "Scale Rating"
+    },
+    "text": {
+      "title": "Text Slide",
+      "placeholder": "Enter rich text content for this slide...",
+      "info": "This text will be presented to students. They will be able to view and interact with this content during the module."
+    },
+    "quiz": {
+      "selectOne": "Mark one option as correct for the quiz",
+      "selectMultiple": "Select one or more options as correct for the quiz"
+    },
+    "viewer": {
+      "noSlides": {
+        "title": "No slides available for this module.",
+        "subtitle": "The instructor has not added any content yet."
+      }
+    }
+  }
+}
