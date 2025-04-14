@@ -161,7 +161,14 @@ export const TextSlideContent = forwardRef<TextSlideRef, TextSlideProps>(({ conf
   };
 
   return (
-    <div className="bg-white rounded-md flex flex-col w-full space-y-4">
+    <div className="bg-white rounded-md flex flex-col w-full space-y-6">
+      <Alert className="bg-indigo-50 border-indigo-200">
+        <Info className="h-4 w-4" />
+        <AlertDescription className="text-indigo-700 border-indigo-200">
+          {t('slides.text.info')}
+        </AlertDescription>
+      </Alert>
+      
       <div className="quill-container w-full">
         <style jsx global>{`
           .quill {
@@ -200,13 +207,6 @@ export const TextSlideContent = forwardRef<TextSlideRef, TextSlideProps>(({ conf
           modules={modules}
         />
       </div>
-      
-      <Alert className="bg-blue-50 border-blue-200">
-        <Info className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-700">
-          {t('slides.text.info')}
-        </AlertDescription>
-      </Alert>
     </div>
   );
 });
@@ -217,14 +217,18 @@ export const TextSlideTypeBadge = () => {
   const t = useTranslations();
   return (
     <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-      <AlignLeft className="h-3 w-3 mr-1" /> {t('slides.text.title')}
+      <AlignLeft className="h-3 w-3 mr-1" /> {t('slides.common.textSlide')}
     </Badge>
   );
 };
 
 // Get default text slide config
 export const getDefaultTextSlideConfig = (): TextSlideConfig => {
-  return { type: 'text', content: '' };
+  return { 
+    type: 'text', 
+    content: '',
+    isRequired: false
+  };
 };
 
 // Create default text slide config

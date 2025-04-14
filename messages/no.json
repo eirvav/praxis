@@ -52,17 +52,17 @@
   "slides": {
     "common": {
       "unknownSlide": "Ukjent lysbilde",
-      "textSlide": "Tekstlysbilde",
-      "videoSlide": "Videolysbilde",
-      "quizSlide": "Quizlysbilde",
+      "textSlide": "Skriftlig Tilbakemelding",
+      "videoSlide": "Last opp Video",
+      "quizSlide": "Kunnskapstest",
       "videoResponse": "Videorespons",
-      "scaleRating": "Skalarangering",
+      "scaleRating": "Meningsmåling",
       "slider": "Meningsmåling"
     },
     "text": {
-      "title": "Tekstlysbilde",
-      "placeholder": "Skriv inn rikt tekstinnhold for dette lysbildet...",
-      "info": "Denne teksten vil bli presentert for studentene. De vil kunne se og samhandle med dette innholdet under modulen."
+      "title": "Skriftlig Tilbakemelding",
+      "placeholder": "Skriv inn instruksjoner eller spørsmål som studentene skal svare på...",
+      "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger."
     },
     "quiz": {
       "selectOne": "Merk ett alternativ som riktig for quizen",

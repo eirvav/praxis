@@ -131,31 +131,31 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
       case 'text':
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-            <FileText className="h-3 w-3 mr-1" /> Text
+            <FileText className="h-3 w-3 mr-1" /> {t('slides.common.textSlide')}
           </Badge>
         );
       case 'video':
         return (
           <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50 border-purple-200">
-            <Video className="h-3 w-3 mr-1" /> Video
+            <Video className="h-3 w-3 mr-1" /> {t('slides.common.videoSlide')}
           </Badge>
         );
       case 'quiz':
         return (
           <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200">
-            <ListTodo className="h-3 w-3 mr-1" /> Quiz
+            <ListTodo className="h-3 w-3 mr-1" /> {t('slides.common.quizSlide')}
           </Badge>
         );
       case 'student_response':
         return (
           <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
-            <MessageSquare className="h-3 w-3 mr-1" /> Response
+            <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
           </Badge>
         );
       case 'slider':
         return (
           <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
-            <MoveHorizontal className="h-3 w-3 mr-1" /> Slider
+            <MoveHorizontal className="h-3 w-3 mr-1" /> {t('slides.common.scaleRating')}
           </Badge>
         );
       default:

@@ -17,11 +17,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-//import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Import slide type components
-import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig, TextSlideRef } from './slide_types/TextSlide';
+import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig, TextSlideRef } from './slide_types/ReflectionSlide';
 import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig } from './slide_types/VideoSlide';
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
@@ -41,6 +41,8 @@ export interface Slide {
 export interface TextSlideConfig {
   type: 'text';
   content: string;
+  isRequired: boolean;
+  maxWords?: number;
 }
 
 export interface VideoSlideConfig {
@@ -60,8 +62,6 @@ export interface QuizSlideConfig {
   correctOptionIndex: number;
   explanations?: string[];
   optionImages?: string[];
-  points?: number;
-  timeLimit?: number;
   shuffleOptions?: boolean;
   multipleCorrect?: boolean;
   correctOptionIndices?: number[];
@@ -170,6 +170,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const textSlideRef = useRef<TextSlideRef>(null);
+  const t = useTranslations();
   
   // Helper function to format duration in seconds to a readable format
   const formatDuration = (seconds: number): string => {
@@ -207,7 +208,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       module_id: moduleId,
       slide_type: 'text',
       position: 0,
-      config: { type: 'text', content: '' }
+      config: { type: 'text', content: '', isRequired: false }
     };
   }, [moduleId]);
 
@@ -286,7 +287,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   }, [moduleId, supabase, createDefaultSlide]);
 
   // Remove a slide
-  const removeSlide = (index: number) => {
+  const removeSlide = useCallback((index: number) => {
     if (slides.length <= 1) {
       toast.error("You must have at least one slide");
       return;
@@ -313,7 +314,45 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     } else if (activeSlideIndex !== null && activeSlideIndex > index) {
       setActiveSlideIndex(activeSlideIndex - 1);
     }
-  };
+  }, [slides, activeSlideIndex]);
+
+  // Add keyboard shortcut for deleting slides
+  useEffect(() => {
+    // Add keyboard event listener for backspace
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle backspace key
+      if (e.key !== 'Backspace') return;
+      
+      // Check if we have an active slide
+      if (activeSlideIndex === null) return;
+      
+      // Don't delete if we're typing in an input or contentEditable element
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.isContentEditable ||
+          target.tagName === 'SELECT') {
+        return;
+      }
+      
+      // Don't delete if we only have one slide
+      if (slides.length <= 1) {
+        toast.error("You must have at least one slide");
+        return;
+      }
+      
+      // Remove the slide
+      removeSlide(activeSlideIndex);
+    };
+    
+    // Add the event listener
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      // Clean up the event listener
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeSlideIndex, slides.length, removeSlide]);
 
   // Handle drag start
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -912,14 +951,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                     alignOffset={-25}
                     sideOffset={8}
                     onInteractOutside={(e) => {
-                      // Only close if we're not clicking the trigger button
                       if (!popoverTriggerRef.current?.contains(e.target as Node)) {
                         handlePopoverOpen(false);
                       }
                     }}
                   >
                     <div className="flex items-center justify-between border-b p-3">
-                      <span className="text-sm text-muted-foreground font-medium">Slide Types</span>
+                      <span className="text-sm text-muted-foreground font-small">Slide Types</span>
                       <button 
                         onClick={() => handlePopoverOpen(false)}
                         className="text-muted-foreground hover:text-foreground rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -928,35 +966,73 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                         <span className="sr-only">Close</span>
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 p-3">
-                      {[
-                        { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: 'Text', bgColor: 'bg-blue-100' },
-                        { id: 'video', value: 'video', icon: Video, color: 'purple', label: 'Video', bgColor: 'bg-purple-100' },
-                        { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: 'Quiz', bgColor: 'bg-amber-100' },
-                        { id: 'student_response', value: 'student_response', icon: MessageSquare, color: 'rose', label: 'Response', bgColor: 'bg-rose-100' },
-                        { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: 'Opinion Scale', bgColor: 'bg-indigo-100' },
-                        { id: 'poll', value: 'text', icon: BarChart3, color: 'emerald', label: 'Poll', bgColor: 'bg-emerald-100' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className="relative group outline-none"
-                          onMouseEnter={() => setAddSlidePreviewType(item.value)}
-                          onMouseLeave={() => setAddSlidePreviewType(null)}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
-                          }}
-                        >
-                          <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                            <div className={`w-10 h-10 ${item.bgColor} rounded-full flex items-center justify-center`}>
-                              <item.icon className={`h-5 w-5 text-${item.color}-600`} />
-                            </div>
-                            <span className="font-medium text-sm">{item.label}</span>
-                          </div>
-                        </button>
-                      ))}
+
+                    {/* Interactive Slides Section */}
+                    <div className="p-3 space-y-3">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Interactive Slides</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide'), bgColor: 'bg-blue-100' },
+                            { id: 'student_response', value: 'student_response', icon: MessageSquare, color: 'rose', label: t('slides.common.videoResponse'), bgColor: 'bg-rose-100' },
+                            { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide'), bgColor: 'bg-amber-100' },
+                            { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: t('slides.common.scaleRating'), bgColor: 'bg-indigo-100' },
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="relative group outline-none"
+                              onMouseEnter={() => setAddSlidePreviewType(item.value)}
+                              onMouseLeave={() => setAddSlidePreviewType(null)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
+                              }}
+                            >
+                              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div className={`w-10 h-10 ${item.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                                  <item.icon className={`h-5 w-5 text-${item.color}-600`} />
+                                </div>
+                                <span className="font-medium text-sm text-left">{item.label}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="border-t my-3"></div>
+
+                      {/* Context Slides Section */}
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Context Slides</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: 'video', value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide'), bgColor: 'bg-purple-100' },
+                            { id: 'poll', value: 'text', icon: BarChart3, color: 'emerald', label: 'Poll', bgColor: 'bg-emerald-100' }
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="relative group outline-none"
+                              onMouseEnter={() => setAddSlidePreviewType(item.value)}
+                              onMouseLeave={() => setAddSlidePreviewType(null)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
+                              }}
+                            >
+                              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div className={`w-10 h-10 ${item.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                                  <item.icon className={`h-5 w-5 text-${item.color}-600`} />
+                                </div>
+                                <span className="font-medium text-sm text-left">{item.label}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -1155,11 +1231,11 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                     <SelectContent>
                       <div className="relative cursor-pointer">
                         {[
-                          { value: 'text', icon: AlignLeft, color: 'blue', label: 'Text' },
-                          { value: 'video', icon: Video, color: 'purple', label: 'Video' },
-                          { value: 'quiz', icon: ListTodo, color: 'amber', label: 'Quiz' },
-                          { value: 'student_response', icon: MessageSquare, color: 'rose', label: 'Student Response' },
-                          { value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: 'Opinion Scale' }
+                          { value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide') },
+                          { value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide') },
+                          { value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide') },
+                          { value: 'student_response', icon: MessageSquare, color: 'rose', label: t('slides.common.videoResponse') },
+                          { value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: t('slides.common.scaleRating') }
                         ].map((item) => (
                           <div 
                             key={item.value} 
@@ -1183,11 +1259,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {/* Video-specific settings */}
                 {slides[activeSlideIndex].slide_type === 'video' && isVideoSlide(slides[activeSlideIndex].config) && (
                   <>
-                    <Separator className="my-2" />
+                    <Separator className="my-6" />
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Video Settings</h3>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="allowReplay" className="text-sm cursor-pointer">
+                          Replay video
+                        </Label>
                         <Switch 
                           id="allowReplay" 
                           checked={slides[activeSlideIndex].config.allowReplay ?? true}
@@ -1195,11 +1273,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             updateSlideConfig(activeSlideIndex, { allowReplay: checked });
                           }}
                         />
-                        <Label htmlFor="allowReplay" className="text-sm cursor-pointer">
-                          Allow students to replay the video
-                        </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-7">
+                      <p className="text-xs text-muted-foreground">
                         If disabled, students will only be able to play the video once
                       </p>
                       
@@ -1234,11 +1309,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {/* Quiz-specific settings */}
                 {slides[activeSlideIndex].slide_type === 'quiz' && isQuizSlide(slides[activeSlideIndex].config) && (
                   <>
-                    <Separator className="my-2" />
+                    <Separator className="my-6" />
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Quiz Settings</h3>
-                      
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="multipleCorrect" className="text-sm cursor-pointer">
+                          Allow multiple correct answers
+                        </Label>
                         <Switch 
                           id="multipleCorrect" 
                           checked={slides[activeSlideIndex].config.multipleCorrect ?? false}
@@ -1246,13 +1322,11 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             const quizConfig = slides[activeSlideIndex].config;
                             if (isQuizSlide(quizConfig)) {
                               if (checked) {
-                                // Convert from single to multiple correct
                                 updateSlideConfig(activeSlideIndex, { 
                                   multipleCorrect: true,
                                   correctOptionIndices: [quizConfig.correctOptionIndex],
                                 });
                               } else {
-                                // Convert from multiple to single correct
                                 const correctOptionIndices = quizConfig.correctOptionIndices || [];
                                 updateSlideConfig(activeSlideIndex, { 
                                   multipleCorrect: false,
@@ -1262,15 +1336,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             }
                           }}
                         />
-                        <Label htmlFor="multipleCorrect" className="text-sm cursor-pointer">
-                          Allow multiple correct answers
-                        </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-7">
-                        Students can select more than one correct answer
-                      </p>
                       
-                      <div className="flex items-center space-x-2 mt-3">
+                      <div className="flex items-center justify-between w-full mt-3">
+                        <Label htmlFor="shuffleOptions" className="text-sm cursor-pointer">
+                          Shuffle options
+                        </Label>
                         <Switch 
                           id="shuffleOptions" 
                           checked={slides[activeSlideIndex].config.shuffleOptions ?? false}
@@ -1278,60 +1349,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             updateSlideConfig(activeSlideIndex, { shuffleOptions: checked });
                           }}
                         />
-                        <Label htmlFor="shuffleOptions" className="text-sm cursor-pointer">
-                          Shuffle options for students
-                        </Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground pl-7">
-                        Options will appear in random order for each student
-                      </p>
-                      
-                      <div className="mt-3 space-y-2">
-                        <label htmlFor="points" className="text-sm font-medium">Points</label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            id="points"
-                            type="number"
-                            min="1"
-                            max="100"
-                            value={slides[activeSlideIndex].config.points ?? 10}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              const validValue = isNaN(value) ? 10 : Math.max(1, Math.min(100, value));
-                              updateSlideConfig(activeSlideIndex, { points: validValue });
-                            }}
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-500">points</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Points awarded for correct answer(s)
-                        </p>
-                      </div>
-                      
-                      <div className="mt-3 space-y-2">
-                        <label htmlFor="timeLimit" className="text-sm font-medium">Time Limit (seconds)</label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            id="timeLimit"
-                            type="number"
-                            min="0"
-                            max="600"
-                            value={slides[activeSlideIndex].config.timeLimit ?? 0}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              const validValue = isNaN(value) ? 0 : Math.max(0, Math.min(600, value));
-                              updateSlideConfig(activeSlideIndex, { timeLimit: validValue });
-                            }}
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-500">seconds</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {slides[activeSlideIndex].config.timeLimit ? 
-                            `Students have ${slides[activeSlideIndex].config.timeLimit} seconds to answer` : 
-                            'No time limit for this question'}
-                        </p>
                       </div>
                     </div>
                   </>
@@ -1340,11 +1357,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {/* Student Response-specific settings */}
                 {slides[activeSlideIndex].slide_type === 'student_response' && isStudentResponseSlide(slides[activeSlideIndex].config) && (
                   <>
-                    <Separator className="my-2" />
+                    <Separator className="my-6" />
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Response Settings</h3>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="severalResponses" className="text-sm cursor-pointer">
+                          Allow multiple responses
+                        </Label>
                         <Switch 
                           id="severalResponses" 
                           checked={slides[activeSlideIndex].config.severalResponses ?? false}
@@ -1352,11 +1371,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             updateSlideConfig(activeSlideIndex, { severalResponses: checked });
                           }}
                         />
-                        <Label htmlFor="severalResponses" className="text-sm cursor-pointer">
-                          Allow multiple responses
-                        </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-7">
+                      <p className="text-xs text-muted-foreground">
                         If enabled, students can submit multiple responses
                       </p>
                       
@@ -1407,7 +1423,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             />
                           </div>
                           <div className="flex justify-between items-center text-sm">
-                            <span className="font-medium">
+                            <span className="font-medium bg-indigo-100 px-2 py-1 rounded-md">
                               {formatDuration(isStudentResponseSlide(slides[activeSlideIndex].config) ? 
                                 slides[activeSlideIndex].config.responseMaxDuration ?? 120 : 120)}
                             </span>
@@ -1448,7 +1464,10 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                         </p>
                       </div>
 
-                      <div className="flex items-center space-x-2 mt-4">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="instantResponse" className="text-sm cursor-pointer text-red-500 font-bold">
+                          Force instant response
+                        </Label>
                         <Switch 
                           id="instantResponse" 
                           checked={slides[activeSlideIndex].config.instantResponse ?? false}
@@ -1456,11 +1475,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             updateSlideConfig(activeSlideIndex, { instantResponse: checked });
                           }}
                         />
-                        <Label htmlFor="instantResponse" className="text-sm cursor-pointer text-red-500 font-bold">
-                          Force instant response
-                        </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-7">
+                      <p className="text-xs text-muted-foreground">
                         If enabled, students must respond immediately after the video ends
                       </p>
                     </div>
@@ -1470,11 +1486,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {/* Slider-specific settings */}
                 {slides[activeSlideIndex].slide_type === 'slider' && isSliderSlide(slides[activeSlideIndex].config) && (
                   <>
-                    <Separator className="my-2" />
+                    <Separator className="my-6" />
                     <div className="space-y-4">
-                      <h3 className="text-sm font-medium">Slider Settings</h3>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required slide
+                        </Label>
                         <Switch 
                           id="isRequired" 
                           checked={slides[activeSlideIndex].config.isRequired}
@@ -1487,9 +1505,6 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             }
                           }}
                         />
-                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
-                          Required slide
-                        </Label>
                       </div>
 
                       {slides[activeSlideIndex].config.sliders.map((slider, sliderIndex) => (
@@ -1561,6 +1576,64 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </>
+                )}
+                
+                {/* Text-specific settings */}
+                {slides[activeSlideIndex].slide_type === 'text' && isTextSlide(slides[activeSlideIndex].config) && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                      
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required slide
+                        </Label>
+                        <Switch 
+                          id="isRequired" 
+                          checked={slides[activeSlideIndex].config.isRequired}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { isRequired: checked });
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="hasMaxWords" className="text-sm cursor-pointer">
+                          Max words
+                        </Label>
+                        <Switch 
+                          id="hasMaxWords" 
+                          checked={slides[activeSlideIndex].config.maxWords !== undefined}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { 
+                              maxWords: checked ? 100 : undefined 
+                            });
+                          }}
+                        />
+                      </div>
+
+                      {slides[activeSlideIndex].config.maxWords !== undefined && (
+                        <div className="space-y-2 pl-7">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              id="maxWords"
+                              type="number"
+                              min="1"
+                              max="1000"
+                              value={slides[activeSlideIndex].config.maxWords}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                const validValue = isNaN(value) ? 100 : Math.max(1, Math.min(1000, value));
+                                updateSlideConfig(activeSlideIndex, { maxWords: validValue });
+                              }}
+                              className="w-24"
+                            />
+                            <span className="text-sm text-gray-500">words</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

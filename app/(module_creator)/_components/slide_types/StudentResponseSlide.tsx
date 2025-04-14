@@ -30,9 +30,9 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
 
   return (
     <div className="space-y-6">
-      <Alert>
+      <Alert className="bg-indigo-50 border-indigo-200">
         <Info className="h-4 w-4" />
-        <AlertDescription>
+        <AlertDescription className="text-indigo-700 border-indigo-200">
           {t('slides.studentResponse.info')}
         </AlertDescription>
       </Alert>

@@ -52,17 +52,17 @@
   "slides": {
     "common": {
       "unknownSlide": "Unknown slide",
-      "textSlide": "Text slide",
-      "videoSlide": "Video slide",
-      "quizSlide": "Quiz slide",
+      "textSlide": "Written Response",
+      "videoSlide": "Video",
+      "quizSlide": "Quiz",
       "videoResponse": "Video Response",
-      "scaleRating": "Scale Rating",
-      "slider": "Slider"
+      "scaleRating": "Opinion Scale",
+      "slider": "Opinion Scale"
     },
     "text": {
-      "title": "Text Slide",
-      "placeholder": "Enter rich text content for this slide...",
-      "info": "This text will be presented to students. They will be able to view and interact with this content during the module."
+      "title": "Written Response",
+      "placeholder": "Enter instructions or prompts for students to respond to...",
+      "info": "This interactive slide lets students respond to your content with reflections, open-ended answers, or feedback."
     },
     "quiz": {
       "selectOne": "Mark one option as correct for the quiz",

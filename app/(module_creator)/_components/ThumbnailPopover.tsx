@@ -75,33 +75,14 @@ export default function ThumbnailPopover({
             </div>
             
             <div className="overflow-y-auto" style={{ maxHeight: "300px" }}>
-              <TabsContent value="gallery" className="py-4 px-4 m-0">
+              <TabsContent value="gallery" className="py-4 px-4 space-y-3 m-0">
                 {isLoadingPredefinedThumbnails ? (
                   <div className="text-center py-8">
                     <div className="animate-pulse">Loading gallery...</div>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 mb-6">
-                      <h3 className="text-sm font-medium text-gray-500 mb-3">Solid Color</h3>
-                      <div className="grid grid-cols-4 gap-3">
-                        {predefinedThumbnails
-                          .filter(item => item.type === 'color')
-                          .slice(0, 8) // Show only first 8 colors (2 rows of 4)
-                          .map((color, index) => (
-                            <div 
-                              key={`color-${index}`}
-                              className={`aspect-video relative rounded-md cursor-pointer hover:ring-2 hover:ring-primaryStyling transition-all overflow-hidden shadow-sm border border-gray-100 ${selectedThumbnail === color.url ? 'ring-2 ring-primaryStyling' : ''}`}
-                              onClick={() => selectPredefinedThumbnail(color)}
-                            >
-                              <div className="absolute inset-0" style={{ backgroundColor: color.url }}></div>
-                            </div>
-                          ))
-                        }
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
+                  <div className="space-y-3">
                       <h3 className="text-sm font-medium text-gray-500 mb-3">Images</h3>
                       {predefinedThumbnails.filter(item => item.type === 'illustration').length === 0 ? (
                         <div className="text-center py-6 border border-dashed border-gray-300 rounded-md">
@@ -130,6 +111,27 @@ export default function ThumbnailPopover({
                         </div>
                       )}
                     </div>
+                    
+                    <div className="mb-6">
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">Solid Color</h3>
+                      <div className="grid grid-cols-4 gap-3">
+                        {predefinedThumbnails
+                          .filter(item => item.type === 'color')
+                          .slice(0, 8) // Show only first 8 colors (2 rows of 4)
+                          .map((color, index) => (
+                            <div 
+                              key={`color-${index}`}
+                              className={`aspect-video relative rounded-md cursor-pointer hover:ring-2 hover:ring-primaryStyling transition-all overflow-hidden shadow-sm border border-gray-100 ${selectedThumbnail === color.url ? 'ring-2 ring-primaryStyling' : ''}`}
+                              onClick={() => selectPredefinedThumbnail(color)}
+                            >
+                              <div className="absolute inset-0" style={{ backgroundColor: color.url }}></div>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </div>
+                    
+                    
                   </>
                 )}
               </TabsContent>

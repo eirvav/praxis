@@ -316,8 +316,6 @@ export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
     correctOptionIndex: 0,
     explanations: [''],
     optionImages: [''],
-    points: 10,
-    timeLimit: 0,
     shuffleOptions: false,
     multipleCorrect: false,
     correctOptionIndices: [],

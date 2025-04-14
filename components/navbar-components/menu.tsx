@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { getMenuList } from "@/lib/menu-list";
+import { TRANSLATION_KEYS } from "@/lib/menu-list";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CollapseMenuButton } from "@/components/navbar-components/collapse-menu-button";
@@ -63,9 +64,10 @@ export function Menu({ isOpen }: MenuProps) {
       <ScrollArea className="[&>div>div[style]]:!block">
         <nav className="mt-8 h-full w-full">
           <ul className="flex flex-col min-h-[calc(100vh-48px-36px-16px-32px)] lg:min-h-[calc(100vh-32px-40px-32px)] items-start space-y-1 px-2">
-            {menuList.map(({ groupLabel, translationKey, menus }, index) => {
+            {menuList.map(({ groupLabel, translationKey: groupTranslationKey, menus }, index) => {
               // Get translated group label if available
-              const translatedGroupLabel = getTranslatedLabel(groupLabel, translationKey);
+              const translatedGroupLabel = getTranslatedLabel(groupLabel, groupTranslationKey);
+              const isCoursesGroup = groupTranslationKey === TRANSLATION_KEYS.COURSES;
               
               return (
                 <li className={cn("w-full", translatedGroupLabel ? "pt-5" : "")} key={index}>
@@ -74,7 +76,7 @@ export function Menu({ isOpen }: MenuProps) {
                       <p className="text-sm font-medium text-muted-foreground max-w-[200px] truncate">
                         {translatedGroupLabel}
                       </p>
-                      {translatedGroupLabel === "Courses" && (
+                      {isCoursesGroup && (
                         <div
                           className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer"
                           onClick={() => setIsCourseModalOpen(true)}
@@ -89,9 +91,9 @@ export function Menu({ isOpen }: MenuProps) {
                         <TooltipTrigger asChild>
                           <div 
                             className="w-full flex justify-center items-center"
-                            onClick={translatedGroupLabel === "Courses" ? () => setIsCourseModalOpen(true) : undefined}
+                            onClick={isCoursesGroup ? () => setIsCourseModalOpen(true) : undefined}
                           >
-                            {translatedGroupLabel === "Courses" ? (
+                            {isCoursesGroup ? (
                               <div className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer">
                                 <Plus className="h-4 w-4 transition-transform group-hover:scale-125 group-hover:text-primary" />
                               </div>

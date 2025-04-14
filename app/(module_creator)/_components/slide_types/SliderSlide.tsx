@@ -89,7 +89,7 @@ export const SliderSlideTypeBadge = () => {
   return (
     <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">
       <MoveHorizontal className="w-3 h-3 mr-1" />
-      {t('slides.common.slider')}
+      {t('slides.common.scaleRating')}
     </Badge>
   );
 };
@@ -273,7 +273,7 @@ export default function SliderSlideContent({ config, onConfigChange }: SliderSli
         <Button
           onClick={addSlider}
           size="lg"
-          className="h-10 rounded-lg"
+          className="h-10 rounded-lg bg-primaryStyling hover:bg-indigo-700 text-white cursor-pointer"
         >
           <Plus className="h-4 w-4 mr-1" />
           {t('slides.slider.addSlider')}
