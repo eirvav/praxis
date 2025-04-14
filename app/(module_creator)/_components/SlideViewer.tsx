@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal, Clock, Camera } from 'lucide-react';
 import { toast } from 'sonner';
-import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig } from './SlideEditor';
+import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig, ContextSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -55,6 +55,9 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
 
   const isSliderSlide = (slide: Slide): slide is Slide & { config: SliderSlideConfig } => 
     slide.slide_type === 'slider' && slide.config.type === 'slider';
+
+  const isContextSlide = (slide: Slide): slide is Slide & { config: ContextSlideConfig } => 
+    slide.slide_type === 'context' && slide.config.type === 'context';
 
   // Load slides
   useEffect(() => {
@@ -149,13 +152,19 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
       case 'student_response':
         return (
           <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
-            <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
+            <Camera className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
           </Badge>
         );
       case 'slider':
         return (
           <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
             <MoveHorizontal className="h-3 w-3 mr-1" /> {t('slides.common.scaleRating')}
+          </Badge>
+        );
+      case 'context':
+        return (
+          <Badge variant="outline" className="bg-teal-50 text-teal-700 hover:bg-teal-50 border-teal-200">
+            <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.contextSlide')}
           </Badge>
         );
       default:
@@ -347,7 +356,7 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
               <div className="bg-rose-50 border border-rose-200 rounded-md p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center">
-                    <Video className="h-5 w-5 text-rose-600" />
+                    <Camera className="h-5 w-5 text-rose-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-rose-900">Record Your Response</h3>
@@ -368,7 +377,7 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
               {/* Video recording interface will be implemented here */}
               <div className="aspect-video bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center">
                 <div className="text-center p-6">
-                  <MessageSquare className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+                  <Camera className="h-12 w-12 text-slate-400 mx-auto mb-3" />
                   <h3 className="text-slate-900 font-medium mb-1">Video Response</h3>
                   <p className="text-sm text-slate-500">
                     The recording interface will appear here when viewing as a student
@@ -379,8 +388,6 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
           </Card>
         );
       
-
-      {/* Sjekk ut hvordan Slider ser ut på vieweren på siden, den er forskjellig fra de andre */}
       case 'slider':
         if (!isSliderSlide(currentSlide)) return <p>Invalid slider slide configuration</p>;
         return (
@@ -434,6 +441,26 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'context':
+        if (!isContextSlide(currentSlide)) return <p>Invalid context slide configuration</p>;
+        return (
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle>{t('slides.common.contextSlide')}</CardTitle>
+                {getSlideTypeBadge('context')}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <div className="bg-teal-50 border border-teal-200 rounded-md p-4">
+                <div className="prose max-w-none text-teal-900">
+                  <div dangerouslySetInnerHTML={{ __html: currentSlide.config.content }} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -510,6 +537,8 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                     slideContent = t('slides.common.videoResponse');
                   } else if (slide.slide_type === 'slider' && isSliderSlide(slide)) {
                     slideContent = t('slides.common.scaleRating');
+                  } else if (slide.slide_type === 'context' && isContextSlide(slide)) {
+                    slideContent = t('slides.common.contextSlide');
                   }
                   
                   return (

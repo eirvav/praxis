@@ -37,7 +37,7 @@ interface Slide {
   id?: string;
   module_id: string;
   position: number;
-  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context';
   config: SlideConfig;
 }
 
@@ -1769,12 +1769,17 @@ function CreateModulePageContent() {
                             )}
                             {slide.slide_type === 'student_response' && (
                               <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-                                <MessageSquare className="h-4 w-4 text-rose-600" />
+                                <Camera className="h-4 w-4 text-rose-600" />
                               </div>
                             )}
                             {slide.slide_type === 'slider' && (
                               <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
                                 <MoveHorizontal className="h-4 w-4 text-primaryStyling" />
+                              </div>
+                            )}
+                            {slide.slide_type === 'context' && (
+                              <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                                <MessageSquare className="h-4 w-4 text-teal-600" />
                               </div>
                             )}
                           </div>
@@ -1792,6 +1797,8 @@ function CreateModulePageContent() {
                                 'Video Response' :
                                slide.slide_type === 'slider' ?
                                 'Slider' :
+                               slide.slide_type === 'context' ?
+                                'Context' :
                                 'Unknown slide'}
                               {slide.config.content && stripHtmlTags(slide.config.content).length > 50 && '...'}
                             </h3>

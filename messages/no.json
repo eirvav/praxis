@@ -57,7 +57,8 @@
       "quizSlide": "Kunnskapstest",
       "videoResponse": "Videorespons",
       "scaleRating": "Meningsmåling",
-      "slider": "Meningsmåling"
+      "slider": "Meningsmåling",
+      "contextSlide": "Kontekst"
     },
     "text": {
       "title": "Skriftlig Tilbakemelding",
@@ -124,6 +125,10 @@
       "minute": "1 minutt",
       "minutes": "{count} minutter",
       "minutesSeconds": "{minutes}m {seconds}s"
+    },
+    "context": {
+      "title": "Kontekst",
+      "info": "Dette lysbildet vil gjøre det mulig for studenter å ta opp og sende inn videoresponser. Konfigurer responsinnstillingene i høyre panel."
     },
     "viewer": {
       "noSlides": {

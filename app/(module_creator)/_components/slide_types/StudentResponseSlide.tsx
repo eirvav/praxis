@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Video, Info } from 'lucide-react';
+import { Info, Camera } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StudentResponseSlideConfig } from '../SlideEditor';
 import { useTranslations } from 'next-intl';
@@ -40,7 +40,7 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
       <div className="rounded-lg border bg-slate-50 p-6">
         <div className="flex items-center justify-center gap-4">
           <div className="h-12 w-12 rounded-full bg-rose-100 flex items-center justify-center">
-            <Video className="h-6 w-6 text-rose-600" />
+            <Camera className="h-6 w-6 text-rose-600" />
           </div>
           <div>
             <h3 className="font-medium text-slate-900">{t('slides.studentResponse.title')}</h3>
@@ -69,7 +69,7 @@ export const StudentResponseSlideTypeBadge = () => {
   const t = useTranslations();
   return (
     <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
-      <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
+      <Camera className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
     </Badge>
   );
 };

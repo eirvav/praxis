@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, Copy, X } from 'lucide-react';
+import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, MessageSquare, MoveHorizontal, Copy, X, Camera } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -26,11 +26,12 @@ import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig }
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
 import SliderSlideContent, { SliderSlideTypeBadge, createDefaultSliderConfig } from './slide_types/SliderSlide';
+import ContextSlideContent, { ContextSlideTypeBadge, createDefaultContextSlideConfig } from './slide_types/ContextSlide';
 
 export interface Slide {
   id?: string;
   module_id: string;
-  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
+  slide_type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context';
   position: number;
   config: SlideConfig;
   created_at?: string;
@@ -94,13 +95,19 @@ export interface SliderSlideConfig {
   isRequired: boolean;
 }
 
+export interface ContextSlideConfig {
+  type: 'context';
+  content: string;
+}
+
 // Define a union type for all possible slide configurations
 export type SlideConfig = 
   | TextSlideConfig 
   | VideoSlideConfig 
   | QuizSlideConfig 
   | StudentResponseSlideConfig
-  | SliderSlideConfig;
+  | SliderSlideConfig
+  | ContextSlideConfig;
 
 // Type guard functions to check the slide type
 function isTextSlide(config: SlideConfig): config is TextSlideConfig {
@@ -121,6 +128,10 @@ function isStudentResponseSlide(config: SlideConfig): config is StudentResponseS
 
 function isSliderSlide(config: SlideConfig): config is SliderSlideConfig {
   return config.type === 'slider';
+}
+
+function isContextSlide(config: SlideConfig): config is ContextSlideConfig {
+  return config.type === 'context';
 }
 
 interface SlideEditorProps {
@@ -149,6 +160,10 @@ const PreviewSlide = ({ type }: { type: string }) => {
     case 'slider': {
       const config = createDefaultSliderConfig();
       return <SliderSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    case 'context': {
+      const config = createDefaultContextSlideConfig();
+      return <ContextSlideContent config={config} onConfigChange={() => {}} />;
     }
     default:
       return null;
@@ -475,7 +490,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   // Handle slide type change
   const handleSlideTypeChange = (value: string, index: number) => {
     const updatedSlides = [...slides];
-    const slideType = value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider';
+    const slideType = value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context';
     
     // Set default config based on type
     let config: SlideConfig;
@@ -508,6 +523,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         break;
       case 'slider':
         config = createDefaultSliderConfig();
+        break;
+      case 'context':
+        config = createDefaultContextSlideConfig();
         break;
     }
     
@@ -566,6 +584,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         ...currentConfig,
         ...configUpdate as Partial<SliderSlideConfig>,
         type: 'slider'
+      };
+    } else if (isContextSlide(currentConfig)) {
+      updatedConfig = {
+        ...currentConfig,
+        ...configUpdate as Partial<ContextSlideConfig>,
+        type: 'context'
       };
     } else {
       // Fallback to default type if for some reason we have an invalid config
@@ -693,6 +717,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         return <StudentResponseSlideTypeBadge />;
       case 'slider':
         return <SliderSlideTypeBadge />;
+      case 'context':
+        return <ContextSlideTypeBadge />;
       default:
         return null;
     }
@@ -744,13 +770,20 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         updateSlideConfig(index, createDefaultSliderConfig());
         return null;
       
+      case 'context':
+        if (isContextSlide(slide.config)) {
+          return <ContextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+        }
+        updateSlideConfig(index, createDefaultContextSlideConfig());
+        return null;
+      
       default:
         return <p>Unknown slide type</p>;
     }
   };
 
   // Create a new slide of a specific type
-  const createSlideOfType = async (type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider') => {
+  const createSlideOfType = async (type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context') => {
     console.log(`[SlideEditor] Creating new slide of type: ${type}`);
     
     const newSlide: Slide = {
@@ -761,6 +794,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
               type === 'video' ? createDefaultVideoSlideConfig() : 
               type === 'quiz' ? createDefaultQuizSlideConfig() :
               type === 'slider' ? createDefaultSliderConfig() :
+              type === 'context' ? createDefaultContextSlideConfig() :
               createDefaultStudentResponseConfig()
     };
 
@@ -967,16 +1001,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                       </button>
                     </div>
 
-                    {/* Interactive Slides Section */}
-                    <div className="p-3 space-y-3">
-                      <div>
-                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Interactive Slides</h3>
+                    {/* Context Slides Section */}
+                    <div className="p-3">
+                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Context Slides</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {[
-                            { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide'), bgColor: 'bg-blue-100' },
-                            { id: 'student_response', value: 'student_response', icon: MessageSquare, color: 'rose', label: t('slides.common.videoResponse'), bgColor: 'bg-rose-100' },
-                            { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide'), bgColor: 'bg-amber-100' },
-                            { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: t('slides.common.scaleRating'), bgColor: 'bg-indigo-100' },
+                            { id: 'video', value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide'), bgColor: 'bg-purple-100' },
+                            { id: 'context', value: 'context', icon: MessageSquare, color: 'teal', label: t('slides.common.contextSlide'), bgColor: 'bg-teal-100' }
                           ].map((item) => (
                             <button
                               key={item.id}
@@ -987,7 +1018,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
+                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context');
                               }}
                             >
                               <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -1000,16 +1031,17 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           ))}
                         </div>
                       </div>
-
-                      <div className="border-t my-3"></div>
-
-                      {/* Context Slides Section */}
+                    <div className="border-t my-2"></div>
+                    {/* Interactive Slides Section */}
+                    <div className="p-3 space-y-3">
                       <div>
-                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Context Slides</h3>
+                        <h3 className="text-sm font-semibold mb-2 text-gray-900">Interactive Slides</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {[
-                            { id: 'video', value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide'), bgColor: 'bg-purple-100' },
-                            { id: 'poll', value: 'text', icon: BarChart3, color: 'emerald', label: 'Poll', bgColor: 'bg-emerald-100' }
+                            { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide'), bgColor: 'bg-blue-100' },
+                            { id: 'student_response', value: 'student_response', icon: Camera, color: 'rose', label: t('slides.common.videoResponse'), bgColor: 'bg-rose-100' },
+                            { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide'), bgColor: 'bg-amber-100' },
+                            { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'indigo', label: t('slides.common.scaleRating'), bgColor: 'bg-indigo-100' },
                           ].map((item) => (
                             <button
                               key={item.id}
@@ -1020,7 +1052,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
+                                createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider' | 'context');
                               }}
                             >
                               <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -1093,10 +1125,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                               <ListTodo className="h-6 w-6 text-amber-500" />
                             )}
                             {slide.slide_type === 'student_response' && (
-                              <MessageSquare className="h-6 w-6 text-rose-500" />
+                              <Camera className="h-6 w-6 text-rose-500" />
                             )}
                              {slide.slide_type === 'slider' && (
                               <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
+                            )}
+                            {slide.slide_type === 'context' && (
+                                <MessageSquare className="h-6 w-6 text-teal-600" />
                             )}
                           </div>
                         </div>
@@ -1162,6 +1197,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                     {(previewType || addSlidePreviewType) === 'quiz' && <QuizSlideTypeBadge />}
                     {(previewType || addSlidePreviewType) === 'student_response' && <StudentResponseSlideTypeBadge />}
                     {(previewType || addSlidePreviewType) === 'slider' && <SliderSlideTypeBadge />}
+                    {(previewType || addSlidePreviewType) === 'context' && <ContextSlideTypeBadge />}
                   </div>
                 </div>
               </CardHeader>
@@ -1234,22 +1270,16 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           { value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide') },
                           { value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide') },
                           { value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide') },
-                          { value: 'student_response', icon: MessageSquare, color: 'rose', label: t('slides.common.videoResponse') },
-                          { value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: t('slides.common.scaleRating') }
+                          { value: 'student_response', icon: Camera, color: 'rose', label: t('slides.common.videoResponse') },
+                          { value: 'slider', icon: MoveHorizontal, color: 'indigo', label: t('slides.common.scaleRating') },
+                          { value: 'context', icon: MessageSquare, color: 'teal', label: t('slides.common.contextSlide') }
                         ].map((item) => (
-                          <div 
-                            key={item.value} 
-                            className="relative"
-                            onMouseEnter={() => setPreviewType(item.value)}
-                            onMouseLeave={() => setPreviewType(null)}
-                          >
-                            <SelectItem value={item.value}>
-                              <div className="flex items-center gap-2 cursor-pointer">
-                                <item.icon className={`h-4 w-4 text-${item.color}-500`} />
-                                <span>{item.label}</span>
-                              </div>
-                            </SelectItem>
-                          </div>
+                          <SelectItem key={item.value} value={item.value}>
+                            <div className="flex items-center gap-2 cursor-pointer">
+                              <item.icon className={`h-4 w-4 text-${item.color}-600`} />
+                              <span>{item.label}</span>
+                            </div>
+                          </SelectItem>
                         ))}
                       </div>
                     </SelectContent>
@@ -1460,7 +1490,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Set the maximum length of student video responses (10 seconds to 10 minutes)
+                          Set the maximum length of video responses
                         </p>
                       </div>
 

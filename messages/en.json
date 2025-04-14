@@ -57,7 +57,8 @@
       "quizSlide": "Quiz",
       "videoResponse": "Video Response",
       "scaleRating": "Opinion Scale",
-      "slider": "Opinion Scale"
+      "slider": "Opinion Scale",
+      "contextSlide": "Context"
     },
     "text": {
       "title": "Written Response",
@@ -124,6 +125,13 @@
       "minute": "1 minute",
       "minutes": "{count} minutes",
       "minutesSeconds": "{minutes}m {seconds}s"
+    },
+    "context": {
+      "title": "Context",
+      "info": "This slide will allow students to record and submit video responses. Configure the response settings in the right panel.",
+      "recordOnce": "Students can record only once!",
+      "recordMultiple": "Students can record up to {count} response",
+      "recordMultiple_plural": "Students can record up to {count} responses"
     },
     "viewer": {
       "noSlides": {
