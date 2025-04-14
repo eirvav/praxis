@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CollapseMenuButton } from "@/components/navbar-components/collapse-menu-button";
 import { CourseNavigation } from "@/app/(dashboard)/_components/CourseNavigation";
 import { CreateCourseModal } from "@/app/(dashboard)/_components/CreateCourseModal";
+import { QuickCreateModal } from "@/app/(dashboard)/_components/quick-create-modal";
 import {
   Tooltip,
   TooltipTrigger,
@@ -30,6 +31,7 @@ export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const { user } = useUser();
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [isQuickCreateModalOpen, setIsQuickCreateModalOpen] = useState(false);
   const t = useTranslations();
   
   // Determine user role from pathname
@@ -129,25 +131,47 @@ export function Menu({ isOpen }: MenuProps) {
                                       ((active === undefined && pathname.startsWith(href)) || active) && 
                                       "bg-indigo-100 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-foreground"
                                     )}
-                                    asChild
+                                    onClick={(e) => {
+                                      if (translationKey === "common.navigation.quickCreate") {
+                                        e.preventDefault();
+                                        setIsQuickCreateModalOpen(true);
+                                      }
+                                    }}
+                                    asChild={translationKey !== "common.navigation.quickCreate"}
                                   >
-                                    <Link href={href}>
-                                      <span
-                                        className={cn(isOpen === false ? "" : "mr-4")}
-                                      >
-                                        <Icon size={18} />
-                                      </span>
-                                      <p
-                                        className={cn(
-                                          "max-w-[200px] truncate",
-                                          isOpen === false
-                                            ? "-translate-x-96 opacity-0"
-                                            : "translate-x-0 opacity-100"
-                                        )}
-                                      >
-                                        {translatedLabel}
-                                      </p>
-                                    </Link>
+                                    {translationKey === "common.navigation.quickCreate" ? (
+                                      <div className="flex items-center">
+                                        <span className={cn(isOpen === false ? "" : "mr-4")}>
+                                          <Icon size={18} />
+                                        </span>
+                                        <p
+                                          className={cn(
+                                            "max-w-[200px] truncate",
+                                            isOpen === false
+                                              ? "-translate-x-96 opacity-0"
+                                              : "translate-x-0 opacity-100"
+                                          )}
+                                        >
+                                          {translatedLabel}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <Link href={href}>
+                                        <span className={cn(isOpen === false ? "" : "mr-4")}>
+                                          <Icon size={18} />
+                                        </span>
+                                        <p
+                                          className={cn(
+                                            "max-w-[200px] truncate",
+                                            isOpen === false
+                                              ? "-translate-x-96 opacity-0"
+                                              : "translate-x-0 opacity-100"
+                                          )}
+                                        >
+                                          {translatedLabel}
+                                        </p>
+                                      </Link>
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
                                 {isOpen === false && (
@@ -228,6 +252,11 @@ export function Menu({ isOpen }: MenuProps) {
       <CreateCourseModal 
         isOpen={isCourseModalOpen} 
         onClose={() => setIsCourseModalOpen(false)} 
+      />
+
+      <QuickCreateModal
+        isOpen={isQuickCreateModalOpen}
+        onClose={() => setIsQuickCreateModalOpen(false)}
       />
     </>
   );

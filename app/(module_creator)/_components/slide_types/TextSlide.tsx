@@ -2,15 +2,16 @@ import { Badge } from '@/components/ui/badge';
 import { AlignLeft, Info } from 'lucide-react';
 import { TextSlideConfig } from '../SlideEditor';
 import dynamic from 'next/dynamic';
-import { useState, useEffect } from 'react';
+import { useState, useImperativeHandle, forwardRef, Ref } from 'react';
 import { useSupabase } from '../../../(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
 import 'react-quill-new/dist/quill.snow.css';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslations } from 'next-intl';
+import type ReactQuill from 'react-quill-new';
 
 // Define type for ReactQuill props
-interface ReactQuillProps {
+interface BaseReactQuillProps {
   theme?: string;
   value: string;
   onChange: (value: string) => void;
@@ -18,43 +19,69 @@ interface ReactQuillProps {
   modules?: Record<string, unknown>;
 }
 
+// Define the Quill editor interface
+interface ReactQuillInstance {
+  getEditor: () => {
+    blur: () => void;
+    getSelection: (focus: boolean) => { index: number; length: number };
+    insertEmbed: (index: number, type: string, value: string) => void;
+    setSelection: (index: number, length?: number) => void;
+  };
+}
+
 // Dynamically import ReactQuill with loading state and SSR disabled
-const ReactQuill = dynamic(
+const ReactQuillComponent = dynamic(
   async () => {
     const { default: RQ } = await import('react-quill-new');
-    return function comp(props: ReactQuillProps) {
-      return <RQ {...props} />;
+    return function QuillEditor({ forwardedRef, ...props }: BaseReactQuillProps & { forwardedRef?: Ref<ReactQuill> }) {
+      return <RQ ref={forwardedRef} {...props} />;
     };
   },
-  { ssr: false, loading: () => <p className="py-4 h-[300px] border rounded-md flex items-center justify-center bg-white text-gray-500">Loading text editor...</p> }
+  { 
+    ssr: false, 
+    loading: () => {
+      // We're using a function component here to access the translations
+      const TextEditorLoading = () => {
+        const t = useTranslations();
+        return (
+          <p className="py-4 h-[300px] border rounded-md flex items-center justify-center bg-white text-gray-500">
+            {t('common.loading.textEditor')}
+          </p>
+        );
+      };
+      return <TextEditorLoading />;
+    }
+  }
 );
+
+export interface TextSlideRef {
+  blur: () => void;
+}
 
 interface TextSlideProps {
   config: TextSlideConfig;
   onConfigChange: (configUpdate: Partial<TextSlideConfig>) => void;
 }
 
-// Define Quill editor interface
-interface QuillEditor {
-  getSelection: (focus: boolean) => { index: number; length: number };
-  insertEmbed: (index: number, type: string, value: string) => void;
-  setSelection: (index: number, length?: number) => void;
-}
-
 // Define QL-Editor element interface
-interface QuillEditorElement extends HTMLElement {
-  __quill?: QuillEditor;
-}
 
-export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => {
+export const TextSlideContent = forwardRef<TextSlideRef, TextSlideProps>(({ config, onConfigChange }, ref) => {
   const supabase = useSupabase();
   const t = useTranslations();
   const [editorValue, setEditorValue] = useState(config.content || '');
-  
-  // Make sure to sync our local state with props when they change
-  useEffect(() => {
-    setEditorValue(config.content || '');
-  }, [config.content]);
+  const [quillInstance, setQuillInstance] = useState<ReactQuill | null>(null);
+
+  // Expose blur method
+  useImperativeHandle(ref, () => ({
+    blur: () => {
+      if (quillInstance) {
+        const editor = (quillInstance as unknown as ReactQuillInstance).getEditor();
+        if (editor && typeof editor.blur === 'function') {
+          editor.blur();
+        }
+      }
+    }
+  }));
 
   // Upload image handler
   const handleImageUpload = async () => {
@@ -67,51 +94,44 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
       if (!file) return;
       
       try {
-        // Show loading toast
-        toast.loading('Uploading image...');
+        toast.loading(t('common.editor.imageUpload'));
         
         if (!supabase) {
           throw new Error('Supabase client not initialized');
         }
         
-        // Create unique filename
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `slide_images/${fileName}`;
         
-        // Upload to Supabase storage
         const { error } = await supabase.storage
           .from('module_content')
           .upload(filePath, file);
           
         if (error) throw error;
         
-        // Get public URL
         const { data: urlData } = supabase.storage
           .from('module_content')
           .getPublicUrl(filePath);
           
         if (!urlData?.publicUrl) throw new Error('Failed to get public URL');
         
-        // Get the Quill editor instance
-        const quillEditorElement = document.querySelector('.ql-editor') as QuillEditorElement;
-        const quill = quillEditorElement?.__quill;
-        if (!quill) throw new Error('Quill editor not found');
-        
-        // Insert image into editor
-        const range = quill.getSelection(true);
-        quill.insertEmbed(range.index, 'image', urlData.publicUrl);
-        
-        // Move cursor after image
-        quill.setSelection(range.index + 1);
+        if (quillInstance) {
+          const editor = (quillInstance as unknown as ReactQuillInstance).getEditor();
+          if (editor) {
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, 'image', urlData.publicUrl);
+            editor.setSelection(range.index + 1);
+          }
+        }
         
         toast.dismiss();
-        toast.success('Image uploaded successfully');
+        toast.success(t('common.editor.imageUploadSuccess'));
       } catch (error: unknown) {
         console.error('Error uploading image:', error);
         toast.dismiss();
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        toast.error(`Upload failed: ${errorMessage}`);
+        toast.error(t('common.editor.imageUploadError', { message: errorMessage }));
       }
     };
     
@@ -142,7 +162,6 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
 
   return (
     <div className="bg-white rounded-md flex flex-col w-full space-y-4">
-      {/* Quill Editor */}
       <div className="quill-container w-full">
         <style jsx global>{`
           .quill {
@@ -168,7 +187,12 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
             }
           }
         `}</style>
-        <ReactQuill
+        <ReactQuillComponent
+          forwardedRef={(el: ReactQuill | null) => {
+            if (el) {
+              setQuillInstance(el);
+            }
+          }}
           theme="snow"
           value={editorValue}
           onChange={handleChange}
@@ -177,7 +201,6 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
         />
       </div>
       
-      {/* Informational alert for teachers */}
       <Alert className="bg-blue-50 border-blue-200">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-700">
@@ -186,7 +209,9 @@ export const TextSlideContent = ({ config, onConfigChange }: TextSlideProps) => 
       </Alert>
     </div>
   );
-};
+});
+
+TextSlideContent.displayName = 'TextSlideContent';
 
 export const TextSlideTypeBadge = () => {
   const t = useTranslations();
@@ -197,8 +222,14 @@ export const TextSlideTypeBadge = () => {
   );
 };
 
-export const createDefaultTextSlideConfig = (): TextSlideConfig => {
+// Get default text slide config
+export const getDefaultTextSlideConfig = (): TextSlideConfig => {
   return { type: 'text', content: '' };
+};
+
+// Create default text slide config
+export const createDefaultTextSlideConfig = (): TextSlideConfig => {
+  return getDefaultTextSlideConfig();
 };
 
 export default TextSlideContent;

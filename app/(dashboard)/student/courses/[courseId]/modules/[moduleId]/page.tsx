@@ -19,6 +19,7 @@ interface Module {
   created_at: string;
   updated_at: string;
   course_id: string;
+  estimated_duration?: number | null;
 }
 
 export default function StudentCourseModuleDetailPage() {
@@ -153,7 +154,7 @@ export default function StudentCourseModuleDetailPage() {
           Last updated: {new Date(module.updated_at).toLocaleString()}
         </div>
         
-        <SlideViewer moduleId={moduleId} />
+        <SlideViewer moduleId={moduleId} estimatedDuration={module.estimated_duration} />
       </div>
     </ContentLayout>
   );

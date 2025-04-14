@@ -7,6 +7,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslations } from 'next-intl';
+//import type { AbstractIntlMessages } from 'next-intl';
 
 interface QuizSlideProps {
   config: QuizSlideConfig;
@@ -22,7 +23,8 @@ const SortableOption = ({
   multipleCorrect, 
   onUpdate, 
   onRemove, 
-  onToggleCorrect 
+  onToggleCorrect,
+  t
 }: { 
   id: string; 
   option: string; 
@@ -32,6 +34,7 @@ const SortableOption = ({
   onUpdate: (value: string) => void; 
   onRemove: () => void; 
   onToggleCorrect: () => void;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   
@@ -49,7 +52,7 @@ const SortableOption = ({
         {index + 1}
       </div>
       <Input
-        placeholder={`Option ${index + 1}`}
+        placeholder={`${t('slides.quiz.optionPlaceholder')} ${index + 1}`}
         value={option}
         onChange={(e) => onUpdate(e.target.value)}
         className="flex-1"
@@ -61,7 +64,7 @@ const SortableOption = ({
         onClick={onToggleCorrect}
         className="h-8 px-2"
       >
-        {multipleCorrect ? (isCorrect ? "Selected" : "Select") : "Correct"}
+        {multipleCorrect ? (isCorrect ? t('slides.quiz.selected') : t('slides.quiz.select')) : t('slides.quiz.correct')}
       </Button>
       <Button
         type="button"
@@ -233,9 +236,9 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Question</label>
+        <label className="text-sm font-medium">{t('slides.quiz.question')}</label>
         <Input
-          placeholder="Enter your question"
+          placeholder={t('slides.quiz.questionPlaceholder')}
           value={config.question || ''}
           onChange={(e) => onConfigChange({ question: e.target.value })}
         />
@@ -243,7 +246,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <label className="text-sm font-medium">Options</label>
+          <label className="text-sm font-medium">{t('slides.quiz.options')}</label>
           <Button 
             type="button" 
             variant="outline" 
@@ -251,7 +254,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
             onClick={addQuizOption}
             className="h-7 px-2"
           >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Option
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t('slides.quiz.addOption')}
           </Button>
         </div>
         
@@ -278,6 +281,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
                   onUpdate={(value) => updateQuizOption(optionIndex, value)}
                   onRemove={() => removeQuizOption(optionIndex)}
                   onToggleCorrect={() => setCorrectQuizOption(optionIndex)}
+                  t={t}
                 />
               </div>
             ))}
@@ -295,14 +299,16 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
 };
 
 export const QuizSlideTypeBadge = () => {
+  const t = useTranslations();
   return (
     <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200">
-      <ListTodo className="h-3 w-3 mr-1" /> Quiz
+      <ListTodo className="h-3 w-3 mr-1" /> {t('slides.common.quizSlide')}
     </Badge>
   );
 };
 
-export const createDefaultQuizSlideConfig = (): QuizSlideConfig => {
+// Get default quiz config
+export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
   return { 
     type: 'quiz', 
     question: '', 
@@ -316,6 +322,11 @@ export const createDefaultQuizSlideConfig = (): QuizSlideConfig => {
     multipleCorrect: false,
     correctOptionIndices: [],
   };
+};
+
+// Create default quiz config
+export const createDefaultQuizSlideConfig = (): QuizSlideConfig => {
+  return getDefaultQuizSlideConfig();
 };
 
 export default QuizSlideContent;

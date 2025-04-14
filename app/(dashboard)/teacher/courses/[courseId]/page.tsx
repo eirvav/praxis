@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Filter, LayoutGrid, List, BookOpen, ChevronDown, Plus, Trash2, MoreVertical, Settings } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, ChevronDown, Plus, Trash2, MoreVertical, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
+import { CreateFirstModule } from '@/app/(dashboard)/_components/createFirstModule';
 
 interface Course {
   id: string;
@@ -132,8 +133,14 @@ export default function CourseDetailPage() {
       if (error) throw error;
       
       toast.success('Course deleted successfully');
+      
+      // First navigate to the courses page
       router.push('/teacher/courses');
-      router.refresh();
+      
+      // Then refresh after a delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (err) {
       console.error('Error deleting course:', err);
       toast.error('Failed to delete course');
@@ -255,17 +262,7 @@ export default function CourseDetailPage() {
         </div>
 
         {modules.length === 0 ? (
-          <div className="text-center p-15">
-            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-medium mb-2">No modules yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">Get started by creating your first module for this course.</p>
-            <Link href={`/teacher/modules/create?preselectedCourseId=${course.id}`}>
-              <Button className="bg-primaryStyling text-white hover:bg-indigo-700">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Your First Module
-              </Button>
-            </Link>
-          </div>
+          <CreateFirstModule />
         ) : (
           <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {filteredModules

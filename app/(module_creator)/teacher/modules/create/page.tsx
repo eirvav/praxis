@@ -6,7 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal, ImageIcon, PencilLine } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal, ImageIcon, PencilLine, Timer } from 'lucide-react';
 import Image from 'next/image';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
@@ -21,11 +21,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
+import { z } from "zod";
 
 import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 import ThumbnailPopover from '@/app/(module_creator)/_components/ThumbnailPopover';
+import { cn } from "@/lib/utils";
 
 interface Course {
   id: string;
@@ -66,6 +67,18 @@ const stripHtmlTags = (html: string | undefined): string => {
   return tempElement.textContent || tempElement.innerText || '';
 };
 
+// Add this after the imports
+const moduleFormSchema = z.object({
+  title: z.string().min(1, "Module title is required"),
+  deadline: z.string().min(1, "Module deadline is required"),
+  courseId: z.string().min(1, "Please select a course"),
+  description: z.string().optional(),
+  publishDate: z.string().optional(),
+  estimatedDuration: z.number().nullable().optional(),
+});
+
+type ModuleFormData = z.infer<typeof moduleFormSchema>;
+
 // This is the client component that uses useSearchParams
 function CreateModulePageContent() {
   console.log('[CreateModulePage] RENDERING component');
@@ -88,6 +101,8 @@ function CreateModulePageContent() {
   const [isLoadingPredefinedThumbnails, setIsLoadingPredefinedThumbnails] = useState(false);
   const [predefinedThumbnails, setPredefinedThumbnails] = useState<Array<{type: 'color' | 'illustration', url: string}>>([]);
   const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(null);
+  const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
+  const [errors, setErrors] = useState<Partial<Record<keyof ModuleFormData, string>>>({});
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -553,20 +568,37 @@ function CreateModulePageContent() {
     fetchCourses();
   }, [user, supabase, searchParams, selectedCourseId]);
 
-  // Step 1: Create initial module
+  // Handle form validation
+  const validateForm = (): boolean => {
+    try {
+      moduleFormSchema.parse({
+        title,
+        deadline,
+        courseId: selectedCourseId,
+        description,
+        publishDate,
+        estimatedDuration,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors: Partial<Record<keyof ModuleFormData, string>> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0] as keyof ModuleFormData] = err.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
+      return false;
+    }
+  };
+
+  // Update handleCreateModule to use validation
   async function handleCreateModule() {
-    if (!title.trim()) {
-      setError('Please enter a module title');
-      return;
-    }
-
-    if (!selectedCourseId) {
-      setError('Please select a course for this module');
-      return;
-    }
-
-    if (!deadline) {
-      setError('Please set a module deadline');
+    if (!validateForm()) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -591,7 +623,8 @@ function CreateModulePageContent() {
             course_id: selectedCourseId,
             thumbnail_url: thumbnailUrl,
             deadline,
-            publish_date: publishDate || null
+            publish_date: publishDate || null,
+            estimated_duration: estimatedDuration,
           })
           .eq('id', moduleId);
 
@@ -611,7 +644,8 @@ function CreateModulePageContent() {
             teacher_id: user.id,
             thumbnail_url: thumbnailUrl,
             deadline,
-            publish_date: publishDate || null
+            publish_date: publishDate || null,
+            estimated_duration: estimatedDuration,
           })
           .select();
 
@@ -802,7 +836,7 @@ function CreateModulePageContent() {
       <div className="max-w-xl mx-auto">
         <Button 
           onClick={handleCreateModule}
-          disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
+          disabled={isSubmitting}
           className="bg-primaryStyling hover:bg-primaryStyling/90 text-white w-full py-6 text-lg relative group transition-all duration-200"
         >
           <span className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></span>
@@ -810,7 +844,7 @@ function CreateModulePageContent() {
           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </Button>
         <p className="text-sm text-gray-500 text-center mt-3">
-          You&apos;ll be able to add slides and content in the next step
+          You can edit these settings later!
         </p>
       </div>
     </div>
@@ -824,11 +858,11 @@ function CreateModulePageContent() {
           <ThumbnailPopover 
             trigger={
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-primaryStyling cursor-pointer">
-               {/*<div className="flex flex-col items-center space-y-2">
+               <div className="flex flex-col items-center space-y-2">
                   <Camera className="h-10 w-10 text-white" />
                   <span className="text-white font-medium">Click to add a cover image</span>
                   <span className="text-white text-sm">Recommended size: 1280×720</span>
-                </div>*/}
+                </div>
               </div>
             }
             thumbnailUrl={thumbnailUrl}
@@ -994,7 +1028,7 @@ function CreateModulePageContent() {
             {step === 1 && (
               <Button 
                 onClick={handleCreateModule}
-                disabled={isSubmitting || !title.trim() || !selectedCourseId || !deadline}
+                disabled={isSubmitting}
                 className="bg-primaryStyling hover:bg-primaryStyling/90"
               >
                 Next Step
@@ -1137,16 +1171,26 @@ function CreateModulePageContent() {
                   <Input
                     id="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (errors.title) {
+                        setErrors({ ...errors, title: undefined });
+                      }
+                    }}
                     placeholder="Module Title... *"
                     disabled={isSubmitting}
-                    className="text-6xl leading-tight font-semibold w-full p-0 h-auto border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent placeholder:text-gray-400/70 outline-none"
-                    style={{
-                      fontSize: '32px'
-                    }}
+                    style={{ fontSize: '32px' }}
+                    className={cn(
+                      "text-6xl leading-tight font-semibold w-full p-0 h-auto border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent outline-none",
+                      "placeholder:text-gray-400/70",
+                      errors.title && "placeholder:text-red-500/70 text-red-500",
+                      "text-[32px]"
+                    )}
                   />
+                  {errors.title && (
+                    <p className="text-sm text-red-500 mt-1">{errors.title}</p>
+                  )}
                 </div>
-                <span className="text-red-500"></span>
                 
                 {/* Course Selection - Second most important */}
                 <div className="grid grid-cols-4 gap-6 items-start">
@@ -1165,10 +1209,16 @@ function CreateModulePageContent() {
                           setIsCourseModalOpen(true);
                         } else {
                           setSelectedCourseId(value);
+                          if (errors.courseId) {
+                            setErrors({ ...errors, courseId: undefined });
+                          }
                         }
                       }}
                     >
-                      <SelectTrigger className="h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling text-base">
+                      <SelectTrigger className={cn(
+                        "h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling text-base",
+                        errors.courseId && "border-red-500 ring-red-500"
+                      )}>
                         <SelectValue placeholder="Select a course for this module" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1194,39 +1244,77 @@ function CreateModulePageContent() {
                         </div>
                       </SelectContent>
                     </Select>
+                    {errors.courseId && (
+                      <p className="text-sm text-red-500 mt-1">{errors.courseId}</p>
+                    )}
                   </div>
                 </div>
                 
-                {/* Module Dates */}
+                {/* Module Deadline */}
                 <div className="grid grid-cols-4 gap-6 items-start">
                   <div className="col-span-1">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">Module Timing</span>
+                      <span className="font-medium">Time Settings</span>
                       <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3 space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Module Deadline</label>                        
+                        <label className="text-sm font-medium text-gray-700">Module Deadline</label>
+                        <span className="text-red-500">*</span>
                       </div>
-                      <div 
-                        className="relative cursor-pointer"
-                        onClick={() => {
-                          const input = document.querySelector('input[name="deadline"]') as HTMLInputElement;
-                          if (input) input.showPicker();
-                        }}
-                      >
+                      <div className="flex gap-2">
+                        <div 
+                          className="relative flex-1 cursor-pointer"
+                          onClick={() => {
+                            const input = document.querySelector('input[name="deadline-date"]') as HTMLInputElement;
+                            if (input) input.showPicker();
+                          }}
+                        >
+                          <input
+                            type="date"
+                            name="deadline-date"
+                            value={deadline ? deadline.split('T')[0] : ''}
+                            onChange={(e) => {
+                              const date = e.target.value;
+                              const time = deadline ? deadline.split('T')[1] : '00:00';
+                              const newDeadline = `${date}T${time}`;
+                              
+                              const selectedDate = new Date(newDeadline);
+                              const now = new Date();
+                              now.setSeconds(0);
+                              now.setMilliseconds(0);
+                              
+                              if (selectedDate <= now) {
+                                toast.error("Deadline must be in the future");
+                                return;
+                              }
+                              
+                              setDeadline(newDeadline);
+                              if (errors.deadline) {
+                                setErrors({ ...errors, deadline: undefined });
+                              }
+                            }}
+                            min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
+                            className={cn(
+                              "w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer",
+                              errors.deadline && "border-red-500 ring-red-500"
+                            )}
+                            required
+                          />
+                        </div>
                         <input
-                          type="datetime-local"
-                          name="deadline"
-                          value={deadline}
+                          type="time"
+                          name="deadline-time"
+                          value={deadline ? deadline.split('T')[1] : '00:00'}
                           onChange={(e) => {
-                            const selectedDate = new Date(e.target.value);
-                            const now = new Date();
+                            const date = deadline ? deadline.split('T')[0] : new Date().toISOString().split('T')[0];
+                            const newDeadline = `${date}T${e.target.value}`;
                             
-                            // Set time of now to start of the minute for accurate comparison
+                            const selectedDate = new Date(newDeadline);
+                            const now = new Date();
                             now.setSeconds(0);
                             now.setMilliseconds(0);
                             
@@ -1235,42 +1323,105 @@ function CreateModulePageContent() {
                               return;
                             }
                             
-                            setDeadline(e.target.value);
+                            setDeadline(newDeadline);
+                            if (errors.deadline) {
+                              setErrors({ ...errors, deadline: undefined });
+                            }
                           }}
-                          min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          className={cn(
+                            "w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm",
+                            errors.deadline && "border-red-500 ring-red-500"
+                          )}
                           required
                         />
                       </div>
+                      {errors.deadline && (
+                        <p className="text-sm text-red-500">{errors.deadline}</p>
+                      )}
                       <p className="text-sm text-gray-500">
                         <Clock className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
                         Set when students need to complete this module
                       </p>
                     </div>
                     
+                    
+                    {/* Publish Date */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium text-gray-700">Publish Date</label>
                         <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                       </div>
-                      <div 
-                        className="relative cursor-pointer"
-                        onClick={() => {
-                          const input = document.querySelector('input[name="publish_date"]') as HTMLInputElement;
-                          if (input) input.showPicker();
-                        }}
-                      >
+                      <div className="flex gap-2">
+                        <div 
+                          className="relative flex-1"
+                          onClick={() => {
+                            const input = document.querySelector('input[name="publish-date"]') as HTMLInputElement;
+                            if (input) input.showPicker();
+                          }}
+                        >
+                          <input
+                            type="date"
+                            name="publish-date"
+                            value={publishDate ? publishDate.split('T')[0] : ''}
+                            onChange={(e) => {
+                              const date = e.target.value;
+                              const time = publishDate ? publishDate.split('T')[1] : '00:00';
+                              setPublishDate(`${date}T${time}`);
+                            }}
+                            className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer"
+                          />
+                        </div>
                         <input
-                          type="datetime-local"
-                          name="publish_date"
-                          value={publishDate}
-                          onChange={(e) => setPublishDate(e.target.value)}
-                          className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:hover:opacity-70"
+                          type="time"
+                          name="publish-time"
+                          value={publishDate ? publishDate.split('T')[1] : '00:00'}
+                          onChange={(e) => {
+                            const date = publishDate ? publishDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                            setPublishDate(`${date}T${e.target.value}`);
+                          }}
+                          className="w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
                         />
                       </div>
                       <p className="text-sm text-gray-500">
                         <Calendar className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
                         Schedule when this module becomes available
+                      </p>
+                    </div>
+
+                    {/* Estimated Duration */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">Estimated Duration</label>
+                        <span className="text-gray-500 text-xs font-normal">(Optional)</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="999"
+                            value={estimatedDuration || ''}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (!isNaN(value) && value > 0) {
+                                setEstimatedDuration(value);
+                              } else {
+                                setEstimatedDuration(null);
+                              }
+                            }}
+                            placeholder="Enter duration"
+                            className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            aria-label="Module estimated duration in minutes"
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-600 font-medium min-w-[60px]">minutes</span>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        <Timer className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
+                        Approximate time it takes to complete this module
                       </p>
                     </div>
                   </div>
@@ -1682,9 +1833,6 @@ function CreateModulePageContent() {
                     {isPublishing ? 'Publishing...' : 'Publish Module'}
                     <CheckCircle className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                   </Button>
-                  <p className="text-sm text-gray-500 text-center mt-3">
-                    Review all content before publishing
-                  </p>
                 </div>
               </div>
             </div>

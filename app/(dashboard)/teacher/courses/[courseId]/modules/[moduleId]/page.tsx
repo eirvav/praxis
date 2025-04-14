@@ -22,6 +22,7 @@ interface Module {
   deadline?: string;
   total_slides?: number;
   completion_rate?: number;
+  estimated_duration?: number | null;
 }
 
 export default function CourseModuleDetailPage() {
@@ -166,8 +167,10 @@ export default function CourseModuleDetailPage() {
               <TabsTrigger value="edit">Edit</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="preview">
-              <SlideViewer moduleId={moduleId} />
+            <TabsContent value="preview" className="mt-0">
+              <div className="bg-card rounded-lg shadow-sm p-6 border">
+                <SlideViewer moduleId={moduleId} estimatedDuration={module?.estimated_duration} />
+              </div>
             </TabsContent>
             
             <TabsContent value="edit">

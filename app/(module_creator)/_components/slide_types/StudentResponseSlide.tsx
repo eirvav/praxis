@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Video, Info } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StudentResponseSlideConfig } from '../SlideEditor';
+import { useTranslations } from 'next-intl';
 
 interface StudentResponseSlideProps {
   config: StudentResponseSlideConfig;
@@ -9,19 +10,21 @@ interface StudentResponseSlideProps {
 }
 
 export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProps) => {
+  const t = useTranslations();
+  
   // Function to format duration in seconds to a readable format
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     
     if (minutes === 0) {
-      return `${remainingSeconds} seconds`;
+      return t('slides.studentResponse.seconds', { duration: remainingSeconds });
     } else if (minutes === 1 && remainingSeconds === 0) {
-      return `1 minute`;
+      return t('slides.studentResponse.minute');
     } else if (remainingSeconds === 0) {
-      return `${minutes} minutes`;
+      return t('slides.studentResponse.minutes', { count: minutes });
     } else {
-      return `${minutes}m ${remainingSeconds}s`;
+      return t('slides.studentResponse.minutesSeconds', { minutes, seconds: remainingSeconds });
     }
   };
 
@@ -30,7 +33,7 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          This slide will allow students to record and submit video responses. Configure the response settings in the right panel.
+          {t('slides.studentResponse.info')}
         </AlertDescription>
       </Alert>
       
@@ -40,19 +43,19 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
             <Video className="h-6 w-6 text-rose-600" />
           </div>
           <div>
-            <h3 className="font-medium text-slate-900">Student Video Response</h3>
+            <h3 className="font-medium text-slate-900">{t('slides.studentResponse.title')}</h3>
             <p className="text-sm text-slate-500">
               {config.severalResponses 
-                ? `Students can record up to ${config.maxResponses} response${config.maxResponses > 1 ? 's' : ''}` 
-                : "Students can record only once!"}
+                ? t('slides.studentResponse.recordMultiple', { count: config.maxResponses }) 
+                : t('slides.studentResponse.recordOnce')}
             </p>
             <p className="text-sm text-slate-500 mt-1">
-              Maximum response length: {formatDuration(config.responseMaxDuration)}
+              {t('slides.studentResponse.maxLength', { duration: formatDuration(config.responseMaxDuration) })}
             </p>
             
             {config.instantResponse && (
               <p className="text-sm text-rose-600 mt-1">
-                Response required immediately after video
+                {t('slides.studentResponse.requiredImmediately')}
               </p>
             )}
           </div>
@@ -63,14 +66,16 @@ export const StudentResponseSlideContent = ({ config }: StudentResponseSlideProp
 };
 
 export const StudentResponseSlideTypeBadge = () => {
+  const t = useTranslations();
   return (
     <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
-      <MessageSquare className="h-3 w-3 mr-1" /> Response
+      <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
     </Badge>
   );
 };
 
-export const createDefaultStudentResponseConfig = (): StudentResponseSlideConfig => {
+// Get default config with translations
+export const getDefaultStudentResponseConfig = (): StudentResponseSlideConfig => {
   return {
     type: 'student_response',
     severalResponses: false,
@@ -78,6 +83,11 @@ export const createDefaultStudentResponseConfig = (): StudentResponseSlideConfig
     maxResponses: 1,
     responseMaxDuration: 120 // default to 2 minutes (120 seconds)
   };
+};
+
+// Default config creator used in the app
+export const createDefaultStudentResponseConfig = (): StudentResponseSlideConfig => {
+  return getDefaultStudentResponseConfig();
 };
 
 export default StudentResponseSlideContent; 

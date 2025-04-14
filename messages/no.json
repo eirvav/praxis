@@ -1,7 +1,7 @@
 {
   "common": {
     "buttons": {
-      "createCourse": "Opprett Kurs",
+      "createCourse": "Opprett Fag",
       "createModule": "Opprett Modul",
       "backToContentEditor": "Tilbake til Innholdsredigering"
     },
@@ -9,16 +9,21 @@
       "textEditor": "Laster inn tekstredigering..."
     },
     "navigation": {
-      "quickCreate": "Hurtigoppsett",
+      "quickCreate": "Hurtigopprettelse",
       "dashboard": "Dashbord",
-      "courses": "Kurs",
+      "courses": "Fag",
       "resources": "Ressurser",
-      "courseList": "Kursliste",
-      "courseListTemp": "Kursliste (midlertidig)",
+      "courseList": "Fagliste",
+      "courseListTemp": "Fagliste (midlertidig)",
       "content": "Innhold",
       "learning": "Læring",
       "myProgress": "Min Fremgang",
       "contents": "Innhold"
+    },
+    "editor": {
+      "imageUpload": "Laster opp bilde...",
+      "imageUploadError": "Opplasting mislyktes: {message}",
+      "imageUploadSuccess": "Bilde lastet opp"
     }
   },
   "teacher": {
@@ -51,7 +56,8 @@
       "videoSlide": "Videolysbilde",
       "quizSlide": "Quizlysbilde",
       "videoResponse": "Videorespons",
-      "scaleRating": "Skalarangering"
+      "scaleRating": "Skalarangering",
+      "slider": "Meningsmåling"
     },
     "text": {
       "title": "Tekstlysbilde",
@@ -60,7 +66,64 @@
     },
     "quiz": {
       "selectOne": "Merk ett alternativ som riktig for quizen",
-      "selectMultiple": "Velg ett eller flere alternativer som riktige for quizen"
+      "selectMultiple": "Velg ett eller flere alternativer som riktige for quizen",
+      "question": "Spørsmål",
+      "questionPlaceholder": "Skriv inn ditt spørsmål",
+      "options": "Alternativer",
+      "addOption": "Legg til alternativ",
+      "optionPlaceholder": "Alternativ",
+      "correct": "Riktig",
+      "selected": "Valgt",
+      "select": "Velg"
+    },
+    "video": {
+      "title": "Video",
+      "videoTitle": "Videotittel",
+      "titlePlaceholder": "Skriv inn en tittel for denne videoen",
+      "context": "Videokontekst (Valgfritt)",
+      "contextPlaceholder": "Gi kontekst om hva videoen handler om",
+      "contextHelp": "Denne konteksten vil bli vist til studenter for å hjelpe dem med å forstå hva de skal fokusere på",
+      "uploadVideo": "Last opp video",
+      "uploading": "Laster opp...",
+      "uploadWait": "Vennligst vent mens videoen lastes opp",
+      "replaceVideo": "Erstatt video",
+      "clickToUpload": "Klikk for å laste opp video",
+      "videoFormats": "MP4, WebM eller MOV (maks. 100MB)",
+      "errors": {
+        "videoOnly": "Vennligst last opp en videofil",
+        "fileSize": "Filstørrelsen må ikke overstige 100MB",
+        "uploadFailed": "Opplasting mislyktes",
+        "uploadSuccess": "Video lastet opp"
+      }
+    },
+    "slider": {
+      "question": "Spørsmål",
+      "questionPlaceholder": "Skriv inn ditt spørsmål",
+      "description": "Beskrivelse (Valgfritt)",
+      "descriptionPlaceholder": "Skriv inn beskrivelse",
+      "labels": "Etiketter",
+      "startLabel": "Startetikett",
+      "middleLabel": "Midtre etikett",
+      "endLabel": "Sluttetikett",
+      "preview": "Forhåndsvisning",
+      "notAtAll": "Ikke i det hele tatt",
+      "somewhat": "Delvis",
+      "veryMuch": "Veldig mye",
+      "sliderTitle": "Meningsmåling",
+      "addSlider": "Legg til meningsmåling"
+    },
+    "studentResponse": {
+      "title": "Student videorespons",
+      "info": "Dette lysbildet vil gjøre det mulig for studenter å ta opp og sende inn videoresponser. Konfigurer responsinnstillingene i høyre panel.",
+      "recordOnce": "Studenter kan bare ta opp én gang!",
+      "recordMultiple": "Studenter kan ta opp opptil {count} respons",
+      "recordMultiple_plural": "Studenter kan ta opp opptil {count} responser",
+      "maxLength": "Maksimal responslengde: {duration}",
+      "requiredImmediately": "Respons kreves umiddelbart etter video",
+      "seconds": "{duration} sekunder",
+      "minute": "1 minutt",
+      "minutes": "{count} minutter",
+      "minutesSeconds": "{minutes}m {seconds}s"
     },
     "viewer": {
       "noSlides": {

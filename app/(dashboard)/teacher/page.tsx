@@ -2,15 +2,15 @@
 
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BookOpen, PlusCircle, Layers } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { CreateCourseModal } from "../_components/CreateCourseModal";
 import ModuleCard from "../_components/ModuleCard";
 import { useSupabase } from "../_components/SupabaseProvider";
 import { ContentLayout } from "@/components/navbar-components/content-layout";
 import { useTranslations } from 'next-intl';
+import { CreateFirstModule } from "../_components/createFirstModule";
 
 interface Module {
   id: string;
@@ -127,15 +127,15 @@ export default function TeacherDashboard() {
             {/* Only show navigation buttons when there are modules */}
             {hasModules && !hasNoCourses && (
               <>
-                <Button 
+                {/*<Button 
                   size="lg"
                   className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
                   onClick={() => setIsCourseModalOpen(true)}
                 >
                   <BookOpen className="h-5 w-5" />
                   {t('common.buttons.createCourse')}
-                </Button>
-                <Link href="/teacher/modules/create">
+                </Button>*/}
+                {/*<Link href="/teacher/modules/create">
                   <Button 
                     size="lg"
                     className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
@@ -143,7 +143,7 @@ export default function TeacherDashboard() {
                     <PlusCircle className="h-5 w-5" />
                     {t('common.buttons.createModule')}
                   </Button>
-                </Link>
+                </Link>*/}
               </>
             )}
           </div>
@@ -179,26 +179,7 @@ export default function TeacherDashboard() {
         
         {/* Display "Create your first module" prompt if there are courses but no modules */}
         {!hasNoCourses && !hasModules && !loading && (
-          <div className="bg-white p-15">
-            <div className="text-center space-y-4">
-              <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
-              <h2 className="text-2xl font-bold">Let's Create Your First Module</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                You've created a course. Now it's time to add learning content with modules.
-              </p>
-              <div className="pt-4">
-                <Link href="/teacher/modules/create">
-                  <Button 
-                    size="lg"
-                    className="bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
-                  >
-                    <PlusCircle className="h-5 w-5 mr-2" />
-                    Create Your First Module
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <CreateFirstModule />
         )}
         
         {/* Only show modules section if teacher has modules */}

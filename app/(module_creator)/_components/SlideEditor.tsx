@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, Copy } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, BarChart3, MessageSquare, MoveHorizontal, Copy, X } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,9 +17,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+//import { useTranslations } from 'next-intl';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Import slide type components
-import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig } from './slide_types/TextSlide';
+import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig, TextSlideRef } from './slide_types/TextSlide';
 import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig } from './slide_types/VideoSlide';
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
@@ -128,6 +128,33 @@ interface SlideEditorProps {
   onSave?: () => void;
 }
 
+const PreviewSlide = ({ type }: { type: string }) => {
+  switch (type) {
+    case 'text': {
+      const config = createDefaultTextSlideConfig();
+      return <TextSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    case 'quiz': {
+      const config = createDefaultQuizSlideConfig();
+      return <QuizSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    case 'video': {
+      const config = createDefaultVideoSlideConfig();
+      return <VideoSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    case 'student_response': {
+      const config = createDefaultStudentResponseConfig();
+      return <StudentResponseSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    case 'slider': {
+      const config = createDefaultSliderConfig();
+      return <SliderSlideContent config={config} onConfigChange={() => {}} />;
+    }
+    default:
+      return null;
+  }
+};
+
 export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   console.log('[SlideEditor] RENDERING with moduleId:', moduleId);
   
@@ -137,8 +164,12 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
   const initialFetchDoneRef = useRef(false);
   const supabase = useSupabase();
-  const [showSlideTypeSelector, setShowSlideTypeSelector] = useState(false);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
+  const [previewType, setPreviewType] = useState<string | null>(null);
+  const [addSlidePreviewType, setAddSlidePreviewType] = useState<string | null>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const popoverTriggerRef = useRef<HTMLButtonElement>(null);
+  const textSlideRef = useRef<TextSlideRef>(null);
   
   // Helper function to format duration in seconds to a readable format
   const formatDuration = (seconds: number): string => {
@@ -635,7 +666,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     switch (slide.slide_type) {
       case 'text':
         if (isTextSlide(slide.config)) {
-          return <TextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+          return (
+            <TextSlideContent 
+              ref={textSlideRef}
+              config={slide.config} 
+              onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
+            />
+          );
         }
         updateSlideConfig(index, createDefaultTextSlideConfig());
         return null;
@@ -674,7 +711,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   };
 
   // Create a new slide of a specific type
-  const createSlideOfType = (type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider') => {
+  const createSlideOfType = async (type: 'text' | 'video' | 'quiz' | 'student_response' | 'slider') => {
+    console.log(`[SlideEditor] Creating new slide of type: ${type}`);
+    
     const newSlide: Slide = {
       module_id: moduleId,
       slide_type: type,
@@ -685,11 +724,50 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
               type === 'slider' ? createDefaultSliderConfig() :
               createDefaultStudentResponseConfig()
     };
-    
-    const newSlides = [...slides, newSlide];
-    setSlides(newSlides);
-    setActiveSlideIndex(newSlides.length - 1);
-    setShowSlideTypeSelector(false);
+
+    try {
+      // First, insert the slide into the database
+      if (supabase) {
+        const { data: insertedSlide, error } = await supabase
+          .from('slides')
+          .insert({
+            module_id: newSlide.module_id,
+            slide_type: newSlide.slide_type,
+            position: newSlide.position,
+            config: newSlide.config
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (insertedSlide) {
+          newSlide.id = insertedSlide.id;
+        }
+      }
+
+      // Then update the local state
+      const newSlides = [...slides, newSlide];
+      
+      // Clear states and close popover
+      setPreviewType(null);
+      setAddSlidePreviewType(null);
+      setIsPopoverOpen(false);
+      
+      // Update slides and set active index
+      setSlides(newSlides);
+      setActiveSlideIndex(newSlides.length - 1);
+
+      // Save to localStorage for persistence
+      try {
+        localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(newSlides));
+      } catch (err) {
+        console.error('Error saving slides to localStorage:', err);
+      }
+
+    } catch (err) {
+      console.error('Error creating new slide:', err);
+      toast.error('Failed to create new slide');
+    }
   };
 
   // Add a duplicate slide function
@@ -740,6 +818,55 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     toast.success('Slide duplicated');
   };
 
+  // Update the click handler for slide selection
+  const handleSlideSelect = (index: number) => {
+    console.log(`[SlideEditor] Selecting slide at index: ${index}`);
+    setActiveSlideIndex(index);
+    // Clear preview states when selecting a slide
+    setPreviewType(null);
+    setAddSlidePreviewType(null);
+  };
+
+  // Create a stable key for the slide editor
+  const getSlideKey = useCallback((slide: Slide, index: number) => {
+    return `slide-${slide.id || index}-${slide.slide_type}`;
+  }, []);
+
+  // Handle popover open
+  const handlePopoverOpen = useCallback((open: boolean) => {
+    console.log('[SlideEditor] Popover state changing to:', open);
+    
+    // If we're opening the popover
+    if (open) {
+      // First blur any Quill editor if it exists
+      if (textSlideRef.current) {
+        textSlideRef.current.blur();
+      }
+      
+      // Then blur any standard HTML element
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+    setIsPopoverOpen(open);
+  }, []);
+
+  // Handle Add Slide click
+  const handleAddSlideClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Ensure any active element is blurred
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    // Delay opening the popover slightly to ensure blur events are processed
+    setTimeout(() => {
+      handlePopoverOpen(true);
+    }, 0);
+  }, [handlePopoverOpen]);
+
   if (loading) {
     return <p className="text-center py-8">Loading slides...</p>;
   }
@@ -757,129 +884,85 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
         </Button>
       </div>
       
-      {/* Slide Type Selector Modal */}
-      <Dialog open={showSlideTypeSelector} onOpenChange={setShowSlideTypeSelector}>
-        <DialogContent className="sm:max-w-[720px] bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Select slide type</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
-            {/* TEXT SLIDE */}
-            <div 
-              className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <AlignLeft className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Text</h3>
-                  <p className="text-xs text-gray-500">Simple text content slide</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* VIDEO SLIDE */}
-            <div 
-              className="border rounded-lg p-4 hover:border-purple-500 cursor-pointer hover:bg-purple-50 transition-colors"
-              onClick={() => createSlideOfType('video')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Video className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Video</h3>
-                  <p className="text-xs text-gray-500">Add video content</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* QUIZ SLIDE */}
-            <div 
-              className="border rounded-lg p-4 hover:border-amber-500 cursor-pointer hover:bg-amber-50 transition-colors"
-              onClick={() => createSlideOfType('quiz')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                  <ListTodo className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Quiz</h3>
-                  <p className="text-xs text-gray-500">Multiple choice questions</p>
-                </div>
-              </div>
-            </div>
-
-            <div 
-              className="border rounded-lg p-4 hover:border-rose-500 cursor-pointer hover:bg-rose-50 transition-colors"
-              onClick={() => createSlideOfType('student_response')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-rose-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Response to Video</h3>
-                  <p className="text-xs text-gray-500">Video Responses</p>
-                </div>
-              </div>
-            </div>
-
-            <div 
-              className="border rounded-lg p-4 hover:border-primaryStyling cursor-pointer hover:bg-primaryStyling/10 transition-colors"
-              onClick={() => createSlideOfType('slider')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <MoveHorizontal className="h-6 w-6 text-primaryStyling" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Opinion Scale</h3>
-                  <p className="text-xs text-gray-500">Scale-based feedback</p>
-                </div>
-              </div>
-            </div>
-
-            {/* DECORATIVE OPTIONS (Creates text slides) */}
-            <div 
-              className="border rounded-lg p-4 hover:border-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors"
-              onClick={() => createSlideOfType('text')}
-            >
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Poll</h3>
-                  <p className="text-xs text-gray-500">Get learner opinions</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[2000px] mx-auto">
         {/* Slide list sidebar - LEFT COLUMN */}
-        <div className="lg:col-span-2">
-          <div className="bg-transparent">
-            <div className="p-2">
+        <div className="lg:col-span-2 sticky top-[57px] self-start h-[calc(100vh-57px)] overflow-hidden flex flex-col">
+          <div className="bg-transparent flex flex-col h-full">
+            <div className="p-2 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-transparent"></div>
-                <Button 
-                  size="lg" 
-                  className="flex-grow rounded-full" 
-                  onClick={() => setShowSlideTypeSelector(true)}
-                  title="Add new slide"
+                <Popover 
+                  open={isPopoverOpen} 
+                  onOpenChange={handlePopoverOpen}
                 >
-                  <Plus className="h-4 w-4 mr-1" /> Add Slide
-                </Button>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      ref={popoverTriggerRef}
+                      size="lg" 
+                      className="flex-grow rounded-full" 
+                      title="Add new slide"
+                      onClick={handleAddSlideClick}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Slide
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-[400px] p-0" 
+                    align="start"
+                    alignOffset={-25}
+                    sideOffset={8}
+                    onInteractOutside={(e) => {
+                      // Only close if we're not clicking the trigger button
+                      if (!popoverTriggerRef.current?.contains(e.target as Node)) {
+                        handlePopoverOpen(false);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between border-b p-3">
+                      <span className="text-sm text-muted-foreground font-medium">Slide Types</span>
+                      <button 
+                        onClick={() => handlePopoverOpen(false)}
+                        className="text-muted-foreground hover:text-foreground rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 p-3">
+                      {[
+                        { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: 'Text', bgColor: 'bg-blue-100' },
+                        { id: 'video', value: 'video', icon: Video, color: 'purple', label: 'Video', bgColor: 'bg-purple-100' },
+                        { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: 'Quiz', bgColor: 'bg-amber-100' },
+                        { id: 'student_response', value: 'student_response', icon: MessageSquare, color: 'rose', label: 'Response', bgColor: 'bg-rose-100' },
+                        { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: 'Opinion Scale', bgColor: 'bg-indigo-100' },
+                        { id: 'poll', value: 'text', icon: BarChart3, color: 'emerald', label: 'Poll', bgColor: 'bg-emerald-100' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className="relative group outline-none"
+                          onMouseEnter={() => setAddSlidePreviewType(item.value)}
+                          onMouseLeave={() => setAddSlidePreviewType(null)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            createSlideOfType(item.value as 'text' | 'video' | 'quiz' | 'student_response' | 'slider');
+                          }}
+                        >
+                          <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <div className={`w-10 h-10 ${item.bgColor} rounded-full flex items-center justify-center`}>
+                              <item.icon className={`h-5 w-5 text-${item.color}-600`} />
+                            </div>
+                            <span className="font-medium text-sm">{item.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
-            <ScrollArea className="h-[600px]">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-2 space-y-4">
                 {slides.map((slide, index) => (
                   <div 
@@ -897,10 +980,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                             ${activeSlideIndex === index ? 'ring-2 ring-indigo-500' : 'ring-1 ring-gray-200'}
                             bg-white hover:ring-2 hover:ring-indigo-400 transition-all
                           `}
-                          onClick={() => {
-                            console.log(`[SlideEditor] Slide thumbnail clicked, index: ${index}`);
-                            setActiveSlideIndex(index);
-                          }}
+                          onClick={() => handleSlideSelect(index)}
                           draggable
                           onDragStart={(e) => {
                             console.log(`[SlideEditor] Drag started on slide index: ${index}`);
@@ -976,24 +1056,44 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
-            {slides.length === 0 && (
-              <div className="p-6 text-center text-gray-500">
-                <p className="mb-2">No slides yet</p>
-                <Button 
-                  onClick={() => setShowSlideTypeSelector(true)} 
-                  size="sm"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add your first slide
-                </Button>
-              </div>
-            )}
+              {slides.length === 0 && (
+                <div className="p-6 text-center text-gray-500">
+                  <p className="mb-2">No slides yet</p>
+                  <Button 
+                    onClick={() => setIsPopoverOpen(true)}
+                    size="sm"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add your first slide
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
         {/* Active slide editor - MIDDLE COLUMN */}
-        <div className="lg:col-span-7">
-          {activeSlideIndex !== null && slides[activeSlideIndex] ? (
+        <div className={`lg:col-span-7 transition-all duration-300 ease-in-out ${isPopoverOpen ? 'lg:ml-[200px]' : ''}`}>
+          {(previewType || addSlidePreviewType) ? (
+            <Card className="shadow-sm border-slate-200 bg-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 py-3 border-b">
+                <div className="space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base font-medium">
+                      Preview
+                    </CardTitle>
+                    {(previewType || addSlidePreviewType) === 'text' && <TextSlideTypeBadge />}
+                    {(previewType || addSlidePreviewType) === 'video' && <VideoSlideTypeBadge />}
+                    {(previewType || addSlidePreviewType) === 'quiz' && <QuizSlideTypeBadge />}
+                    {(previewType || addSlidePreviewType) === 'student_response' && <StudentResponseSlideTypeBadge />}
+                    {(previewType || addSlidePreviewType) === 'slider' && <SliderSlideTypeBadge />}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <PreviewSlide type={previewType || addSlidePreviewType || ''} />
+              </CardContent>
+            </Card>
+          ) : activeSlideIndex !== null && slides[activeSlideIndex] ? (
             <Card className="shadow-sm border-slate-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 py-3 border-b">
                 <div className="space-y-0">
@@ -1005,7 +1105,10 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent 
+                className="p-4"
+                key={getSlideKey(slides[activeSlideIndex], activeSlideIndex)}
+              >
                 {renderSlideEditor(slides[activeSlideIndex], activeSlideIndex)}
               </CardContent>
             </Card>
@@ -1014,7 +1117,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
               <div className="text-center p-6">
                 <p className="text-gray-500 mb-4">Select a slide to edit or create a new slide</p>
                 <Button 
-                  onClick={() => setShowSlideTypeSelector(true)} 
+                  onClick={() => setIsPopoverOpen(true)} 
                   className="bg-primaryStyling hover:bg-primaryStyling/90 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" /> Add Slide
@@ -1034,22 +1137,45 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent className="pt-2 space-y-3">
-                <div className="space-y-1">
+              <CardContent className="pt-2 space-y-3" key={getSlideKey(slides[activeSlideIndex], activeSlideIndex)}>
+                <div className="space-y-1 cursor-pointer">
                   <label className="text-sm font-medium">Slide Type</label>
                   <Select
                     value={slides[activeSlideIndex].slide_type}
-                    onValueChange={(value) => handleSlideTypeChange(value, activeSlideIndex)}
+                    onValueChange={(value) => {
+                      handleSlideTypeChange(value, activeSlideIndex);
+                      // Clear preview states when changing slide type
+                      setPreviewType(null);
+                      setAddSlidePreviewType(null);
+                    }}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-indigo-50 cursor-pointer">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="quiz">Quiz</SelectItem>
-                      <SelectItem value="student_response">Student Response</SelectItem>
-                      <SelectItem value="slider">Slider</SelectItem>
+                      <div className="relative cursor-pointer">
+                        {[
+                          { value: 'text', icon: AlignLeft, color: 'blue', label: 'Text' },
+                          { value: 'video', icon: Video, color: 'purple', label: 'Video' },
+                          { value: 'quiz', icon: ListTodo, color: 'amber', label: 'Quiz' },
+                          { value: 'student_response', icon: MessageSquare, color: 'rose', label: 'Student Response' },
+                          { value: 'slider', icon: MoveHorizontal, color: 'primaryStyling', label: 'Opinion Scale' }
+                        ].map((item) => (
+                          <div 
+                            key={item.value} 
+                            className="relative"
+                            onMouseEnter={() => setPreviewType(item.value)}
+                            onMouseLeave={() => setPreviewType(null)}
+                          >
+                            <SelectItem value={item.value}>
+                              <div className="flex items-center gap-2 cursor-pointer">
+                                <item.icon className={`h-4 w-4 text-${item.color}-500`} />
+                                <span>{item.label}</span>
+                              </div>
+                            </SelectItem>
+                          </div>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1453,9 +1579,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <div className="h-10"></div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

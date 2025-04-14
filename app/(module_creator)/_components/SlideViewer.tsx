@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig } from './SlideEditor';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +26,10 @@ const stripHtmlTags = (html: string | undefined): string => {
 
 interface SlideViewerProps {
   moduleId: string;
+  estimatedDuration?: number | null;
 }
 
-export default function SlideViewer({ moduleId }: SlideViewerProps) {
+export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewerProps) {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -460,8 +461,19 @@ export default function SlideViewer({ moduleId }: SlideViewerProps) {
           <ChevronLeft className="h-4 w-4 mr-1" /> Previous
         </Button>
         
-        <div className="text-sm font-medium">
-          {slides.length > 0 ? `Slide ${currentSlideIndex + 1} of ${slides.length}` : 'No Slides'}
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-medium">
+            {slides.length > 0 ? `Slide ${currentSlideIndex + 1} of ${slides.length}` : 'No Slides'}
+          </div>
+          {estimatedDuration && (
+            <>
+              <div className="h-4 w-px bg-gray-300" />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{estimatedDuration} min</span>
+              </div>
+            </>
+          )}
         </div>
         
         <Button 

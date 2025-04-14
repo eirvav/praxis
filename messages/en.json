@@ -19,6 +19,11 @@
       "learning": "Learning",
       "myProgress": "My Progress",
       "contents": "Contents"
+    },
+    "editor": {
+      "imageUpload": "Uploading image...",
+      "imageUploadError": "Upload failed: {message}",
+      "imageUploadSuccess": "Image uploaded successfully"
     }
   },
   "teacher": {
@@ -51,7 +56,8 @@
       "videoSlide": "Video slide",
       "quizSlide": "Quiz slide",
       "videoResponse": "Video Response",
-      "scaleRating": "Scale Rating"
+      "scaleRating": "Scale Rating",
+      "slider": "Slider"
     },
     "text": {
       "title": "Text Slide",
@@ -60,7 +66,64 @@
     },
     "quiz": {
       "selectOne": "Mark one option as correct for the quiz",
-      "selectMultiple": "Select one or more options as correct for the quiz"
+      "selectMultiple": "Select one or more options as correct for the quiz",
+      "question": "Question",
+      "questionPlaceholder": "Enter your question",
+      "options": "Options",
+      "addOption": "Add Option",
+      "optionPlaceholder": "Option",
+      "correct": "Correct",
+      "selected": "Selected",
+      "select": "Select"
+    },
+    "video": {
+      "title": "Video",
+      "videoTitle": "Video Title",
+      "titlePlaceholder": "Enter a title for this video",
+      "context": "Video Context (Optional)",
+      "contextPlaceholder": "Provide context about what the video is about",
+      "contextHelp": "This context will be shown to students to help them understand what to focus on",
+      "uploadVideo": "Upload Video",
+      "uploading": "Uploading...",
+      "uploadWait": "Please wait while your video is being uploaded",
+      "replaceVideo": "Replace Video",
+      "clickToUpload": "Click to upload video",
+      "videoFormats": "MP4, WebM, or MOV (max. 100MB)",
+      "errors": {
+        "videoOnly": "Please upload a video file",
+        "fileSize": "File size should not exceed 100MB",
+        "uploadFailed": "Failed to upload video",
+        "uploadSuccess": "Video uploaded successfully"
+      }
+    },
+    "slider": {
+      "question": "Question",
+      "questionPlaceholder": "Enter your question",
+      "description": "Description (Optional)",
+      "descriptionPlaceholder": "Enter description",
+      "labels": "Labels",
+      "startLabel": "Start label",
+      "middleLabel": "Middle label",
+      "endLabel": "End label",
+      "preview": "Preview",
+      "notAtAll": "Not at all",
+      "somewhat": "Somewhat",
+      "veryMuch": "Very much",
+      "sliderTitle": "Slider",
+      "addSlider": "Add Slider"
+    },
+    "studentResponse": {
+      "title": "Student Video Response",
+      "info": "This slide will allow students to record and submit video responses. Configure the response settings in the right panel.",
+      "recordOnce": "Students can record only once!",
+      "recordMultiple": "Students can record up to {count} response",
+      "recordMultiple_plural": "Students can record up to {count} responses",
+      "maxLength": "Maximum response length: {duration}",
+      "requiredImmediately": "Response required immediately after video",
+      "seconds": "{duration} seconds",
+      "minute": "1 minute",
+      "minutes": "{count} minutes",
+      "minutesSeconds": "{minutes}m {seconds}s"
     },
     "viewer": {
       "noSlides": {

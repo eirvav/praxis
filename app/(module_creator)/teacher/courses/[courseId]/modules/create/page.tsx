@@ -1,3 +1,6 @@
+//This file serves as a redirect handler for when users try to create a module directly from a course page,
+// without going through the module creator page
+
 'use client';
 
 import { useEffect } from 'react';
