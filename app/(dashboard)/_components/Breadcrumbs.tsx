@@ -21,10 +21,15 @@ export function Breadcrumbs() {
       const paths = pathname.split('/').filter(Boolean);
       const breadcrumbItems: BreadcrumbItem[] = [];
       
+      // Determine if we're in teacher or student route
+      const isTeacherRoute = pathname.startsWith('/teacher');
+      const isStudentRoute = pathname.startsWith('/student');
+      const baseRoute = isTeacherRoute ? '/teacher' : isStudentRoute ? '/student' : '';
+      
       // Always start with Dashboard
       breadcrumbItems.push({
         label: 'Dashboard',
-        href: '/teacher'
+        href: baseRoute
       });
 
       // If we're in a course route
@@ -40,7 +45,7 @@ export function Breadcrumbs() {
           if (courseData) {
             breadcrumbItems.push({
               label: courseData.title,
-              href: `/teacher/courses/${courseId}`
+              href: `${baseRoute}/courses/${courseId}`
             });
           }
 
@@ -58,7 +63,7 @@ export function Breadcrumbs() {
               if (moduleData) {
                 breadcrumbItems.push({
                   label: moduleData.title,
-                  href: `/teacher/courses/${courseId}/modules/${moduleId}`
+                  href: `${baseRoute}/courses/${courseId}/modules/${moduleId}`
                 });
               }
             }

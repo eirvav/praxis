@@ -86,22 +86,29 @@ export default function StudentCoursesPage() {
   );
 
   return (
-    <ContentLayout title="Available Courses">
+    <ContentLayout>
       <div className="space-y-6">
-        <div className="relative w-full sm:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search courses..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Available Courses</h1>
+            <p className="text-muted-foreground mt-1">Browse and enroll in courses</p>
+          </div>
+          
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search courses..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
         
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-[200px] animate-pulse bg-gray-100 rounded-md"></div>
+              <div key={i} className="h-[200px] animate-pulse bg-muted rounded-md"></div>
             ))}
           </div>
         ) : filteredCourses.length === 0 ? (

@@ -169,10 +169,6 @@ export const menuConfigs: Record<string, RoleConfig> = {
         translationKey: TRANSLATION_KEYS.LEARNING,
         items: [
           {
-            ...sharedMenuItems.courses,
-            href: "/student/courses",
-          },
-          {
             ...sharedMenuItems.resources,
             href: "#",
           },
@@ -181,6 +177,20 @@ export const menuConfigs: Record<string, RoleConfig> = {
             translationKey: TRANSLATION_KEYS.MY_PROGRESS,
             href: "#",
             icon: GraduationCap,
+          },
+        ],
+      },
+      {
+        label: "Courses",
+        translationKey: TRANSLATION_KEYS.COURSES,
+        items: [
+          {
+            label: "Course List",
+            translationKey: TRANSLATION_KEYS.COURSE_LIST,
+            href: "/student/courses",
+            icon: BookOpen,
+            injectComponent: true,
+            isCoursesSection: true,
           },
         ],
       },

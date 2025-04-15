@@ -69,7 +69,7 @@ export default function StudentCourseModuleDetailPage() {
 
   if (loading) {
     return (
-      <ContentLayout title="Module Details">
+      <ContentLayout>
         <div className="flex items-center justify-center h-64">
           <p>Loading module...</p>
         </div>
@@ -79,7 +79,7 @@ export default function StudentCourseModuleDetailPage() {
 
   if (error) {
     return (
-      <ContentLayout title="Error">
+      <ContentLayout>
         <div className="mb-6">
           <Link href={`/student/courses/${courseId}`} className="flex items-center text-muted-foreground hover:text-primary">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -96,7 +96,7 @@ export default function StudentCourseModuleDetailPage() {
 
   if (!module) {
     return (
-      <ContentLayout title="Module Not Found">
+      <ContentLayout>
         <div className="mb-6">
           <Link href={`/student/courses/${courseId}`} className="flex items-center text-muted-foreground hover:text-primary">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -111,8 +111,11 @@ export default function StudentCourseModuleDetailPage() {
     );
   }
 
+  // Check if thumbnail_url is a color (starts with #)
+  const isColorThumbnail = module.thumbnail_url?.startsWith('#');
+
   return (
-    <ContentLayout title={module.title}>
+    <ContentLayout>
       <div className="mb-6">
         <Link href={`/student/courses/${courseId}`} className="flex items-center text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -130,13 +133,20 @@ export default function StudentCourseModuleDetailPage() {
       {/* Display thumbnail if available */}
       {module.thumbnail_url && (
         <div className="relative w-full h-64 md:h-80 mb-8 overflow-hidden rounded-lg border">
-          <Image
-            src={module.thumbnail_url}
-            alt={module.title}
-            fill
-            style={{ objectFit: 'cover' }}
-            priority
-          />
+          {isColorThumbnail ? (
+            <div 
+              className="absolute inset-0 w-full h-full" 
+              style={{ backgroundColor: module.thumbnail_url }}
+            />
+          ) : (
+            <Image
+              src={module.thumbnail_url}
+              alt={module.title}
+              fill
+              style={{ objectFit: 'cover' }}
+              priority
+            />
+          )}
         </div>
       )}
 

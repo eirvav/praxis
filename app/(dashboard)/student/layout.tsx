@@ -1,14 +1,11 @@
-import { type Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Bell, Menu, Settings } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Sidebar } from '@/components/navbar-components/sidebar'
-
-export const metadata: Metadata = {
-  title: 'praXis Student Dashboard',
-  description: 'Created By Eirik Pagani Vavik',
-}
+import { cn } from '@/lib/utils'
+import { Breadcrumbs } from '../_components/Breadcrumbs'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { SidebarProvider } from '@/components/providers/sidebar-provider'
+import { SidebarToggle } from '@/components/sidebar-toggle'
 
 export default function StudentLayout({
   children,
@@ -17,49 +14,34 @@ export default function StudentLayout({
 }>) {
   return (
     <ClerkProvider>
-      <div className="h-full">
-        <div className="h-[80px] md:pl-56 fixed inset-y-0 w-full z-50">
-          <div className="border-b h-full flex items-center gap-x-4 px-6">
-            <Sheet>
-              <SheetTrigger>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0">
-                <Sidebar />
-              </SheetContent>
-            </Sheet>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <h1 className="font-bold text-2xl">
-                  praXis
-                </h1>
-              </div>
-              <div className="flex items-center gap-x-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                >
-                  <Bell className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
+      <SidebarProvider>
+        <div className="min-h-screen bg-sidebar dark:bg-slate-900">
+          <div className="flex flex-col min-h-screen p-2 lg:p-4">
+            <div className="rounded-xl overflow-hidden border shadow-[0_3px_10px_rgb(0,0,0,0.2)]">
+              <header className="bg-background border-b">
+                <div className={cn(
+                  "flex h-16 items-center justify-between px-4",
+                  "transition-all duration-300"
+                )}>
+                  <div className="flex items-center">
+                    <SidebarToggle />
+                    <Breadcrumbs />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <LanguageSwitcher />
+                    <Button variant="ghost" size="icon">
+                      <Bell className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              </header>
+              <main className="bg-background">
+                {children}
+              </main>
             </div>
           </div>
         </div>
-        <div className="hidden md:flex h-full w-56 flex-col fixed inset-y-0 z-50">
-          <Sidebar />
-        </div>
-        <main className="md:pl-56 pt-[80px] h-full">
-          {children}
-        </main>
-      </div>
+      </SidebarProvider>
     </ClerkProvider>
   )
 }

@@ -76,7 +76,7 @@ export function Menu({ isOpen }: MenuProps) {
                       <p className="text-sm font-medium text-muted-foreground max-w-[200px] truncate">
                         {translatedGroupLabel}
                       </p>
-                      {isCoursesGroup && (
+                      {isCoursesGroup && userRole === 'teacher' && (
                         <div
                           className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer"
                           onClick={() => setIsCourseModalOpen(true)}
@@ -91,9 +91,9 @@ export function Menu({ isOpen }: MenuProps) {
                         <TooltipTrigger asChild>
                           <div 
                             className="w-full flex justify-center items-center"
-                            onClick={isCoursesGroup ? () => setIsCourseModalOpen(true) : undefined}
+                            onClick={isCoursesGroup && userRole === 'teacher' ? () => setIsCourseModalOpen(true) : undefined}
                           >
-                            {isCoursesGroup ? (
+                            {isCoursesGroup && userRole === 'teacher' ? (
                               <div className="h-5 w-5 p-0 flex items-center justify-center group cursor-pointer">
                                 <Plus className="h-4 w-4 transition-transform group-hover:scale-125 group-hover:text-primary" />
                               </div>
