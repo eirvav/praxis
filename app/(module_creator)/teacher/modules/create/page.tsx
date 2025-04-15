@@ -71,6 +71,29 @@ const moduleFormSchema = z.object({
 
 type ModuleFormData = z.infer<typeof moduleFormSchema>;
 
+// Add these helper functions at the top of the file after the imports
+const formatDateForInput = (date: Date | null): string => {
+  if (!date) return '';
+  return date.toISOString().split('T')[0];
+};
+
+const formatTimeForInput = (date: Date | null): string => {
+  if (!date) return '';
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
+const createDateFromInputs = (dateStr: string, timeStr: string): Date => {
+  if (!dateStr || !timeStr) return new Date();
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date(dateStr);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
 // This is the client component that uses useSearchParams
 function CreateModulePageContent() {
   console.log('[CreateModulePage] RENDERING component');
@@ -1610,14 +1633,14 @@ function CreateModulePageContent() {
                             </div>
                             <div className="flex items-center gap-2">
                               <p className="text-base text-gray-900">
-                                {new Date(deadline).toLocaleString('en-US', {
+                                {deadline ? new Date(deadline).toLocaleString('en-GB', {
                                   year: 'numeric',
                                   month: 'long',
                                   day: 'numeric',
                                   hour: '2-digit',
                                   minute: '2-digit',
                                   hour12: false
-                                })}
+                                }) : 'Not set'}
                               </p>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Edit2 className="h-4 w-4 text-gray-600" />
@@ -1626,58 +1649,35 @@ function CreateModulePageContent() {
                           </div>
                         </div>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-4">
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-4 space-y-4">
                           <div className="space-y-2">
-                            <Label>Module Deadline</Label>
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <input
-                                  type="date"
-                                  value={deadline ? deadline.split('T')[0] : ''}
-                                  onChange={(e) => {
-                                    const date = e.target.value;
-                                    const time = deadline ? deadline.split('T')[1] : '00:00';
-                                    const newDeadline = `${date}T${time}`;
-                                    
-                                    const selectedDate = new Date(newDeadline);
-                                    const now = new Date();
-                                    now.setSeconds(0);
-                                    now.setMilliseconds(0);
-                                    
-                                    if (selectedDate <= now) {
-                                      toast.error("Deadline must be in the future");
-                                      return;
-                                    }
-                                    
-                                    setDeadline(newDeadline);
-                                  }}
-                                  min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
-                                  className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
-                                />
-                              </div>
-                              <input
-                                type="time"
-                                value={deadline ? deadline.split('T')[1] : '00:00'}
-                                onChange={(e) => {
-                                  const date = deadline ? deadline.split('T')[0] : new Date().toISOString().split('T')[0];
-                                  const newDeadline = `${date}T${e.target.value}`;
-                                  
-                                  const selectedDate = new Date(newDeadline);
-                                  const now = new Date();
-                                  now.setSeconds(0);
-                                  now.setMilliseconds(0);
-                                  
-                                  if (selectedDate <= now) {
-                                    toast.error("Deadline must be in the future");
-                                    return;
-                                  }
-                                  
-                                  setDeadline(newDeadline);
-                                }}
-                                className="w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
-                              />
-                            </div>
+                            <Label>Date</Label>
+                            <Input
+                              type="date"
+                              value={formatDateForInput(new Date(deadline))}
+                              onChange={(e) => {
+                                const newDate = createDateFromInputs(
+                                  e.target.value,
+                                  formatTimeForInput(new Date(deadline))
+                                );
+                                setDeadline(newDate.toISOString());
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Time</Label>
+                            <Input
+                              type="time"
+                              value={formatTimeForInput(new Date(deadline))}
+                              onChange={(e) => {
+                                const newDate = createDateFromInputs(
+                                  formatDateForInput(new Date(deadline)),
+                                  e.target.value
+                                );
+                                setDeadline(newDate.toISOString());
+                              }}
+                            />
                           </div>
                         </div>
                       </PopoverContent>
@@ -1696,14 +1696,14 @@ function CreateModulePageContent() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <p className="text-base text-gray-900">
-                                  {new Date(publishDate).toLocaleString('en-US', {
+                                  {publishDate ? new Date(publishDate).toLocaleString('en-GB', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
                                     hour: '2-digit',
                                     minute: '2-digit',
                                     hour12: false
-                                  })}
+                                  }) : 'Not set'}
                                 </p>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Edit2 className="h-4 w-4 text-gray-600" />
@@ -1712,33 +1712,35 @@ function CreateModulePageContent() {
                             </div>
                           </div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                          <div className="space-y-4">
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <div className="p-4 space-y-4">
                             <div className="space-y-2">
-                              <Label>Publish Date</Label>
-                              <div className="flex gap-2">
-                                <div className="flex-1">
-                                  <input
-                                    type="date"
-                                    value={publishDate ? publishDate.split('T')[0] : ''}
-                                    onChange={(e) => {
-                                      const date = e.target.value;
-                                      const time = publishDate ? publishDate.split('T')[1] : '00:00';
-                                      setPublishDate(`${date}T${time}`);
-                                    }}
-                                    className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
-                                  />
-                                </div>
-                                <input
-                                  type="time"
-                                  value={publishDate ? publishDate.split('T')[1] : '00:00'}
-                                  onChange={(e) => {
-                                    const date = publishDate ? publishDate.split('T')[0] : new Date().toISOString().split('T')[0];
-                                    setPublishDate(`${date}T${e.target.value}`);
-                                  }}
-                                  className="w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
-                                />
-                              </div>
+                              <Label>Date</Label>
+                              <Input
+                                type="date"
+                                value={formatDateForInput(new Date(publishDate))}
+                                onChange={(e) => {
+                                  const newDate = createDateFromInputs(
+                                    e.target.value,
+                                    formatTimeForInput(new Date(publishDate))
+                                  );
+                                  setPublishDate(newDate.toISOString());
+                                }}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Time</Label>
+                              <Input
+                                type="time"
+                                value={formatTimeForInput(new Date(publishDate))}
+                                onChange={(e) => {
+                                  const newDate = createDateFromInputs(
+                                    formatDateForInput(new Date(publishDate)),
+                                    e.target.value
+                                  );
+                                  setPublishDate(newDate.toISOString());
+                                }}
+                              />
                             </div>
                           </div>
                         </PopoverContent>
