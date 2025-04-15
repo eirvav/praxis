@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, MessageSquare, MoveHorizontal, Copy, X, Camera } from 'lucide-react';
+import { Plus, Trash, Video, ListTodo, Settings, Grip, AlignLeft, MessageSquare, MoveHorizontal, Copy, X, Camera, AlertCircle } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,6 +19,14 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Import slide type components
 import TextSlideContent, { TextSlideTypeBadge, createDefaultTextSlideConfig, TextSlideRef } from './slide_types/ReflectionSlide';
@@ -187,6 +195,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const textSlideRef = useRef<TextSlideRef>(null);
   const contextSlideRef = useRef<ContextSlideRef>(null);
   const t = useTranslations();
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Helper function to format duration in seconds to a readable format
   const formatDuration = (seconds: number): string => {
@@ -614,12 +624,101 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
     }
   };
 
-  // Save all slides
+  // Replace the existing addVideoBeforeSlide function with this updated version
+  const addVideoBeforeSlide = (slideIndex: number) => {
+    const updatedSlides = [...slides];
+    const newVideoSlide: Slide = {
+      module_id: moduleId,
+      slide_type: 'video',
+      position: slideIndex,
+      config: createDefaultVideoSlideConfig()
+    };
+    
+    // Insert the video slide before the response slide
+    updatedSlides.splice(slideIndex, 0, newVideoSlide);
+    
+    // Update positions
+    const reorderedSlides = updatedSlides.map((slide, idx) => ({
+      ...slide,
+      position: idx
+    }));
+    
+    // First update the slides state
+    setSlides(reorderedSlides);
+    
+    // Then update localStorage
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(reorderedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage:', err);
+    }
+    
+    // Now revalidate with the updated slides
+    const remainingErrors = reorderedSlides.reduce((errors: string[], slide, index) => {
+      if (slide.slide_type === 'student_response') {
+        const previousSlide = index > 0 ? reorderedSlides[index - 1] : null;
+        const hasVideoImmediatelyBefore = previousSlide?.slide_type === 'video';
+        
+        if (!hasVideoImmediatelyBefore) {
+          errors.push(`**Slide ${index + 1}** needs a **Video Slide**`);
+        }
+      }
+      return errors;
+    }, []);
+    
+    // Update validation state
+    setValidationErrors(remainingErrors);
+    
+    // If no more errors, close the modal
+    if (remainingErrors.length === 0) {
+      setShowValidationModal(false);
+    }
+    
+    // Set focus to the new video slide
+    setActiveSlideIndex(slideIndex);
+    
+    // Show success toast
+    toast.success(`Added Video Slide before Slide ${slideIndex + 2}`, {
+      description: "You can now configure the video content"
+    });
+  };
+
+  // Update the validateSlides function to return both isValid and errors
+  const validateSlides = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    slides.forEach((slide, index) => {
+      if (slide.slide_type === 'student_response') {
+        const previousSlide = index > 0 ? slides[index - 1] : null;
+        const hasVideoImmediatelyBefore = previousSlide?.slide_type === 'video';
+        
+        if (!hasVideoImmediatelyBefore) {
+          errors.push(`**Slide ${index + 1}** needs a **Video Slide**`);
+        }
+      }
+    });
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  // Modify the saveSlides function
   const saveSlides = async () => {
-    if (!supabase || !moduleId) return;
+    if (!supabase) return;
+    
+    // First validate the slides
+    const { isValid, errors } = validateSlides();
+    if (!isValid) {
+      setValidationErrors(errors);
+      setShowValidationModal(true);
+      return;
+    }
+    
+    setSaving(true);
     
     try {
-      setSaving(true);
       console.log('Saving all slides to database:', slides);
       
       // First, fetch existing slides to identify which ones need to be kept
@@ -949,6 +1048,52 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       handlePopoverOpen(true);
     }, 0);
   }, [handlePopoverOpen]);
+
+  // Fix All Slides function
+  const fixAllSlides = () => {
+    const updatedSlides = [...slides];
+    let insertCount = 0;
+    
+    slides.forEach((slide, index) => {
+      if (slide.slide_type === 'student_response') {
+        const adjustedIndex = index + insertCount;
+        const previousSlide = adjustedIndex > 0 ? updatedSlides[adjustedIndex - 1] : null;
+        
+        if (previousSlide?.slide_type !== 'video') {
+          const newVideoSlide: Slide = {
+            module_id: moduleId,
+            slide_type: 'video',
+            position: adjustedIndex,
+            config: createDefaultVideoSlideConfig()
+          };
+          
+          updatedSlides.splice(adjustedIndex, 0, newVideoSlide);
+          insertCount++;
+        }
+      }
+    });
+    
+    // Update positions
+    const reorderedSlides = updatedSlides.map((slide, idx) => ({
+      ...slide,
+      position: idx
+    }));
+    
+    setSlides(reorderedSlides);
+    setShowValidationModal(false);
+    
+    // Show success toast
+    toast.success("Added all required Video Slides", {
+      description: "Your module structure has been updated"
+    });
+    
+    // Update localStorage
+    try {
+      localStorage.setItem(`slides_cache_${moduleId}`, JSON.stringify(reorderedSlides));
+    } catch (err) {
+      console.error('Error saving slides to localStorage:', err);
+    }
+  };
 
   if (loading) {
     return <p className="text-center py-8">Loading slides...</p>;
@@ -1701,6 +1846,81 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
           ) : null}
         </div>
       </div>
+      
+      {/* Add the validation modal */}
+      <AlertDialog open={showValidationModal} onOpenChange={setShowValidationModal}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl flex items-center gap-2 pb-2">
+              <div className="p-2 rounded-full bg-amber-100">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <span>Action Required</span>
+            </AlertDialogTitle>
+            <p className="text-sm text-slate-600 mb-4">You cannot proceed until you fix the following issues:</p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                {validationErrors.length > 0 ? (
+                  <div className="bg-slate-50 border rounded-lg divide-y">
+                    {validationErrors.map((error) => {
+                      // Extract slide index from error message
+                      const slideIndex = parseInt(error.match(/Slide (\d+)/)?.[1] || '0') - 1;
+                      
+                      return (
+                        <div 
+                          key={`error-${slideIndex}`}
+                          className="p-4 flex items-center justify-between group animate-fadeIn"
+                        >
+                          <div className="flex items-center gap-2 text-sm">
+                            <Camera className="h-4 w-4 text-red-500" />
+                            <span>
+                              {error.split('**').map((part, i) => {
+                                if (i % 2 === 1) {
+                                  return <strong key={i}>{part}</strong>;
+                                }
+                                return part;
+                              })}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => addVideoBeforeSlide(slideIndex)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-primaryStyling hover:bg-indigo-700 text-white cursor-pointer" 
+                          >
+                            <Video className="h-3 w-3 mr-1" />
+                            Fix
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-sm text-gray-500 animate-fadeIn">
+                    All issues have been fixed! 🎉
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setShowValidationModal(false)}
+              className="flex-1"
+            >
+              {validationErrors.length === 0 ? 'Close' : 'Cancel'}
+            </Button>
+            {validationErrors.length > 0 && (
+              <Button 
+                onClick={fixAllSlides}
+                className="flex-1 bg-primaryStyling hover:bg-indigo-700 text-white cursor-pointer"
+              >
+                Fix All Issues
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 
