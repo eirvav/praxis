@@ -109,13 +109,20 @@ export const ModuleHeader = ({
 
         {thumbnailUrl && (
           <div className="relative aspect-video w-1/3 rounded-lg border overflow-hidden flex-shrink-0">
-            <Image
-              src={thumbnailUrl}
-              alt={title}
-              fill
-              className="object-cover"
-              priority
-            />
+            {thumbnailUrl.startsWith('#') ? (
+              <div 
+                className="absolute inset-0" 
+                style={{ backgroundColor: thumbnailUrl }}
+              />
+            ) : (
+              <Image
+                src={thumbnailUrl}
+                alt={title}
+                fill
+                className="object-cover"
+                priority
+              />
+            )}
           </div>
         )}
       </div>

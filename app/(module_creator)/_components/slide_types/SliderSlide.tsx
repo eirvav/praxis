@@ -15,11 +15,11 @@ type TranslationFunction = {
 // TypeScript type for the slider configuration
 export interface SliderConfig {
   type: 'slider';
+  description: string;
   sliders: Array<{
     id: string;
     title: string;
     question: string;
-    description: string;
     minLabel: string;
     midLabel: string;
     maxLabel: string;
@@ -36,11 +36,11 @@ export interface SliderConfig {
 export const getDefaultSliderConfig = (t: TranslationFunction): SliderConfig => {
   return {
     type: 'slider',
+    description: '',
     sliders: [{
       id: crypto.randomUUID(),
       title: '',
       question: '',
-      description: '',
       minLabel: t('slides.slider.notAtAll'),
       midLabel: t('slides.slider.somewhat'),
       maxLabel: t('slides.slider.veryMuch'),
@@ -59,11 +59,11 @@ export const createDefaultSliderConfig = (): SliderConfig => {
   // Default fallback values without using the hook
   return {
     type: 'slider',
+    description: '',
     sliders: [{
       id: crypto.randomUUID(),
       title: '',
       question: '',
-      description: '',
       minLabel: 'Not at all',
       midLabel: 'Somewhat',
       maxLabel: 'Very much',
@@ -117,17 +117,6 @@ const SliderItem = ({
             value={slider.question || ''}
             onChange={(e) => onChange({ ...slider, question: e.target.value })}
             placeholder={t('slides.slider.questionPlaceholder')}
-            className="mt-1.5 bg-white"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor={`description-${slider.id}`}>{t('slides.slider.description')}</Label>
-          <Input
-            id={`description-${slider.id}`}
-            value={slider.description || ''}
-            onChange={(e) => onChange({ ...slider, description: e.target.value })}
-            placeholder={t('slides.slider.descriptionPlaceholder')}
             className="mt-1.5 bg-white"
           />
         </div>
@@ -210,7 +199,6 @@ export default function SliderSlideContent({ config, onConfigChange }: SliderSli
       id: crypto.randomUUID(),
       title: '',
       question: '',
-      description: '',
       minLabel: t('slides.slider.notAtAll'),
       midLabel: t('slides.slider.somewhat'),
       maxLabel: t('slides.slider.veryMuch'),
@@ -242,6 +230,20 @@ export default function SliderSlideContent({ config, onConfigChange }: SliderSli
 
   return (
     <div className="space-y-6">
+      {/* Unified Description */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium">Description</Label>
+          <span className="text-xs text-muted-foreground">(Optional)</span>
+        </div>
+        <Input
+          value={config.description || ''}
+          onChange={(e) => onConfigChange({ ...config, description: e.target.value })}
+          placeholder="Add some context for the slide!"
+          className="bg-white"
+        />
+      </div>
+
       <div className="space-y-8">
         {config.sliders.map((slider, index) => (
           <div key={slider.id} className="space-y-4">

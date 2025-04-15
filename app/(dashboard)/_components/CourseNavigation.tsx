@@ -6,29 +6,12 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { useSupabase } from './SupabaseProvider';
+import { generateColorFromString } from '@/lib/menu-list';
 
 interface Course {
   id: string;
   title: string;
 }
-
-// Array of nice-looking colors
-const colors = [
-  "#FF6B6B", // coral red
-  "#4ECDC4", // turquoise
-  "#45B7D1", // sky blue
-  "#96CEB4", // sage green
-  "#FFEEAD", // cream yellow
-  "#D4A5A5", // dusty rose
-  "#9B5DE5", // purple
-  "#F15BB5", // pink
-  "#00BBF9", // bright blue
-  "#00F5D4", // mint
-  "#FEE440", // yellow
-  "#8338EC", // violet
-  "#3A86FF", // royal blue
-  "#38B000", // green
-];
 
 export function CourseNavigation({ isTeacher = false }) {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -83,7 +66,8 @@ export function CourseNavigation({ isTeacher = false }) {
   return (
     <div className="space-y-1">
       {courses.map((course) => {
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        // Use consistent color generation based on course title
+        const courseColor = generateColorFromString(course.title);
         
         return (
           <Link
@@ -97,8 +81,8 @@ export function CourseNavigation({ isTeacher = false }) {
             )}
           >
             <div 
-              className="absolute left-3 h-4 w-[3px] rounded-full" 
-              style={{ backgroundColor: randomColor }}
+              className="absolute left-3 h-full w-[3px] rounded-full" 
+              style={{ backgroundColor: courseColor }}
             />
             <span className="pl-4 truncate">{course.title}</span>
           </Link>

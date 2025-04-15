@@ -408,9 +408,9 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                     <div key={slider.id} className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold">{slider.question}</h3>
-                        {slider.description && (
+                        {currentSlide.config.description && (
                           <p className="text-sm text-muted-foreground mt-1">
-                            {slider.description}
+                            {currentSlide.config.description}
                           </p>
                         )}
                       </div>

@@ -19,6 +19,9 @@ interface Module {
   thumbnail_url?: string;
   updated_at: string;
   course_id: string;
+  course_title?: string;
+  deadline?: string;
+  teacher_username?: string;
 }
 
 interface Course {
@@ -57,12 +60,43 @@ export default function TeacherDashboard() {
         // Fetch modules
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
-          .select('id, title, description, thumbnail_url, updated_at, course_id')
+          .select('id, title, description, thumbnail_url, updated_at, course_id, deadline, teacher_id, users:teacher_id(username)')
           .eq('teacher_id', user.id)
           .order('updated_at', { ascending: false });
           
         if (modulesError) throw modulesError;
-        setModules(modulesData || []);
+        
+        // Create a mapping of course IDs to titles
+        const courseTitles = (coursesData || []).reduce((acc, course) => {
+          acc[course.id] = course.title;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        // Add course titles to modules and handle teacher usernames
+        const modulesWithCourses = (modulesData || []).map(module => {
+          // Handle the users join result properly
+          let teacherUsername;
+          if (module.users) {
+            // TypeScript doesn't know the structure of users from the join
+            // Use type assertion to help TypeScript understand
+            const usersData = module.users as { username: string } | { username: string }[];
+            
+            // Check if users is an array or an object
+            if (Array.isArray(usersData)) {
+              teacherUsername = usersData[0]?.username;
+            } else {
+              teacherUsername = usersData.username;
+            }
+          }
+          
+          return {
+            ...module,
+            course_title: courseTitles[module.course_id] || 'Unknown Course',
+            teacher_username: teacherUsername
+          };
+        });
+        
+        setModules(modulesWithCourses);
       } catch (err) {
         console.error('Error fetching data:', err);
         setCourses([]);
@@ -204,8 +238,11 @@ export default function TeacherDashboard() {
                     thumbnail_url={module.thumbnail_url}
                     updated_at={module.updated_at}
                     courseId={module.course_id}
+                    courseName={module.course_title}
                     isTeacher={true}
                     viewMode="grid"
+                    deadline={module.deadline}
+                    teacherUsername={module.teacher_username}
                   />
                 ))}
               </div>

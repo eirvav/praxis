@@ -8,6 +8,42 @@ import {
   PlusCircle,
 } from "lucide-react";
 
+// Function to generate a consistent color from a string
+export const generateColorFromString = (str: string): string => {
+  if (!str) return '#6366f1'; // Default to primary color
+
+  // Extract the course code prefix (letters before numbers)
+  const prefix = str.match(/^[A-Za-z]+/);
+  const mainPrefix = prefix ? prefix[0].toUpperCase() : str;
+  
+  // Use the prefix for base color generation to ensure courses with same prefix get similar colors
+  let hash = 0;
+  for (let i = 0; i < mainPrefix.length; i++) {
+    hash = mainPrefix.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Generate the primary hue from the course prefix (department code)
+  const primaryHue = Math.abs(hash) % 360;
+  
+  // For courses with the same prefix, use the full name to create slight variations
+  let secondaryHash = 0;
+  for (let i = 0; i < str.length; i++) {
+    secondaryHash = str.charCodeAt(i) + ((secondaryHash << 5) - secondaryHash);
+  }
+  
+  // Create a variation of ±20 degrees based on the full course name
+  const hueVariation = (secondaryHash % 41) - 20; // Range from -20 to +20
+  
+  // Calculate final hue with variation
+  const finalHue = (primaryHue + hueVariation + 360) % 360;
+  
+  // Fixed saturation and lightness for vibrant but consistent colors
+  const s = 85;
+  const l = 65;
+
+  return `hsl(${finalHue}, ${s}%, ${l}%)`;
+};
+
 // Translation keys
 export const TRANSLATION_KEYS = {
   QUICK_CREATE: "common.navigation.quickCreate",

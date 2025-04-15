@@ -7,8 +7,18 @@ import { toast } from 'sonner';
 import { useUser } from '@clerk/nextjs';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { Textarea } from '@/components/ui/textarea';
-import { VideoSlideConfig } from '../SlideEditor';
 import { useTranslations } from 'next-intl';
+
+export interface VideoSlideConfig {
+  type: 'video';
+  title: string;
+  videoUrl: string;
+  videoFileName: string;
+  context: string;
+  allowReplay: boolean;
+  maxReplays: number;
+  isRequired: boolean;
+}
 
 interface VideoSlideProps {
   config: VideoSlideConfig;
@@ -201,7 +211,8 @@ export const getDefaultVideoSlideConfig = (): VideoSlideConfig => {
     videoFileName: '',
     context: '',
     allowReplay: false,
-    maxReplays: 3
+    maxReplays: 3,
+    isRequired: true
   };
 };
 

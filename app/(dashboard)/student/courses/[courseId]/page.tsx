@@ -25,6 +25,9 @@ interface Module {
   created_at: string;
   description: string;
   thumbnail_url: string;
+  deadline?: string;
+  teacher_id?: string;
+  teacher_username?: string;
 }
 
 export default function StudentCourseDetailPage() {
@@ -62,16 +65,39 @@ export default function StudentCourseDetailPage() {
         
         setCourse(courseData);
         
-        // Fetch modules for this course
+        // Fetch modules for this course with teacher username
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
-          .select('*')
+          .select('*, users:teacher_id(username)')
           .eq('course_id', courseId)
           .order('created_at', { ascending: false });
           
         if (modulesError) throw modulesError;
         
-        setModules(modulesData || []);
+        // Process the joined data
+        const processedModules = (modulesData || []).map(module => {
+          // Handle the users join result properly
+          let teacherUsername;
+          if (module.users) {
+            // TypeScript doesn't know the structure of users from the join
+            // Use type assertion to help TypeScript understand
+            const usersData = module.users as { username: string } | { username: string }[];
+            
+            // Check if users is an array or an object
+            if (Array.isArray(usersData)) {
+              teacherUsername = usersData[0]?.username;
+            } else {
+              teacherUsername = usersData.username;
+            }
+          }
+          
+          return {
+            ...module,
+            teacher_username: teacherUsername
+          };
+        });
+        
+        setModules(processedModules);
       } catch (err) {
         console.error('Error fetching course details:', err);
         toast.error('Failed to load course details');
@@ -143,6 +169,9 @@ export default function StudentCourseDetailPage() {
                   thumbnail_url={module.thumbnail_url}
                   createdAt={module.created_at}
                   href={`/student/courses/${course.id}/modules/${module.id}`}
+                  courseName={course.title}
+                  deadline={module.deadline}
+                  teacherUsername={module.teacher_username}
                 />
               ))}
             </div>

@@ -235,13 +235,27 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{t('slides.quiz.question')}</label>
-        <Input
-          placeholder={t('slides.quiz.questionPlaceholder')}
-          value={config.question || ''}
-          onChange={(e) => onConfigChange({ question: e.target.value })}
-        />
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Description</label>
+            <span className="text-xs text-muted-foreground">(Optional)</span>
+          </div>
+          <Input
+            placeholder="Add some context to your question..."
+            value={config.description || ''}
+            onChange={(e) => onConfigChange({ description: e.target.value })}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t('slides.quiz.question')}</label>
+          <Input
+            placeholder={t('slides.quiz.questionPlaceholder')}
+            value={config.question || ''}
+            onChange={(e) => onConfigChange({ question: e.target.value })}
+          />
+        </div>
       </div>
       
       <div className="space-y-3">
@@ -312,6 +326,7 @@ export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
   return { 
     type: 'quiz', 
     question: '', 
+    description: '',
     options: ['', '', ''], 
     correctOptionIndex: 0,
     explanations: ['', '', ''],
@@ -319,6 +334,7 @@ export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
     shuffleOptions: false,
     multipleCorrect: false,
     correctOptionIndices: [],
+    isRequired: true,
   };
 };
 

@@ -56,8 +56,8 @@
       "videoSlide": "Video",
       "quizSlide": "Knowledge Test",
       "videoResponse": "Video Response",
-      "scaleRating": "Opinion Scale",
-      "slider": "Opinion Scale",
+      "scaleRating": "Likert Scale",
+      "slider": "Likert Scale",
       "contextSlide": "Context"
     },
     "text": {
@@ -111,7 +111,7 @@
       "somewhat": "Somewhat",
       "veryMuch": "Very much",
       "sliderTitle": "Slider",
-      "addSlider": "Add Slider"
+      "addSlider": "Add"
     },
     "studentResponse": {
       "title": "Student Video Response",

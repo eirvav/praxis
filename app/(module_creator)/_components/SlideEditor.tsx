@@ -56,17 +56,19 @@ export interface TextSlideConfig {
 
 export interface VideoSlideConfig {
   type: 'video';
-  title?: string;
-  videoUrl?: string;
-  videoFileName?: string;
-  context?: string;
-  allowReplay?: boolean;
-  maxReplays?: number;
+  title: string;
+  videoUrl: string;
+  videoFileName: string;
+  context: string;
+  allowReplay: boolean;
+  maxReplays: number;
+  isRequired: boolean;
 }
 
 export interface QuizSlideConfig {
   type: 'quiz';
   question: string;
+  description?: string;
   options: string[];
   correctOptionIndex: number;
   explanations?: string[];
@@ -74,6 +76,7 @@ export interface QuizSlideConfig {
   shuffleOptions?: boolean;
   multipleCorrect?: boolean;
   correctOptionIndices?: number[];
+  isRequired?: boolean;
 }
 
 export interface StudentResponseSlideConfig {
@@ -82,14 +85,15 @@ export interface StudentResponseSlideConfig {
   instantResponse: boolean;
   maxResponses: number;
   responseMaxDuration: number; // in seconds
+  isRequired: boolean;
 }
 
 export interface SliderSlideConfig {
   type: 'slider';
+  description: string;
   sliders: Array<{
     id: string;
     title: string;
-    description: string;
     question: string;
     minLabel: string;
     midLabel: string;
@@ -523,7 +527,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
           videoFileName,
           context: '',
           allowReplay: false,
-          maxReplays: 3
+          maxReplays: 3,
+          isRequired: false
         };
         break;
       case 'quiz':
@@ -631,7 +636,16 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       module_id: moduleId,
       slide_type: 'video',
       position: slideIndex,
-      config: createDefaultVideoSlideConfig()
+      config: {
+        type: 'video',
+        title: '',
+        videoUrl: '',
+        videoFileName: '',
+        context: '',
+        allowReplay: false,
+        maxReplays: 3,
+        isRequired: false
+      }
     };
     
     // Insert the video slide before the response slide
@@ -1064,7 +1078,16 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
             module_id: moduleId,
             slide_type: 'video',
             position: adjustedIndex,
-            config: createDefaultVideoSlideConfig()
+            config: {
+              type: 'video',
+              title: '',
+              videoUrl: '',
+              videoFileName: '',
+              context: '',
+              allowReplay: false,
+              maxReplays: 3,
+              isRequired: false
+            }
           };
           
           updatedSlides.splice(adjustedIndex, 0, newVideoSlide);
@@ -1451,8 +1474,20 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {slides[activeSlideIndex].slide_type === 'video' && isVideoSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-6" />
-                    <div className="space-y-2">
-                      
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required to watch
+                        </Label>
+                        <Switch 
+                          id="isRequired" 
+                          checked={slides[activeSlideIndex].config.isRequired ?? true}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { isRequired: checked });
+                          }}
+                        />
+                      </div>
+
                       <div className="flex items-center justify-between w-full">
                         <Label htmlFor="allowReplay" className="text-sm cursor-pointer">
                           Replay video
@@ -1465,10 +1500,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        If disabled, students will only be able to play the video once
-                      </p>
-                      
+
                       {slides[activeSlideIndex].config.allowReplay && (
                         <div className="mt-3 pl-7 space-y-2">
                           <label htmlFor="maxReplays" className="text-sm font-medium">Maximum replays allowed</label>
@@ -1501,7 +1533,20 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {slides[activeSlideIndex].slide_type === 'quiz' && isQuizSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-6" />
-                    <div className="space-y-2">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required slide
+                        </Label>
+                        <Switch 
+                          id="isRequired" 
+                          checked={slides[activeSlideIndex].config.isRequired ?? false}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { isRequired: checked });
+                          }}
+                        />
+                      </div>
+
                       <div className="flex items-center justify-between w-full">
                         <Label htmlFor="multipleCorrect" className="text-sm cursor-pointer">
                           Allow multiple correct answers
@@ -1549,8 +1594,20 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                 {slides[activeSlideIndex].slide_type === 'student_response' && isStudentResponseSlide(slides[activeSlideIndex].config) && (
                   <>
                     <Separator className="my-6" />
-                    <div className="space-y-2">
-                      
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between w-full">
+                        <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                          Required slide
+                        </Label>
+                        <Switch 
+                          id="isRequired" 
+                          checked={slides[activeSlideIndex].config.isRequired ?? true}
+                          onCheckedChange={(checked) => {
+                            updateSlideConfig(activeSlideIndex, { isRequired: checked });
+                          }}
+                        />
+                      </div>
+
                       <div className="flex items-center justify-between w-full">
                         <Label htmlFor="severalResponses" className="text-sm cursor-pointer">
                           Allow multiple responses
@@ -1563,6 +1620,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                           }}
                         />
                       </div>
+
                       <p className="text-xs text-muted-foreground">
                         If enabled, students can submit multiple responses
                       </p>

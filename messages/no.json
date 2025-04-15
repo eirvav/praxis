@@ -56,8 +56,8 @@
       "videoSlide": "Last opp Video",
       "quizSlide": "Kunnskapstest",
       "videoResponse": "Videorespons",
-      "scaleRating": "Meningsmåling",
-      "slider": "Meningsmåling",
+      "scaleRating": "Likert Skala",
+      "slider": "Likert Skala",
       "contextSlide": "Kontekst"
     },
     "text": {

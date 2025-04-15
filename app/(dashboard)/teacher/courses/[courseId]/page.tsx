@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Filter, LayoutGrid, List, ChevronDown, Plus, Trash2, MoreVertical, Settings } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, ChevronDown, Plus, Trash2, MoreVertical, Settings, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ModuleCard from '@/app/(dashboard)/_components/ModuleCard';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -34,6 +34,9 @@ interface Module {
   enrolled?: number;
   accuracy?: number;
   completion_rate?: number;
+  deadline?: string;
+  teacher_id?: string;
+  teacher_username?: string;
 }
 
 export default function CourseDetailPage() {
@@ -45,6 +48,9 @@ export default function CourseDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'enrolled' | 'completion'>('date');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const { user } = useUser();
   const supabase = useSupabase();
@@ -93,19 +99,37 @@ export default function CourseDetailPage() {
         // Fetch modules for this course
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
-          .select('*')
+          .select('*, users:teacher_id(username)')
           .eq('course_id', courseId)
           .order('created_at', { ascending: false });
           
         if (modulesError) throw modulesError;
         
-        // Add mock stats for demonstration
-        const modulesWithStats = (modulesData || []).map(module => ({
-          ...module,
-          enrolled: Math.floor(Math.random() * 20) + 5,
-          accuracy: Math.floor(Math.random() * 60) + 40,
-          completion_rate: Math.floor(Math.random() * 40) + 60,
-        }));
+        // Add mock stats for demonstration and process teacher username
+        const modulesWithStats = (modulesData || []).map(module => {
+          // Handle the users join result properly
+          let teacherUsername;
+          if (module.users) {
+            // TypeScript doesn't know the structure of users from the join
+            // Use type assertion to help TypeScript understand
+            const usersData = module.users as { username: string } | { username: string }[];
+            
+            // Check if users is an array or an object
+            if (Array.isArray(usersData)) {
+              teacherUsername = usersData[0]?.username;
+            } else {
+              teacherUsername = usersData.username;
+            }
+          }
+          
+          return {
+            ...module,
+            enrolled: Math.floor(Math.random() * 20) + 5,
+            accuracy: Math.floor(Math.random() * 60) + 40,
+            completion_rate: Math.floor(Math.random() * 40) + 60,
+            teacher_username: teacherUsername
+          };
+        });
         
         setModules(modulesWithStats);
       } catch (err) {
@@ -150,6 +174,33 @@ export default function CourseDetailPage() {
     }
   }
 
+  async function handleUpdateCourseTitle() {
+    if (!supabase || !course || !newTitle.trim()) return;
+    
+    try {
+      setIsUpdating(true);
+      
+      const { error } = await supabase
+        .from('courses')
+        .update({ title: newTitle.trim() })
+        .eq('id', course.id);
+        
+      if (error) throw error;
+      
+      setCourse({ ...course, title: newTitle.trim() });
+      setIsEditingTitle(false);
+      toast.success('Course name updated successfully');
+      
+      // Refresh the page to update the sidebar navigation
+      window.location.reload();
+    } catch (err) {
+      console.error('Error updating course name:', err);
+      toast.error('Failed to update course name');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   if (loading) {
     return (
       <ContentLayout title="Loading...">
@@ -185,7 +236,40 @@ export default function CourseDetailPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{course.title}</h1>
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="text-2xl font-bold h-auto py-1 w-[300px]"
+                  placeholder="Enter course name"
+                  disabled={isUpdating}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleUpdateCourseTitle}
+                  disabled={isUpdating || !newTitle.trim()}
+                  className="h-8 w-8"
+                >
+                  <Check className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setIsEditingTitle(false);
+                    setNewTitle(course?.title || '');
+                  }}
+                  disabled={isUpdating}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            ) : (
+              <h1 className="text-2xl font-bold">{course?.title}</h1>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -194,9 +278,15 @@ export default function CourseDetailPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setNewTitle(course?.title || '');
+                    setIsEditingTitle(true);
+                  }}
+                >
                   <Settings className="h-4 w-4 mr-2" />
-                  Edit Course
+                  Edit Name
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -262,7 +352,7 @@ export default function CourseDetailPage() {
         </div>
 
         {modules.length === 0 ? (
-          <CreateFirstModule />
+          <CreateFirstModule courseId={course.id} />
         ) : (
           <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {filteredModules
@@ -292,6 +382,9 @@ export default function CourseDetailPage() {
                   enrolled={module.enrolled}
                   completion_rate={module.completion_rate}
                   viewMode={viewMode}
+                  courseName={course.title}
+                  deadline={module.deadline}
+                  teacherUsername={module.teacher_username}
                 />
               ))
             }

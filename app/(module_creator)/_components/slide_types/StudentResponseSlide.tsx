@@ -1,8 +1,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Info, Camera } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { StudentResponseSlideConfig } from '../SlideEditor';
 import { useTranslations } from 'next-intl';
+
+export interface StudentResponseSlideConfig {
+  type: 'student_response';
+  severalResponses: boolean;
+  instantResponse: boolean;
+  maxResponses: number;
+  responseMaxDuration: number; // in seconds
+  isRequired: boolean;
+}
 
 interface StudentResponseSlideProps {
   config: StudentResponseSlideConfig;
@@ -81,7 +89,8 @@ export const getDefaultStudentResponseConfig = (): StudentResponseSlideConfig =>
     severalResponses: false,
     instantResponse: false,
     maxResponses: 1,
-    responseMaxDuration: 120 // default to 2 minutes (120 seconds)
+    responseMaxDuration: 120, // default to 2 minutes (120 seconds)
+    isRequired: true
   };
 };
 

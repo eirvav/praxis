@@ -4,7 +4,11 @@ import Link from "next/link";
 import { Layers, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const CreateFirstModule = () => {
+interface CreateFirstModuleProps {
+  courseId?: string;
+}
+
+export const CreateFirstModule = ({ courseId }: CreateFirstModuleProps) => {
   return (
     <div className="bg-white p-15">
       <div className="text-center space-y-4">
@@ -14,7 +18,7 @@ export const CreateFirstModule = () => {
           You've created a course. Now it's time to add learning content with modules.
         </p>
         <div className="pt-4">
-          <Link href="/teacher/modules/create">
+          <Link href={`/teacher/modules/create${courseId ? `?preselectedCourseId=${courseId}` : ''}`}>
             <Button 
               size="lg"
               className="bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"

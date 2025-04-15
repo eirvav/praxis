@@ -227,7 +227,7 @@ export const getDefaultTextSlideConfig = (): TextSlideConfig => {
   return { 
     type: 'text', 
     content: '',
-    isRequired: false
+    isRequired: true
   };
 };
 
