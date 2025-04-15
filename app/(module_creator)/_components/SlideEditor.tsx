@@ -26,7 +26,7 @@ import VideoSlideContent, { VideoSlideTypeBadge, createDefaultVideoSlideConfig }
 import QuizSlideContent, { QuizSlideTypeBadge, createDefaultQuizSlideConfig } from './slide_types/QuizSlide';
 import StudentResponseSlideContent, { StudentResponseSlideTypeBadge, createDefaultStudentResponseConfig } from './slide_types/StudentResponseSlide';
 import SliderSlideContent, { SliderSlideTypeBadge, createDefaultSliderConfig } from './slide_types/SliderSlide';
-import ContextSlideContent, { ContextSlideTypeBadge, createDefaultContextSlideConfig } from './slide_types/ContextSlide';
+import ContextSlideContent, { ContextSlideTypeBadge, createDefaultContextSlideConfig, ContextSlideRef } from './slide_types/ContextSlide';
 
 export interface Slide {
   id?: string;
@@ -185,6 +185,7 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const textSlideRef = useRef<TextSlideRef>(null);
+  const contextSlideRef = useRef<ContextSlideRef>(null);
   const t = useTranslations();
   
   // Helper function to format duration in seconds to a readable format
@@ -221,9 +222,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
   const createDefaultSlide = useCallback((): Slide => {
     return {
       module_id: moduleId,
-      slide_type: 'text',
+      slide_type: 'context',
       position: 0,
-      config: { type: 'text', content: '', isRequired: false }
+      config: { type: 'context', content: '' }
     };
   }, [moduleId]);
 
@@ -772,7 +773,13 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       
       case 'context':
         if (isContextSlide(slide.config)) {
-          return <ContextSlideContent config={slide.config} onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} />;
+          return (
+            <ContextSlideContent 
+              ref={contextSlideRef}
+              config={slide.config} 
+              onConfigChange={(configUpdate) => updateSlideConfig(index, configUpdate)} 
+            />
+          );
         }
         updateSlideConfig(index, createDefaultContextSlideConfig());
         return null;
@@ -915,6 +922,9 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       if (textSlideRef.current) {
         textSlideRef.current.blur();
       }
+      if (contextSlideRef.current) {
+        contextSlideRef.current.blur();
+      }
       
       // Then blur any standard HTML element
       if (document.activeElement instanceof HTMLElement) {
@@ -1006,8 +1016,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                         <h3 className="text-sm font-semibold mb-2 text-gray-900">Context Slides</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {[
-                            { id: 'video', value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide'), bgColor: 'bg-purple-100' },
-                            { id: 'context', value: 'context', icon: MessageSquare, color: 'teal', label: t('slides.common.contextSlide'), bgColor: 'bg-teal-100' }
+                            { id: 'context', value: 'context', icon: MessageSquare, color: 'teal', label: t('slides.common.contextSlide'), bgColor: 'bg-teal-100' },
+                            { id: 'video', value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide'), bgColor: 'bg-purple-100' }
                           ].map((item) => (
                             <button
                               key={item.id}
@@ -1039,8 +1049,8 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { id: 'text', value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide'), bgColor: 'bg-blue-100' },
-                            { id: 'student_response', value: 'student_response', icon: Camera, color: 'rose', label: t('slides.common.videoResponse'), bgColor: 'bg-rose-100' },
                             { id: 'quiz', value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide'), bgColor: 'bg-amber-100' },
+                            { id: 'student_response', value: 'student_response', icon: Camera, color: 'rose', label: t('slides.common.videoResponse'), bgColor: 'bg-rose-100' },
                             { id: 'slider', value: 'slider', icon: MoveHorizontal, color: 'indigo', label: t('slides.common.scaleRating'), bgColor: 'bg-indigo-100' },
                           ].map((item) => (
                             <button
@@ -1267,16 +1277,22 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
                     <SelectContent>
                       <div className="relative cursor-pointer">
                         {[
-                          { value: 'text', icon: AlignLeft, color: 'blue', label: t('slides.common.textSlide') },
-                          { value: 'video', icon: Video, color: 'purple', label: t('slides.common.videoSlide') },
-                          { value: 'quiz', icon: ListTodo, color: 'amber', label: t('slides.common.quizSlide') },
-                          { value: 'student_response', icon: Camera, color: 'rose', label: t('slides.common.videoResponse') },
-                          { value: 'slider', icon: MoveHorizontal, color: 'indigo', label: t('slides.common.scaleRating') },
-                          { value: 'context', icon: MessageSquare, color: 'teal', label: t('slides.common.contextSlide') }
+                          { value: 'text', icon: AlignLeft, color: 'text-blue-600', label: t('slides.common.textSlide') },
+                          { value: 'video', icon: Video, color: 'text-purple-600', label: t('slides.common.videoSlide') },
+                          { value: 'quiz', icon: ListTodo, color: 'text-amber-600', label: t('slides.common.quizSlide') },
+                          { value: 'student_response', icon: Camera, color: 'text-rose-600', label: t('slides.common.videoResponse') },
+                          { value: 'slider', icon: MoveHorizontal, color: 'text-indigo-600', label: t('slides.common.scaleRating') },
+                          { value: 'context', icon: MessageSquare, color: 'text-teal-600', label: t('slides.common.contextSlide') }
                         ].map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                              <item.icon className={`h-4 w-4 text-${item.color}-600`} />
+                          <SelectItem 
+                            key={item.value} 
+                            value={item.value}
+                            onMouseEnter={() => setPreviewType(item.value)}
+                            onMouseLeave={() => setPreviewType(null)}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <item.icon className={`h-4 w-4 ${item.color}`} />
                               <span>{item.label}</span>
                             </div>
                           </SelectItem>

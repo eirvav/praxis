@@ -312,10 +312,10 @@ export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
   return { 
     type: 'quiz', 
     question: '', 
-    options: [''], 
+    options: ['', '', ''], 
     correctOptionIndex: 0,
-    explanations: [''],
-    optionImages: [''],
+    explanations: ['', '', ''],
+    optionImages: ['', '', ''],
     shuffleOptions: false,
     multipleCorrect: false,
     correctOptionIndices: [],

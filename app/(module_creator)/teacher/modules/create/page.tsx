@@ -6,7 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, Grip, AlignLeft, Video, ListTodo, MessageSquare, MoveHorizontal, ImageIcon, PencilLine, Timer } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, ImageIcon, PencilLine, Timer } from 'lucide-react';
 import Image from 'next/image';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
@@ -22,8 +22,10 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { z } from "zod";
+import { Label } from "@/components/ui/label";
 
 import SlideEditor from '@/app/(module_creator)/_components/SlideEditor';
+import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 import ThumbnailPopover from '@/app/(module_creator)/_components/ThumbnailPopover';
 import { cn } from "@/lib/utils";
@@ -56,16 +58,6 @@ interface SlideConfig {
   responseType?: string;
   [key: string]: unknown;
 }
-
-// Helper function to strip HTML tags for preview text
-const stripHtmlTags = (html: string | undefined): string => {
-  if (!html) return '';
-  // Create a temporary DOM element
-  const tempElement = document.createElement('div');
-  tempElement.innerHTML = html;
-  // Get the text content
-  return tempElement.textContent || tempElement.innerText || '';
-};
 
 // Add this after the imports
 const moduleFormSchema = z.object({
@@ -694,17 +686,40 @@ function CreateModulePageContent() {
       toast.error('No module to publish');
       return;
     }
+
+    if (!supabase) {
+      toast.error('Database connection not available');
+      return;
+    }
     
     try {
       setIsPublishing(true);
       
-      // Since we&apos;re not using a published field, just consider the module published when it has slides
+      // Since we're not using a published field, just consider the module published when it has slides
       if (slides.length > 0) {
+        // Save all current module data
+        const { error: updateError } = await supabase
+          .from('modules')
+          .update({
+            title,
+            description,
+            course_id: selectedCourseId,
+            thumbnail_url: thumbnailUrl,
+            deadline,
+            publish_date: publishDate || null,
+            estimated_duration: estimatedDuration,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', moduleId);
+
+        if (updateError) {
+          throw updateError;
+        }
+
         setIsPublishModalOpen(false); // Close the modal
         toast.success('Module published successfully!');
         // Redirect to course page
         router.push(`/teacher/courses/${selectedCourseId}`);
-        return;
       } else {
         throw new Error('Cannot publish a module without slides');
       }
@@ -1516,18 +1531,29 @@ function CreateModulePageContent() {
                 {/* Title and Course */}
                 <div className="space-y-4">
                   <div className="group relative inline-flex items-center gap-2">
-                    <h1 className="text-3xl font-semibold text-gray-900">{title}</h1>
-                    <button
-                      onClick={() => {
-                        setStep(1);
-                        const params = new URLSearchParams(searchParams.toString());
-                        params.set('step', '1');
-                        router.push(`/teacher/modules/create?${params.toString()}`);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full"
-                    >
-                      <Edit2 className="h-4 w-4 text-gray-600" />
-                    </button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <div className="group cursor-pointer flex items-center gap-2">
+                          <h1 className="text-3xl font-semibold text-gray-900">{title}</h1>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Edit2 className="h-4 w-4 text-gray-600" />
+                          </div>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-title">Module Title</Label>
+                            <Input
+                              id="edit-title"
+                              value={title}
+                              onChange={(e) => setTitle(e.target.value)}
+                              placeholder="Enter module title"
+                            />
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
                   <div className="group relative inline-flex items-center gap-2">
@@ -1574,56 +1600,205 @@ function CreateModulePageContent() {
                 {/* Timing Information */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
                   <div className="group relative inline-flex items-start gap-2">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        <span className="font-medium">Deadline</span>
-                      </div>
-                      <p className="text-base text-gray-900">
-                        {new Date(deadline).toLocaleString('en-US', {
-                          dateStyle: 'long',
-                          timeStyle: 'short'
-                        })}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setStep(1);
-                        const params = new URLSearchParams(searchParams.toString());
-                        params.set('step', '1');
-                        router.push(`/teacher/modules/create?${params.toString()}`);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
-                    >
-                      <Edit2 className="h-4 w-4 text-gray-600" />
-                    </button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <div className="group cursor-pointer">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Clock className="h-4 w-4" />
+                              <span className="font-medium">Deadline</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-base text-gray-900">
+                                {new Date(deadline).toLocaleString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false
+                                })}
+                              </p>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Edit2 className="h-4 w-4 text-gray-600" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Module Deadline</Label>
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <input
+                                  type="date"
+                                  value={deadline ? deadline.split('T')[0] : ''}
+                                  onChange={(e) => {
+                                    const date = e.target.value;
+                                    const time = deadline ? deadline.split('T')[1] : '00:00';
+                                    const newDeadline = `${date}T${time}`;
+                                    
+                                    const selectedDate = new Date(newDeadline);
+                                    const now = new Date();
+                                    now.setSeconds(0);
+                                    now.setMilliseconds(0);
+                                    
+                                    if (selectedDate <= now) {
+                                      toast.error("Deadline must be in the future");
+                                      return;
+                                    }
+                                    
+                                    setDeadline(newDeadline);
+                                  }}
+                                  min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
+                                  className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
+                                />
+                              </div>
+                              <input
+                                type="time"
+                                value={deadline ? deadline.split('T')[1] : '00:00'}
+                                onChange={(e) => {
+                                  const date = deadline ? deadline.split('T')[0] : new Date().toISOString().split('T')[0];
+                                  const newDeadline = `${date}T${e.target.value}`;
+                                  
+                                  const selectedDate = new Date(newDeadline);
+                                  const now = new Date();
+                                  now.setSeconds(0);
+                                  now.setMilliseconds(0);
+                                  
+                                  if (selectedDate <= now) {
+                                    toast.error("Deadline must be in the future");
+                                    return;
+                                  }
+                                  
+                                  setDeadline(newDeadline);
+                                }}
+                                className="w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {publishDate && (
                     <div className="group relative inline-flex items-start gap-2">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Calendar className="h-4 w-4" />
-                          <span className="font-medium">Publish Date</span>
-                        </div>
-                        <p className="text-base text-gray-900">
-                          {new Date(publishDate).toLocaleString('en-US', {
-                            dateStyle: 'long',
-                            timeStyle: 'short'
-                          })}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setStep(1);
-                          const params = new URLSearchParams(searchParams.toString());
-                          params.set('step', '1');
-                          router.push(`/teacher/modules/create?${params.toString()}`);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
-                      >
-                        <Edit2 className="h-4 w-4 text-gray-600" />
-                      </button>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div className="group cursor-pointer">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Calendar className="h-4 w-4" />
+                                <span className="font-medium">Publish Date</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-base text-gray-900">
+                                  {new Date(publishDate).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false
+                                  })}
+                                </p>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Edit2 className="h-4 w-4 text-gray-600" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Publish Date</Label>
+                              <div className="flex gap-2">
+                                <div className="flex-1">
+                                  <input
+                                    type="date"
+                                    value={publishDate ? publishDate.split('T')[0] : ''}
+                                    onChange={(e) => {
+                                      const date = e.target.value;
+                                      const time = publishDate ? publishDate.split('T')[1] : '00:00';
+                                      setPublishDate(`${date}T${time}`);
+                                    }}
+                                    className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
+                                  />
+                                </div>
+                                <input
+                                  type="time"
+                                  value={publishDate ? publishDate.split('T')[1] : '00:00'}
+                                  onChange={(e) => {
+                                    const date = publishDate ? publishDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                                    setPublishDate(`${date}T${e.target.value}`);
+                                  }}
+                                  className="w-32 h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+
+                  {estimatedDuration !== null && (
+                    <div className="group relative inline-flex items-start gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div className="group cursor-pointer">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Timer className="h-4 w-4" />
+                                <span className="font-medium">Estimated Duration</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-base text-gray-900">
+                                  {estimatedDuration} minutes
+                                </p>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Edit2 className="h-4 w-4 text-gray-600" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Estimated Duration (minutes)</Label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative flex-1">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="999"
+                                    value={estimatedDuration || ''}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value);
+                                      if (!isNaN(value) && value > 0) {
+                                        setEstimatedDuration(value);
+                                      } else {
+                                        setEstimatedDuration(null);
+                                      }
+                                    }}
+                                    placeholder="Enter duration"
+                                    className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
+                                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <Clock className="h-4 w-4 text-gray-400" />
+                                  </div>
+                                </div>
+                                <span className="text-sm text-gray-600 font-medium min-w-[60px]">minutes</span>
+                              </div>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                 </div>
@@ -1667,162 +1842,7 @@ function CreateModulePageContent() {
                     </div>
                   ) : (
                     <div className="border rounded-lg divide-y bg-white">
-                      {slides.map((slide, index) => (
-                        <div
-                          key={index}
-                          className={`
-                            flex items-center gap-4 p-4 transition-all duration-200 ease-in-out
-                            hover:bg-slate-50 cursor-grab active:cursor-grabbing group
-                          `}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.effectAllowed = 'move';
-                            e.currentTarget.classList.add('opacity-50', 'bg-slate-100');
-                            // Store the index being dragged
-                            e.dataTransfer.setData('text/plain', index.toString());
-                          }}
-                          onDragEnd={(e) => {
-                            e.currentTarget.classList.remove('opacity-50', 'bg-slate-100');
-                          }}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = 'move';
-                            const target = e.currentTarget as HTMLElement;
-                            target.classList.add('bg-slate-100');
-                          }}
-                          onDragLeave={(e) => {
-                            const target = e.currentTarget as HTMLElement;
-                            target.classList.remove('bg-slate-100');
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            const target = e.currentTarget as HTMLElement;
-                            target.classList.remove('bg-slate-100');
-                            
-                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                            const dropIndex = index;
-                            
-                            if (draggedIndex === dropIndex) return;
-                            
-                            // Create a copy of the slides array
-                            const newSlides = [...slides];
-                            // Remove the dragged item
-                            const [draggedSlide] = newSlides.splice(draggedIndex, 1);
-                            // Insert it at the new position
-                            newSlides.splice(dropIndex, 0, draggedSlide);
-                            
-                            // Update positions
-                            const reorderedSlides = newSlides.map((slide, idx) => ({
-                              ...slide,
-                              position: idx
-                            }));
-                            
-                            // Animate the change
-                            const container = target.parentElement;
-                            if (container) {
-                              container.style.transition = 'all 0.2s ease-in-out';
-                            }
-                            
-                            // Update state
-                            setSlides(reorderedSlides);
-                            
-                            // Save to database
-                            if (supabase && moduleId) {
-                              supabase
-                                .from('slides')
-                                .upsert(reorderedSlides)
-                                .then(({ error }) => {
-                                  if (error) {
-                                    console.error('Error saving slide order:', error);
-                                    toast.error('Failed to save slide order');
-                                  }
-                                });
-                            }
-                          }}
-                        >
-                          {/* Drag Handle */}
-                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Grip className="h-5 w-5 text-slate-400" />
-                          </div>
-                          
-                          {/* Slide Number */}
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                            <span className="text-sm font-medium text-slate-600">{index + 1}</span>
-                          </div>
-                          
-                          {/* Slide Type Icon */}
-                          <div className="flex-shrink-0">
-                            {slide.slide_type === 'text' && (
-                              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <AlignLeft className="h-4 w-4 text-blue-600" />
-                              </div>
-                            )}
-                            {slide.slide_type === 'video' && (
-                              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                                <Video className="h-4 w-4 text-purple-600" />
-                              </div>
-                            )}
-                            {slide.slide_type === 'quiz' && (
-                              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                                <ListTodo className="h-4 w-4 text-amber-600" />
-                              </div>
-                            )}
-                            {slide.slide_type === 'student_response' && (
-                              <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-                                <Camera className="h-4 w-4 text-rose-600" />
-                              </div>
-                            )}
-                            {slide.slide_type === 'slider' && (
-                              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                <MoveHorizontal className="h-4 w-4 text-primaryStyling" />
-                              </div>
-                            )}
-                            {slide.slide_type === 'context' && (
-                              <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                                <MessageSquare className="h-4 w-4 text-teal-600" />
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Slide Content Preview */}
-                          <div className="flex-grow min-w-0">
-                            <h3 className="font-medium text-slate-900 truncate">
-                              {slide.slide_type === 'text' ? 
-                                (stripHtmlTags(slide.config.content)?.slice(0, 50) || 'Text slide') : 
-                               slide.slide_type === 'video' ? 
-                                (slide.config.title || 'Video slide') : 
-                               slide.slide_type === 'quiz' ? 
-                                (slide.config.question || 'Quiz slide') :
-                               slide.slide_type === 'student_response' ?
-                                'Video Response' :
-                               slide.slide_type === 'slider' ?
-                                'Slider' :
-                               slide.slide_type === 'context' ?
-                                'Context' :
-                                'Unknown slide'}
-                              {slide.config.content && stripHtmlTags(slide.config.content).length > 50 && '...'}
-                            </h3>
-                            <p className="text-sm text-slate-500">
-                              {slide.slide_type.charAt(0).toUpperCase() + slide.slide_type.slice(1)} Slide
-                            </p>
-                          </div>
-                          
-                          {/* Edit Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setStep(2);
-                              const params = new URLSearchParams(searchParams.toString());
-                              params.set('step', '2');
-                              router.push(`/teacher/modules/create?${params.toString()}`);
-                            }}
-                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                      <SlideViewer moduleId={moduleId} estimatedDuration={estimatedDuration} />
                     </div>
                   )}
                 </div>
