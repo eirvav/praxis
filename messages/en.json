@@ -3,7 +3,8 @@
     "buttons": {
       "createCourse": "Create Course",
       "createModule": "Create Module",
-      "backToContentEditor": "Back to Content Editor"
+      "backToContentEditor": "Back to Content Editor",
+      "startModule": "Start Module"
     },
     "loading": {
       "textEditor": "Loading text editor..."

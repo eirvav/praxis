@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isTeacherRoute = createRouteMatcher(['/teacher/modules(.*)']);
+const isStudentPlayerRoute = createRouteMatcher(['/student/player(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
   const { userId, sessionClaims } = await auth();
@@ -30,6 +31,27 @@ export default clerkMiddleware(async (auth, request) => {
     // Others are redirected to the home page
     const url = new URL('/', request.url)
     return NextResponse.redirect(url)
+  }
+  
+  // Handle student player routes - ensure only students can access
+  if (isStudentPlayerRoute(request)) {
+    // Ensure the user is authenticated first
+    await auth.protect();
+    
+    // If not a student, redirect based on role
+    if (userRole !== 'student') {
+      if (userRole === 'teacher') {
+        const url = new URL('/teacher', request.url)
+        return NextResponse.redirect(url)
+      } else if (userRole === 'admin') {
+        const url = new URL('/admin', request.url)
+        return NextResponse.redirect(url)
+      } else {
+        // No recognized role, redirect to home
+        const url = new URL('/', request.url)
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   // If it's the root path and user is authenticated, redirect based on role

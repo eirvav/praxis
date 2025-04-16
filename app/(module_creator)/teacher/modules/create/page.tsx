@@ -762,8 +762,58 @@ function CreateModulePageContent() {
   
   const handleBack = () => {
     if (step > 1) {
+      // If on step 2, trigger save before navigating back
+      if (step === 2 && moduleId) {
+        // Find the save button and click it
+        const slideEditorSaveButton = document.querySelector('[data-slide-editor-save]') as HTMLButtonElement;
+        
+        if (slideEditorSaveButton) {
+          // Set loading state to prevent multiple clicks
+          setIsSubmitting(true);
+          
+          // Create a temporary function to handle successful save
+          const originalOnSave = window.onSaveComplete;
+          
+          // Define a promise to wait for save completion
+          const savePromise = new Promise<void>((resolve) => {
+            // Set up a temporary global function to capture save completion
+            window.onSaveComplete = () => {
+              resolve();
+              // Restore original handler if it existed
+              window.onSaveComplete = originalOnSave;
+            };
+            
+            // Click the save button to trigger the save
+            slideEditorSaveButton.click();
+            
+            // Add a fallback timeout in case the save callback doesn't fire
+            setTimeout(() => {
+              resolve();
+              window.onSaveComplete = originalOnSave;
+            }, 2000);
+          });
+          
+          // After saving is complete, navigate back
+          savePromise.then(() => {
+            const newStep = step - 1;
+            setStep(newStep);
+            
+            // Update URL with step
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('step', newStep.toString());
+            router.push(`/teacher/modules/create?${params.toString()}`);
+            
+            setIsSubmitting(false);
+          });
+          
+          return;
+        }
+      }
+      
+      // Default behavior for other steps
       const newStep = step - 1;
       setStep(newStep);
+      
       // Update URL with step
       const params = new URLSearchParams(searchParams.toString());
       params.set('step', newStep.toString());
@@ -1056,10 +1106,11 @@ function CreateModulePageContent() {
               <Button
                 variant="outline"
                 onClick={handleBack}
+                disabled={isSubmitting}
                 className="flex items-center gap-1"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {isSubmitting && step === 2 ? 'Saving...' : 'Back'}
               </Button>
             )}
             
@@ -1939,4 +1990,11 @@ export default function CreateModulePage() {
       <CreateModulePageContent />
     </Suspense>
   );
+}
+
+// Add TypeScript declaration for the window.onSaveComplete property
+declare global {
+  interface Window {
+    onSaveComplete?: () => void;
+  }
 } 

@@ -807,8 +807,14 @@ export default function SlideEditor({ moduleId, onSave }: SlideEditorProps) {
       toast.success('Slides saved successfully');
       console.log('All slides saved successfully:', slides);
       
+      // Trigger onSave callback if provided
       if (onSave) {
         onSave();
+      }
+      
+      // Trigger the global save complete callback if it exists
+      if (window.onSaveComplete && typeof window.onSaveComplete === 'function') {
+        window.onSaveComplete();
       }
     } catch (err: unknown) {
       console.error('Error saving slides:', err);
