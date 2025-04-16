@@ -28,11 +28,18 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+
+  // Check if we're in a secure context
+  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
+  const hasMediaDevices = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
 
   // Clean up resources
   const cleanupMediaResources = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
     }
     
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
@@ -90,75 +97,183 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
     }
   };
 
-  // Request permissions and setup video/audio preview
-  const requestPermissions = async () => {
-    // Clean up any existing media resources first
-    cleanupMediaResources();
-    
-    setErrorMessage(null);
+  const initializeVideo = async (mediaStream: MediaStream) => {
+    if (!videoRef.current) return;
     
     try {
-      console.log('Requesting media permissions...');
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user"
-        }, 
-        audio: true 
-      });
+      // Reset video element
+      videoRef.current.srcObject = null;
       
-      console.log('Permissions granted, setting up stream');
-      setStream(mediaStream);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(e => {
-            console.error('Error playing video:', e);
-            setErrorMessage('Error playing video. Please try again.');
-          });
-        };
+      // Get video track
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      if (!videoTrack) {
+        throw new Error('No video track found');
       }
+
+      // Log track capabilities
+      console.log('Video track capabilities:', videoTrack.getCapabilities());
+      console.log('Video track settings:', videoTrack.getSettings());
       
+      // Create a new MediaStream with only the video track
+      const videoStream = new MediaStream([videoTrack]);
+      
+      // Set up video element
+      videoRef.current.srcObject = videoStream;
+      videoRef.current.playsInline = true;
+      videoRef.current.muted = true;
+      
+      // Add event listeners for debugging
+      videoRef.current.onloadedmetadata = () => {
+        console.log('Video metadata loaded');
+        setIsVideoLoading(false);
+      };
+      
+      videoRef.current.onplay = () => {
+        console.log('Video playback started');
+      };
+      
+      videoRef.current.onpause = () => {
+        console.log('Video playback paused');
+      };
+      
+      videoRef.current.onerror = (e) => {
+        console.error('Video error:', e);
+        setErrorMessage('Error displaying video feed');
+      };
+
+      // Attempt to play
+      try {
+        await videoRef.current.play();
+        console.log('Video playing successfully');
+      } catch (playError) {
+        console.error('Play error:', playError);
+        // Try playing again with user interaction
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Playback error, waiting for user interaction:', error);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing video:', error);
+      setErrorMessage('Error initializing video feed. Please try refreshing.');
+    }
+  };
+
+  // Request permissions and setup video/audio preview
+  const requestPermissions = async () => {
+    cleanupMediaResources();
+    setErrorMessage(null);
+    setIsVideoLoading(true);
+
+    if (!isSecureContext) {
+      setErrorMessage('This feature requires a secure (HTTPS) connection. Please ensure you are accessing the site via HTTPS.');
+      return;
+    }
+
+    if (!hasMediaDevices) {
+      setErrorMessage('Media devices are not supported in your browser. Please try using a modern browser.');
+      return;
+    }
+
+    try {
+      console.log('Requesting media permissions...');
+      const constraints: MediaStreamConstraints = {
+        video: {
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          aspectRatio: { ideal: 1.7777777778 },
+          facingMode: "user",
+          frameRate: { ideal: 30, min: 15 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      };
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Permissions granted, setting up stream');
+      
+      setStream(mediaStream);
       setPermissionStatus({
         camera: 'granted',
         microphone: 'granted'
       });
 
+      // Initialize video separately
+      await initializeVideo(mediaStream);
+      
+      // Set up audio analysis
       setupAudioAnalysis(mediaStream);
       
     } catch (error) {
       console.error('Error accessing media devices:', error);
-      
-      if (error instanceof DOMException) {
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      handleMediaError(error);
+    }
+  };
+
+  const handleMediaError = (error: unknown) => {
+    if (error instanceof DOMException) {
+      switch (error.name) {
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+          setErrorMessage('Camera and microphone access denied. Please allow permissions in your browser settings and try again.');
           setPermissionStatus({
             camera: 'denied',
             microphone: 'denied'
           });
-          setErrorMessage('Camera and microphone access denied. Please allow permissions in your browser settings and try again.');
-        } else if (error.name === 'NotFoundError') {
+          break;
+        case 'NotFoundError':
           setErrorMessage('Camera or microphone not found. Please check your device connections.');
-        } else if (error.name === 'NotReadableError') {
+          break;
+        case 'NotReadableError':
+        case 'TrackStartError':
           setErrorMessage('Camera or microphone is already in use by another application.');
-        } else {
+          break;
+        case 'OverconstrainedError':
+          // Fall back to lower quality constraints
+          console.log('Falling back to lower quality constraints...');
+          navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          }).then(fallbackStream => {
+            setStream(fallbackStream);
+            initializeVideo(fallbackStream);
+            setPermissionStatus({
+              camera: 'granted',
+              microphone: 'granted'
+            });
+            setupAudioAnalysis(fallbackStream);
+          }).catch(fallbackError => {
+            console.error('Fallback error:', fallbackError);
+            setErrorMessage('Could not access camera with current settings. Please try a different browser or device.');
+          });
+          break;
+        default:
           setErrorMessage(`Error accessing media: ${error.message}`);
-        }
-      } else {
-        setErrorMessage('An unexpected error occurred when trying to access your camera and microphone.');
       }
+    } else {
+      setErrorMessage('An unexpected error occurred when trying to access your camera and microphone.');
     }
   };
 
   // Request permissions and setup video/audio preview immediately
   useEffect(() => {
     let mounted = true;
-    if (mounted) {
-      requestPermissions();
-    }
+    
+    // Add a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        requestPermissions();
+      }
+    }, 100);
+
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       cleanupMediaResources();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,7 +282,6 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
   // Handle microphone test
   const testMicrophone = () => {
     setIsTestingMic(true);
-    // Reset after 3 seconds
     setTimeout(() => setIsTestingMic(false), 3000);
   };
 
@@ -187,6 +301,16 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto">
+      {!isSecureContext && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Security Error</AlertTitle>
+          <AlertDescription>
+            This feature requires a secure (HTTPS) connection. Please ensure you are accessing the site via HTTPS.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <h2 className="text-2xl font-bold mb-4 text-center">Camera & Microphone Required</h2>
       
       <Alert className="mb-6 border-blue-300 bg-blue-50">
@@ -198,7 +322,7 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
         </AlertDescription>
       </Alert>
       
-      {/* Camera preview - made more prominent */}
+      {/* Camera preview - modified */}
       <div className="mb-8 bg-gray-50 p-4 rounded-lg border">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Camera Preview:</h3>
@@ -215,15 +339,20 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
         </div>
         
         <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4 shadow-md">
-          {stream ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
-          ) : (
+          {isVideoLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          )}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`w-full h-full object-cover ${isVideoLoading ? 'opacity-0' : 'opacity-100'}`}
+            style={{ transform: 'scaleX(-1)' }} // Mirror the video
+          />
+          {!stream && (
             <div className="absolute inset-0 flex items-center justify-center">
               <p className="text-white bg-black/50 p-3 rounded">
                 {permissionStatus.camera === 'denied' 
@@ -234,7 +363,7 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
           )}
         </div>
         
-        {stream && (
+        {stream && !isVideoLoading && (
           <div className="text-sm text-center text-green-600 font-medium">
             <CheckCircle className="h-4 w-4 inline mr-1" /> Camera is working properly
           </div>

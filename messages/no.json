@@ -4,7 +4,7 @@
       "createCourse": "Opprett Fag",
       "createModule": "Opprett Modul",
       "backToContentEditor": "Tilbake til Innholdsredigering",
-      "startModule": "Start Modul"
+      "startModule": "Start Arbeidskrav"
     },
     "loading": {
       "textEditor": "Laster inn tekstredigering..."
