@@ -166,7 +166,7 @@ export default function StudentModulePlayerPage() {
         />
         
         {/* Main Content Area */}
-        <div className="flex-grow py-8">
+        <div className="flex-grow pt-[calc(3.5rem+2rem)] pb-8 px-4">
           <div className="max-w-4xl mx-auto">
             <ModuleSlidePlayer 
               slides={slides}

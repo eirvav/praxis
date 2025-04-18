@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, ArrowRight, Video, Mic, RefreshCw } from 'lucide-react';
+import { AlertCircle, CheckCircle, ArrowRight, Video, Mic, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -13,6 +13,7 @@ interface PermissionRequestSlideProps {
 export default function PermissionRequestSlide({ onPermissionsGranted }: PermissionRequestSlideProps) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [showTestingInterface, setShowTestingInterface] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<{
     camera: 'pending' | 'granted' | 'denied';
     microphone: 'pending' | 'granted' | 'denied';
@@ -163,6 +164,7 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
 
   // Request permissions and setup video/audio preview
   const requestPermissions = async () => {
+    setShowTestingInterface(true);
     cleanupMediaResources();
     setErrorMessage(null);
     setIsVideoLoading(true);
@@ -260,20 +262,9 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
     }
   };
 
-  // Request permissions and setup video/audio preview immediately
+  // Only set up initial state, don't request permissions automatically
   useEffect(() => {
-    let mounted = true;
-    
-    // Add a small delay to ensure DOM is ready
-    const timeoutId = setTimeout(() => {
-      if (mounted) {
-        requestPermissions();
-      }
-    }, 100);
-
     return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
       cleanupMediaResources();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -300,186 +291,249 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto">
-      {!isSecureContext && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Security Error</AlertTitle>
-          <AlertDescription>
-            This feature requires a secure (HTTPS) connection. Please ensure you are accessing the site via HTTPS.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <h2 className="text-2xl font-bold mb-4 text-center">Camera & Microphone Required</h2>
-      
-      <Alert className="mb-6 border-blue-300 bg-blue-50">
-        <AlertCircle className="h-5 w-5 text-blue-600" />
-        <AlertTitle className="text-blue-700">Important Information</AlertTitle>
-        <AlertDescription className="text-blue-700">
-          This module requires access to your camera and microphone for recording responses.
-          You must grant these permissions to continue. Please ensure you are in a quiet environment with good lighting.
-        </AlertDescription>
-      </Alert>
-      
-      {/* Camera preview - modified */}
-      <div className="mb-8 bg-gray-50 p-4 rounded-lg border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Camera Preview:</h3>
-          {permissionStatus.camera !== 'granted' && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={requestPermissions} 
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-4 w-4" /> Retry
-            </Button>
-          )}
-        </div>
-        
-        <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4 shadow-md">
-          {isVideoLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          )}
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`w-full h-full object-cover ${isVideoLoading ? 'opacity-0' : 'opacity-100'}`}
-            style={{ transform: 'scaleX(-1)' }} // Mirror the video
-          />
-          {!stream && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-white bg-black/50 p-3 rounded">
-                {permissionStatus.camera === 'denied' 
-                  ? 'Camera access denied. Please reset permissions and try again.' 
-                  : 'Waiting for camera access...'}
+    <div className="fixed inset-0 bg-gray-900/5 overflow-y-auto">
+      {!showTestingInterface ? (
+        // Initial warning screen
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-lg w-full mx-4 text-center">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="flex justify-center mb-6">
+                <AlertTriangle className="h-20 w-20 text-yellow-500" />
+              </div>
+              
+              <h2 className="text-2xl font-bold mb-4">Camera & Microphone Access Required</h2>
+              
+              <p className="text-gray-600 mb-6">
+                This module requires access to your camera and microphone for recording responses. 
+                You will be prompted to allow access after clicking continue. Please ensure you:
               </p>
+              
+              <ul className="text-left text-gray-600 mb-8 space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                  Are in a quiet environment
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                  Have good lighting on your face
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                  Have a stable internet connection
+                </li>
+              </ul>
+              
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleDecline}
+                  className="order-2 sm:order-1"
+                >
+                  Return to Dashboard
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={async () => {
+                    try {
+                      // Request permissions first
+                      await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                      });
+                      
+                      // If successful, proceed with full initialization
+                      await requestPermissions();
+                    } catch (error) {
+                      console.error('Permission request failed:', error);
+                      handleMediaError(error);
+                      setShowTestingInterface(true); // Still show interface to allow retry
+                    }
+                  }}
+                  className="group relative overflow-hidden order-1 sm:order-2 bg-primaryStyling hover:bg-indigo-700 cursor-pointer"
+                >
+                  <span className="relative z-10 flex items-center">
+                    Continue & Allow Access
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="absolute inset-0 bg-primary-foreground opacity-0 group-hover:opacity-20 transition-opacity"></span>
+                </Button>
+              </div>
             </div>
-          )}
-        </div>
-        
-        {stream && !isVideoLoading && (
-          <div className="text-sm text-center text-green-600 font-medium">
-            <CheckCircle className="h-4 w-4 inline mr-1" /> Camera is working properly
-          </div>
-        )}
-      </div>
-      
-      {/* Audio level indicator - improved */}
-      <div className="mb-8 bg-gray-50 p-4 rounded-lg border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Microphone Test:</h3>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={testMicrophone}
-            disabled={!stream}
-            className={isTestingMic ? "bg-green-100" : ""}
-          >
-            {isTestingMic ? "Testing..." : "Test Microphone"}
-          </Button>
-        </div>
-        
-        <div className="mb-2">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Low</span>
-            <span>Medium</span>
-            <span>High</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
-            <div 
-              className={`h-5 rounded-full transition-all duration-100 ${
-                audioLevel > 70 
-                  ? 'bg-red-500' 
-                  : audioLevel > 30 
-                    ? 'bg-green-500' 
-                    : 'bg-blue-500'
-              }`}
-              style={{ width: `${audioLevel}%` }}
-            />
           </div>
         </div>
-        
-        <div className="text-center">
-          {isTestingMic ? (
-            <p className="text-sm font-medium text-green-600">Please speak now to test your microphone</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {stream 
-                ? 'Say something or click "Test Microphone" to check your audio' 
-                : 'Waiting for microphone access...'}
-            </p>
-          )}
-        </div>
-      </div>
-      
-      {/* Permission status */}
-      <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className={`p-3 rounded-lg border ${permissionStatus.camera === 'granted' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
-          <div className="flex items-center gap-2">
-            <Video className={`h-5 w-5 ${permissionStatus.camera === 'granted' ? 'text-green-600' : 'text-muted-foreground'}`} />
-            <span className="font-medium">Camera</span>
-            {permissionStatus.camera === 'granted' && (
-              <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+      ) : (
+        // Testing interface (existing UI)
+        <div className="min-h-screen py-8 px-4">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto w-full mt-14">
+            {!isSecureContext && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Security Error</AlertTitle>
+                <AlertDescription>
+                  This feature requires a secure (HTTPS) connection. Please ensure you are accessing the site via HTTPS.
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
-        </div>
-        <div className={`p-3 rounded-lg border ${permissionStatus.microphone === 'granted' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
-          <div className="flex items-center gap-2">
-            <Mic className={`h-5 w-5 ${permissionStatus.microphone === 'granted' ? 'text-green-600' : 'text-muted-foreground'}`} />
-            <span className="font-medium">Microphone</span>
-            {permissionStatus.microphone === 'granted' && (
-              <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+            
+            {/* Camera preview - modified */}
+            <div className="mb-8 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Camera Preview:</h3>
+                {permissionStatus.camera !== 'granted' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={requestPermissions} 
+                    className="flex items-center gap-1"
+                  >
+                    <RefreshCw className="h-4 w-4" /> Retry
+                  </Button>
+                )}
+              </div>
+              
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4 shadow-md">
+                {isVideoLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                  </div>
+                )}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover ${isVideoLoading ? 'opacity-0' : 'opacity-100'}`}
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+                {!stream && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white bg-black/50 p-3 rounded">
+                      {permissionStatus.camera === 'denied' 
+                        ? 'Camera access denied. Please reset permissions and try again.' 
+                        : 'Waiting for camera access...'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Audio level indicator - improved */}
+            <div className="mb-8 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Microphone Test:</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={testMicrophone}
+                  disabled={!stream}
+                  className={isTestingMic ? "bg-green-100" : ""}
+                >
+                  {isTestingMic ? "Testing..." : "Test Microphone"}
+                </Button>
+              </div>
+              
+              <div className="mb-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Low</span>
+                  <span>Medium</span>
+                  <span>High</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+                  <div 
+                    className={`h-5 rounded-full transition-all duration-100 ${
+                      audioLevel > 70 
+                        ? 'bg-red-500' 
+                        : audioLevel > 30 
+                          ? 'bg-green-500' 
+                          : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${audioLevel}%` }}
+                  />
+                </div>
+              </div>
+              
+              <div className="text-center">
+                {isTestingMic ? (
+                  <p className="text-sm font-medium text-green-600">Please speak now to test your microphone</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {stream 
+                      ? 'Say something or click "Test Microphone" to check your audio' 
+                      : 'Waiting for microphone access...'}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {/* Permission status */}
+            <div className="mb-6 grid grid-cols-2 gap-4">
+              <div className={`p-3 rounded-lg border ${permissionStatus.camera === 'granted' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
+                <div className="flex items-center gap-2">
+                  <Video className={`h-5 w-5 ${permissionStatus.camera === 'granted' ? 'text-green-600' : 'text-muted-foreground'}`} />
+                  <span className="font-medium">Camera</span>
+                  {permissionStatus.camera === 'granted' && (
+                    <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+                  )}
+                </div>
+              </div>
+              <div className={`p-3 rounded-lg border ${permissionStatus.microphone === 'granted' ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
+                <div className="flex items-center gap-2">
+                  <Mic className={`h-5 w-5 ${permissionStatus.microphone === 'granted' ? 'text-green-600' : 'text-muted-foreground'}`} />
+                  <span className="font-medium">Microphone</span>
+                  {permissionStatus.microphone === 'granted' && (
+                    <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Error messages */}
+            {errorMessage && (
+              <div className="mb-6">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              </div>
             )}
+            
+            {permissionStatus.camera === 'denied' || permissionStatus.microphone === 'denied' ? (
+              <div className="mb-6">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Permission Denied</AlertTitle>
+                  <AlertDescription>
+                    You must grant camera and microphone permissions to continue.
+                    Please reset permissions in your browser settings and try again.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : null}
+            
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={handleDecline} className="px-6">
+                Return to Dashboard
+              </Button>
+              
+              <Button 
+                onClick={handleAccept}
+                disabled={permissionStatus.camera === 'denied' || permissionStatus.microphone === 'denied'}
+                className="group relative overflow-hidden bg-primaryStyling hover:bg-indigo-700 px-6 cursor-pointer"
+              >
+                <span className="relative z-10 flex items-center">
+                  {permissionStatus.camera === 'granted' && permissionStatus.microphone === 'granted'
+                    ? 'Continue to Module'
+                    : 'Grant Permissions'}
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <span className="absolute inset-0 bg-primary-foreground opacity-0 group-hover:opacity-20 transition-opacity"></span>
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Error messages */}
-      {errorMessage && (
-        <div className="mb-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
         </div>
       )}
-      
-      {permissionStatus.camera === 'denied' || permissionStatus.microphone === 'denied' ? (
-        <div className="mb-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Permission Denied</AlertTitle>
-            <AlertDescription>
-              You must grant camera and microphone permissions to continue.
-              Please reset permissions in your browser settings and try again.
-            </AlertDescription>
-          </Alert>
-        </div>
-      ) : null}
-      
-      <div className="flex justify-between pt-4 border-t">
-        <Button variant="outline" onClick={handleDecline} className="px-6">
-          Return to Dashboard
-        </Button>
-        
-        <Button 
-          onClick={handleAccept}
-          disabled={permissionStatus.camera === 'denied' || permissionStatus.microphone === 'denied'}
-          className="bg-primaryStyling hover:bg-indigo-700 px-6"
-        >
-          {permissionStatus.camera === 'granted' && permissionStatus.microphone === 'granted'
-            ? 'Continue to Module'
-            : 'Grant Permissions'}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 } 

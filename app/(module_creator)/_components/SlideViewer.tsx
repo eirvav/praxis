@@ -36,6 +36,7 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResults, setQuizResults] = useState<Record<number, boolean>>({});
   const [videoPlayedOnce, setVideoPlayedOnce] = useState<Record<number, boolean>>({});
+  const [videoErrors, setVideoErrors] = useState<Record<number, boolean>>({});
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const supabase = useSupabase();
   const t = useTranslations();
@@ -75,6 +76,30 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
         if (error) throw error;
         
         console.log('[SlideViewer] Loaded slides from database:', data);
+        
+        // Log all video URLs for debugging
+        if (data) {
+          const videoSlides = data.filter(slide => 
+            slide.slide_type === 'video' && 
+            slide.config.type === 'video' && 
+            slide.config.videoUrl
+          );
+          
+          console.log(`[SlideViewer] Found ${videoSlides.length} video slides`);
+          videoSlides.forEach((slide, index) => {
+            console.log(`[SlideViewer] Video ${index + 1} URL:`, slide.config.videoUrl);
+            
+            // Test video URL accessibility
+            fetch(slide.config.videoUrl, { method: 'HEAD' })
+              .then(response => {
+                console.log(`[SlideViewer] Video URL test (${index + 1}) status:`, response.status);
+              })
+              .catch(err => {
+                console.error(`[SlideViewer] Video URL test (${index + 1}) failed:`, err);
+              });
+          });
+        }
+        
         setSlides(data || []);
       } catch (err) {
         console.error('Error loading slides:', err);
@@ -242,14 +267,31 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                       src={currentSlide.config.videoUrl} 
                       className="w-full h-full"
                       controls={!isVideoPlayed || allowReplay}
+                      crossOrigin="anonymous"
                       preload="metadata"
+                      playsInline
                       onPlay={() => {
+                        console.log('[SlideViewer] Video playback started');
                         if (!videoPlayedOnce[currentSlideIndex]) {
                           // Track that this video has been played
                           setVideoPlayedOnce(prev => ({ ...prev, [currentSlideIndex]: true }));
                         }
                       }}
+                      onError={(e) => {
+                        console.error('[SlideViewer] Video load error:', e);
+                        // Try to provide more details about the error
+                        const videoElement = e.target as HTMLVideoElement;
+                        console.error('[SlideViewer] Video error code:', videoElement.error?.code);
+                        console.error('[SlideViewer] Video error message:', videoElement.error?.message);
+                        setVideoErrors(prev => ({ ...prev, [currentSlideIndex]: true }));
+                      }}
+                      onLoadStart={() => console.log('[SlideViewer] Video load started')}
+                      onLoadedData={() => {
+                        console.log('[SlideViewer] Video data loaded successfully');
+                        setVideoErrors(prev => ({ ...prev, [currentSlideIndex]: false }));
+                      }}
                       onEnded={() => {
+                        console.log('[SlideViewer] Video playback ended');
                         // Mark as played when the video ends
                         setVideoPlayedOnce(prev => ({ ...prev, [currentSlideIndex]: true }));
                       }}
@@ -264,6 +306,29 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                           This video has been configured to only allow a single viewing.
                           Please continue to the next slide.
                         </p>
+                      </div>
+                    )}
+                    
+                    {/* Error overlay */}
+                    {videoErrors[currentSlideIndex] && (
+                      <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white p-4">
+                        <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
+                        <h3 className="text-xl font-bold mb-2">Video failed to load</h3>
+                        <p className="text-sm text-center max-w-md mb-4">
+                          There was a problem loading the video. This might be due to a network issue or an invalid video URL.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            // Retry loading the video
+                            setVideoErrors(prev => ({ ...prev, [currentSlideIndex]: false }));
+                            if (videoRefs.current[currentSlideIndex]) {
+                              videoRefs.current[currentSlideIndex]?.load();
+                            }
+                          }}
+                          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                        >
+                          Retry
+                        </button>
                       </div>
                     )}
                   </>

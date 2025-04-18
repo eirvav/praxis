@@ -14,9 +14,24 @@ interface VideoSlidePlayerProps {
 export default function VideoSlidePlayer({ slide }: VideoSlidePlayerProps) {
   const [isVideoPlayed, setIsVideoPlayed] = useState(false);
   const [videoProgress, setVideoProgress] = useState<number>(0);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const supabase = useSupabase();
   const allowReplay = slide.config.allowReplay !== false; // Default to true if not specified
+
+  // Debug logs on component mount
+  useEffect(() => {
+    console.log('[VideoSlidePlayer] Component mounted with video URL:', slide.config.videoUrl);
+    
+    // Reset error state when video URL changes
+    if (slide.config.videoUrl) {
+      setVideoError(false);
+    }
+    
+    return () => {
+      console.log('[VideoSlidePlayer] Component unmounted');
+    };
+  }, [slide.config.videoUrl]);
 
   // Save video progress to database
   const saveProgress = async (progress: number) => {
@@ -84,6 +99,14 @@ export default function VideoSlidePlayer({ slide }: VideoSlidePlayerProps) {
     }
   };
 
+  // Retry loading the video if there's an error
+  const handleRetryVideo = () => {
+    setVideoError(false);
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
@@ -110,14 +133,30 @@ export default function VideoSlidePlayer({ slide }: VideoSlidePlayerProps) {
                 src={slide.config.videoUrl} 
                 className="w-full h-full"
                 controls={!isVideoPlayed || allowReplay}
+                crossOrigin="anonymous"
                 preload="metadata"
+                playsInline
                 onTimeUpdate={handleTimeUpdate}
                 onPlay={() => {
+                  console.log('[VideoSlidePlayer] Video playback started');
                   if (!isVideoPlayed) {
                     setIsVideoPlayed(true);
                   }
                 }}
+                onError={(e) => {
+                  console.error('[VideoSlidePlayer] Video error:', e);
+                  const videoElement = e.target as HTMLVideoElement;
+                  console.error('[VideoSlidePlayer] Video error code:', videoElement.error?.code);
+                  console.error('[VideoSlidePlayer] Video error message:', videoElement.error?.message);
+                  setVideoError(true);
+                }}
+                onLoadStart={() => console.log('[VideoSlidePlayer] Video load started')}
+                onLoadedData={() => {
+                  console.log('[VideoSlidePlayer] Video data loaded successfully');
+                  setVideoError(false);
+                }}
                 onEnded={() => {
+                  console.log('[VideoSlidePlayer] Video playback ended');
                   setIsVideoPlayed(true);
                   saveProgress(100);
                 }}
@@ -140,6 +179,23 @@ export default function VideoSlidePlayer({ slide }: VideoSlidePlayerProps) {
                     This video has been configured to only allow a single viewing.
                     Please continue to the next slide.
                   </p>
+                </div>
+              )}
+              
+              {/* Error overlay */}
+              {videoError && (
+                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white p-4">
+                  <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
+                  <h3 className="text-xl font-bold mb-2">Video failed to load</h3>
+                  <p className="text-sm text-center max-w-md mb-4">
+                    There was a problem loading the video. This might be due to a network issue or an invalid video URL.
+                  </p>
+                  <button 
+                    onClick={handleRetryVideo}
+                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    Retry
+                  </button>
                 </div>
               )}
             </>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,9 +28,39 @@ interface VideoSlideProps {
 export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) => {
   const t = useTranslations();
   const [isUploading, setIsUploading] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = useSupabase();
   const { user } = useUser();
+  
+  // Add an error handler to the window for tracking unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('[VideoSlide] Unhandled promise rejection:', event.reason);
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+  
+  // Add logging on component mount and when config changes
+  useEffect(() => {
+    console.log('[VideoSlide] Component mounted with config:', config);
+    console.log('[VideoSlide] videoUrl:', config.videoUrl);
+    
+    // Reset error state when video URL changes
+    if (config.videoUrl) {
+      setVideoError(false);
+    }
+    
+    return () => {
+      console.log('[VideoSlide] Component unmounted');
+    };
+  }, [config]);
 
   // Upload video for slide
   const uploadVideo = async (file: File) => {
@@ -38,6 +68,7 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
     
     try {
       setIsUploading(true);
+      console.log(`[VideoSlide] Starting upload process for file: ${file.name}`);
       
       // Create a unique file path
       const fileExt = file.name.split('.').pop();
@@ -51,7 +82,7 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
         .from('module-videos')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false,
+          upsert: true,
           contentType: file.type
         });
         
@@ -62,7 +93,16 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
         .from('module-videos')
         .getPublicUrl(filePath);
         
+      // Ensure the URL is correctly formatted
       console.log(`[VideoSlide] Video uploaded successfully, public URL: ${urlData.publicUrl}`);
+      
+      // Test the URL is accessible
+      try {
+        const testResponse = await fetch(urlData.publicUrl, { method: 'HEAD' });
+        console.log(`[VideoSlide] URL test response status: ${testResponse.status}`);
+      } catch (testError) {
+        console.warn(`[VideoSlide] URL test failed: ${testError}`);
+      }
       
       // Update slide config with video URL
       onConfigChange({
@@ -70,12 +110,16 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
         videoFileName: file.name
       });
       
+      // Log the config update
+      console.log(`[VideoSlide] Config updated with videoUrl: ${urlData.publicUrl}`);
+      
       toast.success(t('slides.video.errors.uploadSuccess'));
     } catch (err) {
       console.error('[VideoSlide] Error uploading video:', err);
       toast.error(t('slides.video.errors.uploadFailed'));
     } finally {
       setIsUploading(false);
+      console.log('[VideoSlide] Upload process completed, isUploading set to false');
     }
   };
   
@@ -83,6 +127,8 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    console.log(`[VideoSlide] File selected: ${file.name}, type: ${file.type}, size: ${file.size}`);
     
     // Check if file is a video
     if (!file.type.startsWith('video/')) {
@@ -106,8 +152,16 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
   
   // Trigger file input click
   const handleVideoUploadClick = () => {
+    console.log('[VideoSlide] Video upload area clicked');
     videoFileInputRef.current?.click();
   };
+
+  // Log the rendering conditions
+  console.log('[VideoSlide] Render conditions:', { 
+    isUploading, 
+    hasVideoUrl: !!config.videoUrl, 
+    videoUrl: config.videoUrl 
+  });
 
   return (
     <div className="space-y-6">
@@ -160,7 +214,33 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
                   src={config.videoUrl} 
                   className="w-full h-full"
                   controls
+                  ref={videoRef}
+                  crossOrigin="anonymous"
+                  preload="metadata"
+                  playsInline
+                  onError={(e) => {
+                    console.error('[VideoSlide] Video load error:', e);
+                    // Try to provide more details about the error
+                    const videoElement = e.target as HTMLVideoElement;
+                    console.error('[VideoSlide] Video error code:', videoElement.error?.code);
+                    console.error('[VideoSlide] Video error message:', videoElement.error?.message);
+                    setVideoError(true);
+                  }}
+                  onLoadStart={() => console.log('[VideoSlide] Video load started')}
+                  onLoadedData={() => {
+                    console.log('[VideoSlide] Video data loaded successfully');
+                    setVideoError(false);
+                  }}
                 />
+                {/* Fallback in case of video error */}
+                {videoError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <div className="bg-white p-3 rounded-md shadow-md text-center">
+                      <p className="text-red-600 font-medium">Unable to load video</p>
+                      <p className="text-sm text-gray-600">Try uploading again</p>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Replace Video Button Overlay */}
@@ -204,6 +284,7 @@ export const VideoSlideTypeBadge = () => {
 
 // Get default config with translations
 export const getDefaultVideoSlideConfig = (): VideoSlideConfig => {
+  console.log('[VideoSlide] Creating default config');
   return { 
     type: 'video',
     title: '', 
