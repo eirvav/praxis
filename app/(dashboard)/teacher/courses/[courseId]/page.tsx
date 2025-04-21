@@ -396,7 +396,7 @@ export default function CourseDetailPage() {
             <DialogHeader>
               <DialogTitle className="text-xl">Delete Course</DialogTitle>
               <DialogDescription className="pt-2 text-base">
-                Are you sure you want to delete <span className="font-semibold">{course.title}</span>? This action cannot be undone and all modules within this course will be inaccessible.
+                Are you sure you want to <span className="font-bold">PERMANENTLY</span> delete <span className="font-bold text-red-500">{course.title}</span>? This action cannot be undone and all modules within this course will be inaccessible.
               </DialogDescription>
             </DialogHeader>
             <div className="pt-2 pb-4">
@@ -410,7 +410,7 @@ export default function CourseDetailPage() {
                 variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
                 disabled={isDeleting}
-                className="sm:w-auto flex-1 sm:flex-initial"
+                className="sm:w-auto flex-1 sm:flex-initial cursor-pointer"
               >
                 Cancel
               </Button>
@@ -418,7 +418,7 @@ export default function CourseDetailPage() {
                 variant="destructive"
                 onClick={handleDeleteCourse}
                 disabled={isDeleting}
-                className="sm:w-auto flex-1 sm:flex-initial"
+                className="sm:w-auto flex-1 sm:flex-initial cursor-pointer"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Course'}
               </Button>
