@@ -2,7 +2,7 @@ import {
   LayoutGrid,
   LucideIcon,
   File,
-  ClipboardCheck,
+  //ClipboardCheck,
   BookOpen,
   GraduationCap,
   PlusCircle,
@@ -128,12 +128,12 @@ export const menuConfigs: Record<string, RoleConfig> = {
             ...sharedMenuItems.resources,
             href: "#",
           },
-          {
-            label: "Course List (temp)",
-            translationKey: TRANSLATION_KEYS.COURSE_LIST_TEMP,
-            href: "#",
-            icon: ClipboardCheck,
-          },
+          // {
+          //   label: "Course List (temp)",
+          //   translationKey: TRANSLATION_KEYS.COURSE_LIST_TEMP,
+          //   href: "#",
+          //   icon: ClipboardCheck,
+          // },
         ],
       },
       {
