@@ -1,9 +1,9 @@
-import { SignIn } from '@clerk/nextjs'
+import { Waitlist } from '@clerk/nextjs'
 
-export default function SignInPage() {
+export default function WaitlistPage() {
   return (
     <div className="flex justify-center w-full">
-      <SignIn
+      <Waitlist
         appearance={{
           elements: {
             formButtonPrimary: 
@@ -22,11 +22,10 @@ export default function SignInPage() {
               "text-black hover:text-gray-800",
           },
           layout: {
-            socialButtonsPlacement: "bottom",
             showOptionalFields: false,
           },
         }}
       />
     </div>
   )
-}
+} 

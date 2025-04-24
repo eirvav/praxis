@@ -31,7 +31,9 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <ClerkProvider>
+    <ClerkProvider 
+      waitlistUrl="/waitlist" 
+    >
       <html lang={locale} suppressHydrationWarning>
         <body 
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
