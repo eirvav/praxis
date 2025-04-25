@@ -156,7 +156,7 @@ export default async function Admin({
                   })}
                 </TableBody>
                 <TableCaption>
-                  {users.length === 0 ? 'No users found. Try a different search query.' : 'All users with their assigned roles in the system.'}
+                  {users.length === 0 ? 'No users found. Try a different query.' : 'All users with their assigned roles in the system.'}
                 </TableCaption>
               </Table>
             </div>
