@@ -1,6 +1,3 @@
-FIRST ENTRY TO THE SQL EDITOR:
-
-
 -- Create a "users" table to store user information
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY, -- This will store the Clerk user ID
@@ -98,8 +95,6 @@ USING (
   )
 );
 
-
-THIRD ENTRY TO THE SQL EDITOR:
 
 -- Create a "courses" table
 CREATE TABLE courses (
@@ -206,9 +201,6 @@ WITH CHECK (
 );
 
 
-
-FOURTH ENTRY TO THE SQL EDITOR:
-
 -- Create the slides table to store slide data for modules
 CREATE TABLE slides (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -292,8 +284,6 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 
-STORAGE BUCKET THUMBNAIL:
-
 -- 1. Add thumbnail_url column to modules table
 ALTER TABLE modules
 ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
@@ -334,17 +324,6 @@ USING (
   bucket_id = 'module-thumbnails' AND
   auth.uid()::text = (storage.foldername(name))[1]
 );
-
-
-
-STORAGE BUCKET VIDEOS:
-
--- Create a new storage bucket for module videos
--- Note: You'll need to create this bucket through the Supabase dashboard
--- 1. Go to Storage in Supabase dashboard
--- 2. Click "Create a new bucket"
--- 3. Name it "module-videos"
--- 4. Set it to public
 
 -- Create storage policies for the module-videos bucket
 -- Allow authenticated users to view videos
