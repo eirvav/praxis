@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
+import { AlignLeft } from 'lucide-react';
 import { TextSlide } from './types';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
@@ -70,7 +70,7 @@ export default function TextSlidePlayer({ slide }: TextSlidePlayerProps) {
       <CardHeader className="pb-6 pt-8 px-8">
         <div className="flex items-center gap-3">
           <CardTitle className="flex items-center gap-3 text-2xl">
-            <FileText className="h-6 w-6 text-blue-600" />
+            <AlignLeft className="h-6 w-6 text-blue-600" />
             {t('textSlide')}
           </CardTitle>
         </div>

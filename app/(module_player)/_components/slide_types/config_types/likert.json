@@ -1,0 +1,33 @@
+{
+    "type": "slider",
+    "sliders": [
+      {
+        "id": "5dd349a8-ce96-4cdf-b295-8c35def45bbe",
+        "max": 5,
+        "min": 0,
+        "step": 1,
+        "title": "",
+        "maxLabel": "Very much",
+        "midLabel": "Somewhat",
+        "minLabel": "Not at all",
+        "question": "“I feel confident in my ability to identify a phishing attempt.”",
+        "required": true,
+        "defaultValue": 3
+      },
+      {
+        "id": "53c64d12-5bc9-4937-9baa-79d59e20c3b3",
+        "max": 10,
+        "min": 0,
+        "step": 1,
+        "title": "",
+        "maxLabel": "Very much",
+        "midLabel": "Somewhat",
+        "minLabel": "Not at all",
+        "question": "“I regularly follow best practices for creating strong and unique passwords.”",
+        "required": true,
+        "defaultValue": 3
+      }
+    ],
+    "isRequired": true,
+    "description": ""
+  }

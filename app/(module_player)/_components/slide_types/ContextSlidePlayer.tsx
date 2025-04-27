@@ -68,7 +68,7 @@ export default function ContextSlidePlayer({ slide }: ContextSlidePlayerProps) {
   }, [supabase, slide.id, isRead]);
 
   return (
-    <Card className="bg-teal-50 border-teal-200 w-full flex-1">
+    <Card className="border-teal-200 w-full flex-1">
       <CardHeader className="pb-6 pt-8 px-8">
         <div className="flex items-center gap-3">
           <CardTitle className="flex items-center gap-3 text-2xl">

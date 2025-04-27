@@ -1,0 +1,10 @@
+{
+  "type": "video",
+  "title": "Watch: How Hackers Exploit Human Error",
+  "context": "In this short video (2:30 min), a cybersecurity expert demonstrates how easily attackers can trick users into giving up sensitive information. Pay attention to the red flags mentioned throughout the video.\n[Placeholder for video]",
+  "videoUrl": "https://weugtworfsnwjnvagjzv.supabase.co/storage/v1/object/public/module-videos/user_2uKPkXFmEQakumPRW9H0yUaZbMn/ccd864kjpo5_1745756891951.mp4",
+  "isRequired": true,
+  "maxReplays": 3,
+  "allowReplay": true,
+  "videoFileName": "3209663-uhd_3840_2160_25fps.mp4"
+}

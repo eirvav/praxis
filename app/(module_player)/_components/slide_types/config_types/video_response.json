@@ -1,0 +1,8 @@
+{
+  "type": "student_response",
+  "isRequired": true,
+  "maxResponses": 1,
+  "instantResponse": false,
+  "severalResponses": false,
+  "responseMaxDuration": 120
+}

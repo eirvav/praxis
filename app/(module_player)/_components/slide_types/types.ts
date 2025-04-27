@@ -25,6 +25,8 @@ export interface VideoSlideConfig {
   videoUrl?: string;
   context?: string;
   allowReplay?: boolean;
+  isRequired?: boolean;
+  maxReplays?: number;
 }
 
 export interface VideoSlide extends BaseSlide {

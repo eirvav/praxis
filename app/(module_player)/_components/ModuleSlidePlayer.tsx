@@ -2,9 +2,9 @@
 
 import VideoSlidePlayer from './slide_types/VideoSlidePlayer';
 import QuizSlidePlayer from './slide_types/QuizSlidePlayer';
-import SlideSlidePlayer from './slide_types/TextSlidePlayer';
-import StudentResponseSlidePlayer from './slide_types/StudentResponseSlidePlayer';
-import ReflectionSlidePlayer from './slide_types/ReflectionSlidePlayer';
+import SlideSlidePlayer from './slide_types/TextResponseSlidePlayer';
+import StudentResponseSlidePlayer from './slide_types/StudentVideoResponseSlidePlayer';
+import ReflectionSlidePlayer from './slide_types/LikertScaleSlidePlayer';
 import ContextSlidePlayer from './slide_types/ContextSlidePlayer';
 import { 
   Slide,
@@ -19,9 +19,10 @@ import {
 interface ModuleSlidePlayerProps {
   slides: Slide[];
   currentSlideIndex: number;
+  goToNextSlide?: () => void;
 }
 
-export default function ModuleSlidePlayer({ slides, currentSlideIndex }: ModuleSlidePlayerProps) {
+export default function ModuleSlidePlayer({ slides, currentSlideIndex, goToNextSlide }: ModuleSlidePlayerProps) {
   if (slides.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -34,7 +35,7 @@ export default function ModuleSlidePlayer({ slides, currentSlideIndex }: ModuleS
 
   const renderSlide = () => {
     if (isVideoSlide(currentSlide)) {
-      return <VideoSlidePlayer slide={currentSlide} />;
+      return <VideoSlidePlayer slide={currentSlide} goToNextSlide={goToNextSlide} />;
     } else if (isQuizSlide(currentSlide)) {
       return <QuizSlidePlayer slide={currentSlide} />;
     } else if (isTextSlide(currentSlide)) {

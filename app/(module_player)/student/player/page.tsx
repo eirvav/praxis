@@ -8,7 +8,8 @@ import ModuleSlidePlayer from '../../_components/ModuleSlidePlayer';
 import PlayerHeader from '../../_components/PlayerHeader';
 import PermissionRequestSlide from '../../_components/PermissionRequestSlide';
 import { toast } from 'sonner';
-import { Slide } from '../../_components/slide_types/types';
+import { Slide, isVideoSlide } from '../../_components/slide_types/types';
+import { useVideoCompletionStore } from '../../_components/slide_types/VideoSlidePlayer';
 
 interface ModuleDetails {
   id: string;
@@ -35,6 +36,7 @@ export default function StudentModulePlayerPage() {
   const [loading, setLoading] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const supabase = useSupabase();
+  const completedVideos = useVideoCompletionStore(state => state.completedVideos);
 
   // Load module details, course info, and slides
   useEffect(() => {
@@ -93,6 +95,16 @@ export default function StudentModulePlayerPage() {
 
   // Navigation functions
   const goToNextSlide = () => {
+    const currentSlide = slides[currentSlideIndex];
+    
+    // Check if the current slide is a required video that hasn't been completed
+    if (isVideoSlide(currentSlide) && 
+        currentSlide.config.isRequired && 
+        !completedVideos[currentSlide.id]) {
+      toast.error("You must watch the entire video before proceeding.");
+      return;
+    }
+    
     if (currentSlideIndex < slides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
     }
@@ -136,7 +148,7 @@ export default function StudentModulePlayerPage() {
           <div className="w-full bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b">
             <div className="w-full px-4 flex h-14 items-center justify-center">
               <h1 className="text-lg font-semibold">
-                {moduleDetails?.title || 'Module Player'} - Permission Required
+                {moduleDetails?.title || 'Module Player'} - <span className="text-red-500">Permission Required</span>
               </h1>
             </div>
           </div>
@@ -171,6 +183,7 @@ export default function StudentModulePlayerPage() {
             <ModuleSlidePlayer 
               slides={slides}
               currentSlideIndex={currentSlideIndex}
+              goToNextSlide={goToNextSlide}
             />
           </div>
         </div>
