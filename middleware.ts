@@ -6,7 +6,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/waitlist(.*)',
-  '/api/webhook/clerk(.*)'
+  '/api/webhook/clerk(.*)',
+  '/mobile-warning(.*)'  // Add mobile warning to public routes
 ])
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -31,12 +32,14 @@ const PROTECTED_PATHS = [
   '/student'
 ]
 
-export function middleware(request: NextRequest) {
+// Combine both mobile check and Clerk middleware
+export default clerkMiddleware(async (auth, request) => {
+  // First check for mobile devices
   const userAgent = request.headers.get('user-agent') || ''
   const isMobile = MOBILE_KEYWORDS.some(keyword => userAgent.includes(keyword))
   const path = request.nextUrl.pathname
 
-  // Check if the current path is protected
+  // Check if the current path is protected from mobile
   const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
     path.startsWith(protectedPath)
   )
@@ -51,10 +54,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/mobile-warning', request.url))
   }
 
-  return NextResponse.next()
-}
-
-export default clerkMiddleware(async (auth, request) => {
+  // Then proceed with Clerk authentication logic
   const { userId, sessionClaims } = await auth();
   const userRole = sessionClaims?.metadata?.role as string | undefined;
 
@@ -115,6 +115,8 @@ export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
+
+  return NextResponse.next();
 })
 
 export const config = {
@@ -123,6 +125,5 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
-    '/((?!api|_next/static|_next/image|favicon.ico|mobile-warning).*)',
   ],
 }
