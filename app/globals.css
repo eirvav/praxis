@@ -295,3 +295,593 @@
 .hover-scale:hover {
   transform: scale(1.02);
 }
+
+/* Auth Page Blob Animation */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Grid background pattern */
+.bg-grid-indigo-100 {
+  background-image: linear-gradient(to right, rgba(79, 70, 229, 0.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(79, 70, 229, 0.1) 1px, transparent 1px);
+}
+
+/* Custom Clerk Component Styling */
+.cl-card, .cl-signIn-start, .cl-signUp-start, .cl-signUp-afterChangeEmailVerification,
+.cl-signUp-afterResetPassword, .cl-signUp-passwordWithQRCode, .cl-waitlist-start {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.cl-internal-b3fm6y {
+  display: none !important;
+}
+
+.cl-headerTitle, .cl-headerSubtitle {
+  display: none !important;
+}
+
+.cl-socialButtonsIconButton {
+  color: #4f46e5 !important;
+}
+
+.cl-socialButtonsBlockButton {
+  border-color: #e0e7ff !important;
+  color: #4f46e5 !important;
+}
+
+.cl-socialButtonsBlockButton:hover, .cl-socialButtonsBlockButton:focus {
+  background-color: #f5f3ff !important;
+}
+
+.cl-footerActionLink, .cl-formButtonReset, .cl-formFieldAction {
+  color: #4f46e5 !important;
+}
+
+.cl-footerActionLink:hover, .cl-formButtonReset:hover, .cl-formFieldAction:hover {
+  color: #4338ca !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #4f46e5 !important;
+  text-transform: none !important;
+}
+
+.cl-formButtonPrimary:hover, .cl-formButtonPrimary:focus {
+  background-color: #4338ca !important;
+}
+
+.cl-formFieldLabel {
+  color: #4338ca !important;
+}
+
+.cl-formFieldInput {
+  border-color: #c7d2fe !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 1px #4f46e5 !important;
+}
+
+.cl-dividerLine {
+  background-color: #c7d2fe !important;
+}
+
+.cl-dividerText {
+  color: #4f46e5 !important;
+}
+
+.cl-logoBox {
+  display: none !important;
+}
+
+/* Fix for black box in footer and remaining white border issues */
+.cl-footer, .cl-footer-powered, .cl-footerAction, .cl-footerActionText, .cl-footerWaitlist,
+.cl-rootBox, .cl-signIn-root, .cl-waitlist-root, .cl-signUp-root {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.cl-footer {
+  border-top: none !important;
+  margin-top: 1rem !important;
+}
+
+.cl-footerActionLink {
+  color: #4f46e5 !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+.cl-footerWaitlist, .cl-footerAction, .cl-footerActionText {
+  color: #4f46e5 !important;
+}
+
+.cl-card {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.cl-rootBox {
+  box-shadow: none !important;
+}
+
+.cl-footer-powered {
+  border-top: none !important;
+  color: #4f46e5 !important;
+  opacity: 0.6 !important;
+}
+
+/* Design cards */
+.cl-card, .cl-main {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.cl-auth-form-body {
+  background-color: transparent !important;
+}
+
+.cl-internal-b2utoc, .cl-internal-wkkub3, .cl-internal-16pjy5v {
+  background-color: transparent !important;
+}
+
+/* Aggressive targeting for black footer boxes */
+.cl-footerWaitlist, .cl-footer-powered, .cl-footer, 
+div[class*="cl-internal"] {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: #4f46e5 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Clerk development brand at bottom */
+.cl-auth-footer {
+  background-color: transparent !important;
+  color: #4f46e5 !important;
+}
+
+/* Force all internal components to be transparent */
+[class*="cl-internal-"] {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Target specific internal class that's commonly used for the black box */
+.cl-internal-17gj9ym, .cl-internal-1vbvljd, .cl-internal-ovm4xk {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Fix for button colors - making sure they show properly with correct contrast */
+.cl-formButtonPrimary, 
+button[data-localization-key="formButtonPrimary"],
+button[data-localization-key="userProfile.start.joinWaitlist"],
+button[type="submit"] {
+  background-color: #4f46e5 !important;
+  color: white !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem !important;
+}
+
+.cl-formButtonPrimary:hover, 
+button[data-localization-key="formButtonPrimary"]:hover,
+button[data-localization-key="userProfile.start.joinWaitlist"]:hover,
+button[type="submit"]:hover {
+  background-color: #4338ca !important;
+  color: white !important;
+}
+
+/* Styles for Clerk when logged in (user profile & user button menu) */
+.cl-userButtonBox, .cl-userButtonTrigger, .cl-userButtonAvatarBox {
+  /* Keep minimal styling for these */
+}
+
+.cl-userButtonPopoverCard {
+  background-color: white !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  /* Reset any other custom styling */
+  color: initial !important;
+}
+
+.cl-userButtonPopoverActions,
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverFooter,
+.cl-navbar, 
+.cl-account, 
+.cl-accountSwitcherTrigger, 
+.cl-profileSectionContent, 
+.cl-profileSectionTitle,
+.cl-profileSectionSubtitle,
+.cl-userPreviewMainIdentifier, 
+.cl-userPreviewSecondaryIdentifier {
+  /* Reset to default styling */
+  background-color: initial !important;
+  color: initial !important;
+  border: initial !important;
+}
+
+/* Only keep primary buttons styled */
+.cl-profileSectionPrimaryButton {
+  background-color: #4f46e5 !important;
+  color: white !important;
+}
+
+.cl-profileSectionPrimaryButton:hover {
+  background-color: #4338ca !important;
+}
+
+/* Additional fixes for button text rendering issues */
+.cl-formButtonPrimary span, 
+.cl-formButtonPrimary div,
+button[type="submit"] span,
+button[type="submit"] div,
+button[data-localization-key] span,
+button[data-localization-key] div {
+  color: white !important;
+}
+
+/* Super aggressive button styling to override Clerk's defaults */
+button.cl-formButtonPrimary,
+button.cl-button,
+button[type="submit"],
+.cl-formButtonPrimary,
+.cl-button[type="submit"] {
+  background-color: #4f46e5 !important;
+  color: white !important;
+  border: none !important;
+  /* Enforcing text content color for any children elements */
+  & * {
+    color: white !important;
+  }
+}
+
+/* Style for text in the footer area */
+div.cl-footer a {
+  color: #4f46e5 !important;
+}
+
+/* Remove text overlay fix that's causing issues */
+/* Fix for transparent text in buttons */
+.cl-formButtonPrimary[data-localization-key], 
+button[data-localization-key="userProfile.start.joinWaitlist"], 
+button[data-localization-key="formButtonPrimary"] {
+  position: relative;
+}
+
+/* Direct targeting of button text */
+button[type="submit"] {
+  color: white !important;
+  position: relative !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+button[data-localization-key="formButtonPrimary"]::before {
+  content: "Continue";
+  display: inline;
+  color: white;
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+button[data-localization-key="userProfile.start.joinWaitlist"]::before {
+  content: "Join the waitlist";
+  display: inline;
+  color: white;
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+/* Hide original text if it's causing issues */
+button[data-localization-key="formButtonPrimary"] > span,
+button[data-localization-key="userProfile.start.joinWaitlist"] > span {
+  opacity: 0;
+}
+
+/* Override any remaining indigo styling in the user dropdown completely */
+/* Target specific dropdown elements to match the second image */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverActionButton,
+.cl-userButtonBox,
+.cl-userButtonPopoverFooter,
+.cl-internal-17gj9ym,
+.cl-userButtonPopoverActions {
+  background-color: white !important;
+  color: #333 !important;
+  border-color: #ddd !important;
+}
+
+/* Avatar dropdown needs to be completely neutral */
+.cl-userButtonPopoverActions button,
+.cl-userButtonPopoverActions a,
+.cl-userButtonPopoverFooter button,
+.cl-userButtonPopoverFooter a,
+.cl-footerAction,
+.cl-footerActionText,
+.cl-footerActionLink,
+.cl-userButtonPopoverActionButtonIcon,
+.cl-userButtonPopoverActionButtonText {
+  color: #555 !important;
+  background-color: transparent !important;
+}
+
+/* Avatar dropdown hover states */
+.cl-userButtonPopoverActionButton:hover {
+  background-color: #f5f5f5 !important;
+}
+
+/* Target the specific indigo button in dropdown */
+.cl-userButtonPopoverCard button {
+  color: #555 !important;
+  background-color: transparent !important;
+}
+
+/* Reset any other Clerk UI elements to neutral colors */
+[data-clerk-ui] *:not(button[type="submit"]) {
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+/* More specific ClerkProvider dropdown fixes */
+/* Force white background on dropdown */
+.cl-userButtonPopoverCard, 
+.cl-userButtonPopoverRootBox {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.5rem !important;
+  padding: 8px 0 !important;
+}
+
+/* Fix icon colors - make them dark */
+.cl-userButtonPopoverActionButtonIcon svg,
+.cl-userButtonPopoverActionButtonIcon svg *,
+.cl-userButtonPopoverActionButtonIcon path {
+  color: #374151 !important;
+  fill: #374151 !important;
+  stroke: #374151 !important;
+}
+
+/* Fix text colors */
+.cl-userButtonPopoverActionButtonText {
+  color: #374151 !important;
+}
+
+/* Improve hover states */
+.cl-userButtonPopoverActionButton:hover {
+  background-color: #f3f4f6 !important;
+  transition: background-color 0.2s !important;
+}
+
+/* Make avatar circular */
+.cl-userButtonAvatarBox, 
+.cl-userButtonAvatarImage,
+.cl-userButtonAvatarPrimary {
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+/* More aggressive targeting for avatar icon */
+[data-clerk-ui] .cl-userButtonAvatarBox,
+[data-clerk-ui] .cl-userButtonAvatarImage,
+[data-clerk-ui] .cl-userButtonAvatarPrimary {
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+/* Fix for dropdown card and row spacing */
+.cl-userButtonPopoverActionButton {
+  padding: 8px 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 0 !important;
+}
+
+/* More specific overrides for user button menu */
+.cl-userButtonPopover, 
+.cl-userButtonPopoverActions,
+.cl-userButtonPopoverFooter {
+  background-color: white !important;
+  color: #374151 !important;
+}
+
+/* Ensure proper sizing for avatar box */
+.cl-userButtonTrigger,
+.cl-userButtonBox {
+  border-radius: 50% !important;
+}
+
+/* ONLY target the popup - completely override with specific background fix */
+.cl-userButtonPopover {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+}
+
+/* Fix the background of the entire popup content area */
+.cl-userButtonPopoverCard {
+  background-color: white !important;
+  padding: 0 !important; 
+  overflow: hidden !important;
+}
+
+/* Target the action buttons container */
+.cl-userButtonPopoverActions {
+  background-color: white !important;
+  padding: 0 !important;
+}
+
+/* Target each button individually */
+.cl-userButtonPopoverActionButton {
+  background-color: white !important;
+  color: #374151 !important;
+  transition: none !important;
+}
+
+/* Override hover effect specifically */
+.cl-userButtonPopoverActionButton:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+/* Fix the footer area */
+.cl-userButtonPopoverFooter {
+  background-color: white !important;
+  border-top: 1px solid #f3f4f6 !important;
+  padding: 8px 0 !important;
+}
+
+/* Fix the security text */
+.cl-userButtonPopoverFooter div {
+  background-color: white !important;
+}
+
+/* Target every element inside the popover to ensure white background */
+.cl-userButtonPopover * {
+  background-color: inherit !important;
+}
+
+/* Target text content in action buttons */
+.cl-userButtonPopoverActionButtonText {
+  color: #374151 !important;
+  font-weight: normal !important;
+}
+
+/* Override the development text coloring */
+.cl-development-mode-badge {
+  color: #f97316 !important; /* Orange color for development text */
+}
+
+/* Target "secured by clerk" text */
+.cl-userButtonPopoverFooter path {
+  fill: #6b7280 !important; /* Gray for "secured by" text */
+}
+
+/* COMPLETE RESET FOR CLERK POPUP - ULTRA SPECIFIC SELECTORS */
+/* Main popup container with white bg */
+div[aria-label="User Button Popover"],
+div[aria-label="User Button Popover"] > div,
+div[aria-modal="true"].cl-userButtonPopoverCard,
+div.cl-userButtonPopoverCard[role="dialog"],
+.cl-userButtonPopoverCard {
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  padding: 0 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Target the entire popup content area */
+div.cl-userButtonPopoverCard > div,
+div.cl-userButtonPopoverCard > div > div {
+  background-color: white !important;
+}
+
+/* Target the top section with user info */
+div.cl-userButtonPopoverCard > div > div:first-child {
+  background-color: white !important;
+  padding: 16px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+/* Target the action buttons section */
+div.cl-userButtonPopoverActions,
+div.cl-userButtonPopoverActions > div {
+  background-color: white !important;
+  width: 100% !important;
+}
+
+/* Target each individual button */
+button.cl-userButtonPopoverActionButton,
+div.cl-userButtonPopoverActions button {
+  background-color: white !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 8px 16px !important;
+  border-radius: 0 !important;
+  border: none !important;
+  color: #374151 !important;
+  transition: background-color 0.2s !important;
+}
+
+/* Button hover state */
+button.cl-userButtonPopoverActionButton:hover,
+div.cl-userButtonPopoverActions button:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+/* Target button icons */
+button.cl-userButtonPopoverActionButton svg,
+button.cl-userButtonPopoverActionButton svg path,
+div.cl-userButtonPopoverActions button svg,
+div.cl-userButtonPopoverActions button svg path {
+  color: #374151 !important;
+  fill: #374151 !important;
+}
+
+/* Target button text */
+button.cl-userButtonPopoverActionButton span,
+div.cl-userButtonPopoverActions button span {
+  color: #374151 !important;
+  font-weight: normal !important;
+}
+
+/* Target footer section */
+div.cl-userButtonPopoverFooter {
+  background-color: white !important;
+  border-top: 1px solid #f3f4f6 !important;
+  padding: 8px 16px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Use the most specific selectors possible for the dropdown */
+body div[aria-modal="true"].cl-userButtonPopoverCard, 
+body div.cl-userButtonPopoverCard[role="dialog"] {
+  background-color: white !important;
+}

@@ -5,25 +5,137 @@ export default function SignUpPage() {
     <div className="flex justify-center w-full">
       <SignUp
         appearance={{
+          variables: {
+            colorPrimary: '#4f46e5',
+            colorText: '#4338ca',
+            colorTextSecondary: '#4f46e5',
+            colorBackground: 'transparent',
+            colorInputBackground: 'white',
+            colorInputText: '#1e1b4b',
+            fontFamily: 'inherit',
+            borderRadius: '0.5rem',
+          },
           elements: {
-            formButtonPrimary: 
-              "bg-black hover:bg-gray-800 text-sm normal-case",
-            card: "bg-white shadow-none",
-            headerTitle: "text-gray-900",
-            headerSubtitle: "text-gray-600",
-            socialButtonsBlockButton: 
-              "border-gray-200 text-gray-600 hover:bg-gray-50",
-            dividerLine: "bg-gray-200",
-            dividerText: "text-gray-600",
-            formFieldLabel: "text-gray-700",
-            formFieldInput: 
-              "border-gray-200 focus:border-black focus:ring-black",
-            footerActionLink: 
-              "text-black hover:text-gray-800",
+            formButtonPrimary: {
+              backgroundColor: '#4f46e5',
+              fontSize: '14px',
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#4338ca',
+              },
+            },
+            card: {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              width: '100%',
+              border: 'none',
+            },
+            header: {
+              display: 'none',
+            },
+            headerTitle: {
+              display: 'none',
+            },
+            headerSubtitle: {
+              display: 'none',
+            },
+            socialButtonsBlockButton: {
+              border: '1px solid #e0e7ff',
+              color: '#4f46e5',
+              '&:hover': {
+                backgroundColor: '#f5f3ff',
+              },
+            },
+            dividerLine: {
+              backgroundColor: '#c7d2fe',
+            },
+            dividerText: {
+              color: '#4f46e5',
+            },
+            formFieldLabel: {
+              color: '#4338ca',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            },
+            formFieldInput: {
+              border: '1px solid #c7d2fe',
+              backgroundColor: 'white',
+              padding: '0.625rem',
+              '&:focus': {
+                borderColor: '#4f46e5',
+                boxShadow: '0 0 0 1px #4f46e5',
+              },
+            },
+            footerActionLink: {
+              color: '#4f46e5',
+              fontWeight: 500,
+              '&:hover': {
+                color: '#4338ca',
+              },
+            },
+            logoBox: {
+              display: 'none',
+            },
+            logoImage: {
+              display: 'none',
+            },
+            identityPreviewEditButton: {
+              color: '#4f46e5',
+              '&:hover': {
+                color: '#4338ca',
+              },
+            },
+            identityPreviewText: {
+              color: '#4338ca',
+            },
+            otpCodeFieldInput: {
+              border: '1px solid #c7d2fe',
+              backgroundColor: 'white',
+              '&:focus': {
+                borderColor: '#4f46e5',
+                boxShadow: '0 0 0 1px #4f46e5',
+              },
+            },
+            alertText: {
+              color: '#4338ca',
+            },
+            formFieldAction: {
+              color: '#4f46e5',
+              '&:hover': {
+                color: '#4338ca',
+              },
+            },
+            form: {
+              gap: '1.25rem',
+            },
+            footer: {
+              backgroundColor: 'transparent',
+              borderTop: 'none',
+            },
+            footerAction: {
+              color: '#4f46e5',
+              backgroundColor: 'transparent',
+            },
+            footerActionText: {
+              color: '#4f46e5',
+            },
+            footerText: {
+              color: '#4f46e5',
+            },
+            main: {
+              backgroundColor: 'transparent',
+            },
+            rootBox: {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+            },
           },
           layout: {
             socialButtonsPlacement: "bottom",
             showOptionalFields: false,
+            logoPlacement: "none",
+            logoImageUrl: "",
           },
         }}
       />
