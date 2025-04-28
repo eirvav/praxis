@@ -7,6 +7,7 @@ import { VideoSlide } from './types';
 import { useTranslations } from 'next-intl';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';
+import TextToSpeech from '../TextToSpeech';
 
 // Storage keys with module prefix to avoid conflicts between different modules
 const VIDEO_VIEW_COUNT_KEY = 'praxis_video_view_count_';
@@ -446,10 +447,11 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
           <h1 className="text-3xl font-semibold mb-6">{slide.config.title}</h1>
         )}
 
-        {/* Context field */}
+        {/* Context field with TextToSpeech */}
         {slide.config.context && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-800 mb-6">
             <p className="text-sm">{slide.config.context}</p>
+            <TextToSpeech text={slide.config.context} />
           </div>
         )}
         
@@ -519,34 +521,8 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
               {/* Custom video controls */}
               {isPlaybackAllowed() && showCustomControls && (
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  {/* Progress bar - only show if allowReplay is true or video hasn't been played yet 
-                  {(allowReplay || !isVideoPlayed) && (
-                    <div 
-                      className="w-full h-1 bg-gray-600 mb-3 cursor-pointer"
-                      onClick={seekTo}
-                    >
-                      <div 
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${videoProgress}%` }}
-                      />
-                    </div>
-                  )}
-                */}
-                  
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      {/* Play/Pause 
-                      <button 
-                        onClick={togglePlay} 
-                        className="text-white hover:text-primary-foreground transition"
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-5 w-5" />
-                        ) : (
-                          <Play className="h-5 w-5" />
-                        )}
-                      </button>
-                      */}
                     </div>
                     
                     {/* Fullscreen toggle */}

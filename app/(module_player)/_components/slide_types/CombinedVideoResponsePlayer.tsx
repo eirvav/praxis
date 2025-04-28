@@ -8,6 +8,7 @@ import { Camera, CheckCircle, Play, Pause, Video, AlertCircle, RotateCcw, Maximi
 import { useTranslations } from 'next-intl';
 import { useVideoCompletionStore } from './VideoSlidePlayer';
 import Image from 'next/image';
+import TextToSpeech from '../TextToSpeech';
 
 // Add interfaces for browser compatibility with fullscreen
 interface CustomDocument extends Document {
@@ -1915,10 +1916,11 @@ export default function CombinedVideoResponsePlayer({
           </h1>
         )}
 
-        {/* Context field */}
+        {/* Context field with TextToSpeech */}
         {videoSlide.config.context && phase === 'video' && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-800 mb-6">
             <p className="text-sm">{videoSlide.config.context}</p>
+            <TextToSpeech text={videoSlide.config.context} />
           </div>
         )}
         
