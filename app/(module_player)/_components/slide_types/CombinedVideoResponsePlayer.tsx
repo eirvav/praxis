@@ -92,7 +92,7 @@ export default function CombinedVideoResponsePlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showCustomControls, setShowCustomControls] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [countdown, setCountdown] = useState<number | string>(0);
   
   // Recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -453,16 +453,27 @@ export default function CombinedVideoResponsePlayer({
       // Initialize camera and start countdown
       initializeCamera().then(() => {
         console.log('Camera initialized for instant response');
-        // Start countdown for recording
-        let count = 3;
-        setCountdown(count);
+        // Enhanced countdown sequence
+        const sequence = [
+          { value: "Activating Video Recording", duration: 1000 },
+          { value: "Get Ready!", duration: 1000 },
+          { value: 3, duration: 1000 },
+          { value: 2, duration: 1000 },
+          { value: 1, duration: 1000 },
+        ];
+        
+        let step = 0;
+        setCountdown(sequence[0].value);
         
         const countdownInterval = setInterval(() => {
-          count -= 1;
-          setCountdown(count);
+          step += 1;
           
-          if (count <= 0) {
+          if (step < sequence.length) {
+            setCountdown(sequence[step].value);
+          } else {
             clearInterval(countdownInterval);
+            setCountdown(0);
+            
             // After countdown, start recording directly
             if (streamRef.current) {
               console.log('Starting recording after instantResponse countdown');
@@ -747,16 +758,26 @@ export default function CombinedVideoResponsePlayer({
       // Then move to recording phase
       setPhase('recording');
       
-      // Start countdown for the new recording
-      let count = 3;
-      setCountdown(count);
+      // Enhanced countdown sequence
+      const sequence = [
+        { value: "Activating Video Recording", duration: 1500 },
+        { value: "Get Ready!", duration: 1500 },
+        { value: 3, duration: 1000 },
+        { value: 2, duration: 1000 },
+        { value: 1, duration: 1000 },
+      ];
+      
+      let step = 0;
+      setCountdown(sequence[0].value);
       
       const countdownInterval = setInterval(() => {
-        count -= 1;
-        setCountdown(count);
+        step += 1;
         
-        if (count <= 0) {
+        if (step < sequence.length) {
+          setCountdown(sequence[step].value);
+        } else {
           clearInterval(countdownInterval);
+          setCountdown(0);
           
           // Inline recording logic instead of calling beginRecording
           // First check recording limits
@@ -919,19 +940,30 @@ export default function CombinedVideoResponsePlayer({
     
     // Initialize camera
     initializeCamera().then(() => {
-      // Start countdown then begin recording
-      let count = 3;
-      setCountdown(count);
+      console.log('Camera initialized after skip to recording');
+      
+      // Enhanced countdown sequence
+      const sequence = [
+        { value: "Activating Video Recording", duration: 1500 },
+        { value: "Get Ready!", duration: 1500 },
+        { value: 3, duration: 1000 },
+        { value: 2, duration: 1000 },
+        { value: 1, duration: 1000 },
+      ];
+      
+      let step = 0;
+      setCountdown(sequence[0].value);
       
       const countdownInterval = setInterval(() => {
-        count -= 1;
-        setCountdown(count);
+        step += 1;
         
-        if (count <= 0) {
+        if (step < sequence.length) {
+          setCountdown(sequence[step].value);
+        } else {
           clearInterval(countdownInterval);
+          setCountdown(0);
           
-          // Direct recording logic instead of calling resetRecording
-          // This avoids the double countdown issue
+          // After countdown, start recording with the same logic as before
           if (streamRef.current) {
             // Check recording limits first
             const maxResponses = responseSlide.config.maxResponses || 1;
@@ -1103,22 +1135,32 @@ export default function CombinedVideoResponsePlayer({
       // Move to recording phase
       setPhase('recording');
       
-      // Initialize camera then start countdown
+      // Initialize camera then start enhanced countdown
       initializeCamera().then(() => {
         console.log('Camera initialized after skip to recording');
         
-        // Start countdown for recording
-        let count = 3;
-        setCountdown(count);
+        // Enhanced countdown sequence
+        const sequence = [
+          { value: "Activating Video Recording", duration: 1500 },
+          { value: "Get Ready!", duration: 1500 },
+          { value: 3, duration: 1000 },
+          { value: 2, duration: 1000 },
+          { value: 1, duration: 1000 },
+        ];
+        
+        let step = 0;
+        setCountdown(sequence[0].value);
         
         const countdownInterval = setInterval(() => {
-          count -= 1;
-          setCountdown(count);
+          step += 1;
           
-          if (count <= 0) {
+          if (step < sequence.length) {
+            setCountdown(sequence[step].value);
+          } else {
             clearInterval(countdownInterval);
+            setCountdown(0);
             
-            // After countdown, start recording with the same logic as startRecording
+            // After countdown, start recording directly
             if (streamRef.current) {
               console.log('Beginning recording after skip to recording countdown');
               
@@ -1459,7 +1501,7 @@ export default function CombinedVideoResponsePlayer({
       isFullscreen,
       videoEnded,
       isRecording,
-      hasRecordedChunks: recordedChunks.length > 0
+      hasRecordedChunks: recordedChunks.length
     });
     
     switch (phase) {
@@ -1487,15 +1529,16 @@ export default function CombinedVideoResponsePlayer({
                     <p>A countdown of 3-2-1 will begin, and then recording will start automatically.</p>
                   </DialogDescription>
                   
-                  <div className="flex gap-4 justify-end border-t pt-4 mt-2">
+                  <div className="flex gap-4 justify-between border-t pt-4 mt-2">
                     <Button
                       variant="outline"
                       onClick={() => setShowInstantResponseWarning(false)}
+                      className="flex-1"
                     >
                       Cancel
                     </Button>
                     <Button 
-                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      className="bg-amber-600 hover:bg-amber-700 text-white flex-1"
                       onClick={proceedAfterWarning}
                     >
                       <Play className="h-4 w-4 mr-2" />
@@ -1833,10 +1876,12 @@ export default function CombinedVideoResponsePlayer({
               )}
               
               {/* Countdown overlay */}
-              {countdown > 0 && (
+              {countdown && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
-                  <div className="text-8xl font-bold text-white animate-pulse">
-                    {countdown}
+                  <div className="text-center">
+                    <div className={`font-bold text-white animate-pulse ${typeof countdown === 'string' ? 'text-4xl' : 'text-8xl'}`}>
+                      {countdown}
+                    </div>
                   </div>
                 </div>
               )}

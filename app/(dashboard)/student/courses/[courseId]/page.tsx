@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Search, LayoutGrid, Filter, ChevronDown } from 'lucide-react';
+import { Search, LayoutGrid, Filter, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
@@ -148,12 +148,7 @@ export default function StudentCourseDetailPage() {
   return (
     <ContentLayout>
       <div className="space-y-6">
-        <div>
-          <Link href="/student/courses" className="flex items-center text-muted-foreground hover:text-primary">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to courses
-          </Link>
-        </div>
+
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
