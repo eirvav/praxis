@@ -37,6 +37,9 @@ export default function SignInLayout({
               <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-indigo-300"></div>
             </div>
           </div>
+          <p className="text-sm text-indigo-800 font-medium mt-2">
+            Learning Management System
+          </p>
         </div>
         {children}
       </div>

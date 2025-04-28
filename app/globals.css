@@ -885,3 +885,45 @@ body div[aria-modal="true"].cl-userButtonPopoverCard,
 body div.cl-userButtonPopoverCard[role="dialog"] {
   background-color: white !important;
 }
+
+/* Customize waitlist success message */
+.cl-waitlistSuccess {
+  margin-top: 1.5rem !important;
+  padding: 1.5rem !important;
+}
+
+.cl-waitlistSuccessTitle {
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  color: #4f46e5 !important;
+  margin-bottom: 1rem !important;
+}
+
+.cl-waitlistSuccessText {
+  color: #4338ca !important;
+  font-size: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Add custom check mark for success */
+.cl-waitlistSuccess::before {
+  content: "" !important;
+  display: block !important;
+  width: 64px !important;
+  height: 64px !important;
+  margin: 0 auto 1rem auto !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%234f46e5' class='w-6 h-6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z' /%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+/* Add secondary message after success text */
+.cl-waitlistSuccess::after {
+  display: block !important;
+  margin-top: 1rem !important;
+  color: #6366f1 !important;
+  font-size: 0.875rem !important;
+  font-style: italic !important;
+  opacity: 0.9 !important;
+}
