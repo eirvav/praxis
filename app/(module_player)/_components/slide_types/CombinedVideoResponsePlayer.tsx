@@ -453,26 +453,25 @@ export default function CombinedVideoResponsePlayer({
       // Initialize camera and start countdown
       initializeCamera().then(() => {
         console.log('Camera initialized for instant response');
-        // Enhanced countdown sequence
-        const sequence = [
-          { value: "Activating Video Recording", duration: 1000 },
-          { value: "Get Ready!", duration: 1000 },
-          { value: 3, duration: 1000 },
-          { value: 2, duration: 1000 },
-          { value: 1, duration: 1000 },
-        ];
         
-        let step = 0;
-        setCountdown(sequence[0].value);
+        // Show the header immediately
+        setCountdownHeader("Activating Video Recording!");
+        
+        // Set up the numeric countdown (3,2,1)
+        const countdownDuration = 5000; // 5 seconds total
+        const numberStart = 5;
+        let timeRemaining = countdownDuration;
+        const currentNumber = numberStart;
+        
+        setCountdown(currentNumber);
         
         const countdownInterval = setInterval(() => {
-          step += 1;
+          timeRemaining -= 1000;
           
-          if (step < sequence.length) {
-            setCountdown(sequence[step].value);
-          } else {
+          if (timeRemaining <= 0) {
             clearInterval(countdownInterval);
             setCountdown(0);
+            setCountdownHeader(null);
             
             // After countdown, start recording directly
             if (streamRef.current) {
@@ -758,26 +757,24 @@ export default function CombinedVideoResponsePlayer({
       // Then move to recording phase
       setPhase('recording');
       
-      // Enhanced countdown sequence
-      const sequence = [
-        { value: "Activating Video Recording", duration: 1500 },
-        { value: "Get Ready!", duration: 1500 },
-        { value: 3, duration: 1000 },
-        { value: 2, duration: 1000 },
-        { value: 1, duration: 1000 },
-      ];
+      // Show the header immediately
+      setCountdownHeader("Activating Video Recording!");
       
-      let step = 0;
-      setCountdown(sequence[0].value);
+      // Set up the numeric countdown (3,2,1)
+      const countdownDuration = 5000; // 5 seconds total
+      const numberStart = 5;
+      let timeRemaining = countdownDuration;
+      const currentNumber = numberStart;
+      
+      setCountdown(currentNumber);
       
       const countdownInterval = setInterval(() => {
-        step += 1;
+        timeRemaining -= 1000;
         
-        if (step < sequence.length) {
-          setCountdown(sequence[step].value);
-        } else {
+        if (timeRemaining <= 0) {
           clearInterval(countdownInterval);
           setCountdown(0);
+          setCountdownHeader(null);
           
           // Inline recording logic instead of calling beginRecording
           // First check recording limits
@@ -942,26 +939,24 @@ export default function CombinedVideoResponsePlayer({
     initializeCamera().then(() => {
       console.log('Camera initialized after skip to recording');
       
-      // Enhanced countdown sequence
-      const sequence = [
-        { value: "Activating Video Recording", duration: 1500 },
-        { value: "Get Ready!", duration: 1500 },
-        { value: 3, duration: 1000 },
-        { value: 2, duration: 1000 },
-        { value: 1, duration: 1000 },
-      ];
+      // Show the header immediately
+      setCountdownHeader("Activating Video Recording!");
       
-      let step = 0;
-      setCountdown(sequence[0].value);
+      // Set up the numeric countdown (3,2,1)
+      const countdownDuration = 5000; // 5 seconds total
+      const numberStart = 5;
+      let timeRemaining = countdownDuration;
+      let currentNumber = numberStart;
+      
+      setCountdown(currentNumber);
       
       const countdownInterval = setInterval(() => {
-        step += 1;
+        timeRemaining -= 1000;
         
-        if (step < sequence.length) {
-          setCountdown(sequence[step].value);
-        } else {
+        if (timeRemaining <= 0) {
           clearInterval(countdownInterval);
           setCountdown(0);
+          setCountdownHeader(null);
           
           // After countdown, start recording with the same logic as before
           if (streamRef.current) {
@@ -1094,9 +1089,15 @@ export default function CombinedVideoResponsePlayer({
             console.error('No stream available for direct recording');
             setError('Camera not initialized. Please try again.');
           }
+        } else if (timeRemaining <= (countdownDuration - (numberStart * 1000))) {
+          // We've counted down all numbers
+          setCountdown(0);
+        } else {
+          // Update the countdown number
+          currentNumber -= 1;
+          setCountdown(currentNumber);
         }
       }, 1000);
-      
     }).catch(err => {
       console.error('Failed to initialize camera:', err);
       setError('Could not access camera or microphone. Please check your permissions.');
@@ -1139,26 +1140,24 @@ export default function CombinedVideoResponsePlayer({
       initializeCamera().then(() => {
         console.log('Camera initialized after skip to recording');
         
-        // Enhanced countdown sequence
-        const sequence = [
-          { value: "Activating Video Recording", duration: 1500 },
-          { value: "Get Ready!", duration: 1500 },
-          { value: 3, duration: 1000 },
-          { value: 2, duration: 1000 },
-          { value: 1, duration: 1000 },
-        ];
+        // Show the header immediately
+        setCountdownHeader("Activating Video Recording!");
         
-        let step = 0;
-        setCountdown(sequence[0].value);
+        // Set up the numeric countdown (3,2,1)
+        const countdownDuration = 5000; // 5 seconds total
+        const numberStart = 5;
+        let timeRemaining = countdownDuration;
+        let currentNumber = numberStart;
+        
+        setCountdown(currentNumber);
         
         const countdownInterval = setInterval(() => {
-          step += 1;
+          timeRemaining -= 1000;
           
-          if (step < sequence.length) {
-            setCountdown(sequence[step].value);
-          } else {
+          if (timeRemaining <= 0) {
             clearInterval(countdownInterval);
             setCountdown(0);
+            setCountdownHeader(null);
             
             // After countdown, start recording directly
             if (streamRef.current) {
@@ -1263,6 +1262,13 @@ export default function CombinedVideoResponsePlayer({
               console.error('No stream available for recording after skip');
               setError('Camera not initialized. Please try again.');
             }
+          } else if (timeRemaining <= (countdownDuration - (numberStart * 1000))) {
+            // We've counted down all numbers
+            setCountdown(0);
+          } else {
+            // Update the countdown number
+            currentNumber -= 1;
+            setCountdown(currentNumber);
           }
         }, 1000);
       }).catch(err => {
@@ -1418,6 +1424,9 @@ export default function CombinedVideoResponsePlayer({
       setIsVideoLoading(false);
     }
   };
+
+  // Add state for the countdown header text
+  const [countdownHeader, setCountdownHeader] = useState<string | null>(null);
 
   // Render the response list panel
   const renderResponseListPanel = () => {
@@ -1876,12 +1885,19 @@ export default function CombinedVideoResponsePlayer({
               )}
               
               {/* Countdown overlay */}
-              {countdown && (
+              {(countdown || countdownHeader) && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
                   <div className="text-center">
-                    <div className={`font-bold text-white animate-pulse ${typeof countdown === 'string' ? 'text-4xl' : 'text-8xl'}`}>
-                      {countdown}
-                    </div>
+                    {countdownHeader && (
+                      <div className="text-4xl font-bold text-white mb-8 animate-pulse">
+                        {countdownHeader}
+                      </div>
+                    )}
+                    {countdown !== 0 && typeof countdown !== 'string' && (
+                      <div className="text-8xl font-bold text-white animate-pulse">
+                        {countdown}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
