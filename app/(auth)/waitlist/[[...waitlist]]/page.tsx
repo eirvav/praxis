@@ -81,7 +81,7 @@ export default function WaitlistPage() {
     setupSubmitButtonListener();
     
     // Fallback method: direct form submission listener
-    const handleFormSubmit = (e: SubmitEvent) => {
+    const handleFormSubmit = () => {
       // Delay to allow processing
       setTimeout(() => {
         const errors = document.querySelectorAll('.cl-formFieldError');
@@ -111,14 +111,6 @@ export default function WaitlistPage() {
       if (form) form.removeEventListener('submit', handleFormSubmit as EventListener);
     };
   }, []);
-  
-  // Quick test function for development
-  const testSuccessMessage = () => {
-    setIsSubmitted(true);
-    const url = new URL(window.location.href);
-    url.searchParams.set('status', 'complete');
-    window.history.replaceState({}, '', url);
-  };
   
   // Show our custom success message
   if (isSubmitted) {

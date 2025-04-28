@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
@@ -11,6 +12,47 @@ const isPublicRoute = createRouteMatcher([
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isTeacherRoute = createRouteMatcher(['/teacher/modules(.*)']);
 const isStudentPlayerRoute = createRouteMatcher(['/student/player(.*)']);
+
+// Array of mobile device keywords to check in user agent
+const MOBILE_KEYWORDS = [
+  'Mobile',
+  'Android',
+  'iPhone',
+  'iPad',
+  'Windows Phone',
+  'webOS',
+  'BlackBerry',
+  'iPod'
+]
+
+// Array of paths that should be protected from mobile access
+const PROTECTED_PATHS = [
+  '/teacher',
+  '/student'
+]
+
+export function middleware(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent') || ''
+  const isMobile = MOBILE_KEYWORDS.some(keyword => userAgent.includes(keyword))
+  const path = request.nextUrl.pathname
+
+  // Check if the current path is protected
+  const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
+    path.startsWith(protectedPath)
+  )
+
+  // If it's a mobile device and trying to access a protected path
+  if (isMobile && isProtectedPath) {
+    return NextResponse.redirect(new URL('/mobile-warning', request.url))
+  }
+
+  // If it's a mobile device trying to access the dashboard root
+  if (isMobile && path === '/') {
+    return NextResponse.redirect(new URL('/mobile-warning', request.url))
+  }
+
+  return NextResponse.next()
+}
 
 export default clerkMiddleware(async (auth, request) => {
   const { userId, sessionClaims } = await auth();
@@ -81,5 +123,6 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|mobile-warning).*)',
   ],
 }
