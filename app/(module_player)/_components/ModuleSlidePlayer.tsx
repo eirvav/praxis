@@ -6,6 +6,7 @@ import SlideSlidePlayer from './slide_types/TextResponseSlidePlayer';
 import StudentResponseSlidePlayer from './slide_types/StudentVideoResponseSlidePlayer';
 import ReflectionSlidePlayer from './slide_types/LikertScaleSlidePlayer';
 import ContextSlidePlayer from './slide_types/ContextSlidePlayer';
+import CombinedVideoResponsePlayer from './slide_types/CombinedVideoResponsePlayer';
 import { 
   Slide,
   isTextSlide,
@@ -15,6 +16,7 @@ import {
   isSliderSlide,
   isContextSlide
 } from './slide_types/types';
+import { useState, useEffect } from 'react';
 
 interface ModuleSlidePlayerProps {
   slides: Slide[];
@@ -23,6 +25,19 @@ interface ModuleSlidePlayerProps {
 }
 
 export default function ModuleSlidePlayer({ slides, currentSlideIndex, goToNextSlide }: ModuleSlidePlayerProps) {
+  // Check if this is a case of a video slide followed by a response slide
+  const [isCombinedSlide, setIsCombinedSlide] = useState(false);
+  
+  useEffect(() => {
+    // Check if current slide is a video slide and next slide is a response slide
+    const isVideoWithResponse = 
+      currentSlideIndex < slides.length - 1 && 
+      isVideoSlide(slides[currentSlideIndex]) && 
+      isStudentResponseSlide(slides[currentSlideIndex + 1]);
+      
+    setIsCombinedSlide(isVideoWithResponse);
+  }, [currentSlideIndex, slides]);
+
   if (slides.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -32,8 +47,36 @@ export default function ModuleSlidePlayer({ slides, currentSlideIndex, goToNextS
   }
 
   const currentSlide = slides[currentSlideIndex];
+  
+  // If this is a combined video+response slide, we need the next slide too
+  const nextSlide = currentSlideIndex < slides.length - 1 ? slides[currentSlideIndex + 1] : null;
 
   const renderSlide = () => {
+    // Handle the combined video+response slide case
+    if (isCombinedSlide && nextSlide && isVideoSlide(currentSlide) && isStudentResponseSlide(nextSlide)) {
+      return (
+        <CombinedVideoResponsePlayer 
+          videoSlide={currentSlide} 
+          responseSlide={nextSlide}
+          goToNextSlide={goToNextSlide}
+        />
+      );
+    }
+    
+    // Skip response slides that follow video slides (they're handled in the combined view)
+    if (
+      isStudentResponseSlide(currentSlide) && 
+      currentSlideIndex > 0 && 
+      isVideoSlide(slides[currentSlideIndex - 1])
+    ) {
+      // Automatically move to the next slide
+      if (goToNextSlide) {
+        setTimeout(goToNextSlide, 0);
+      }
+      return <div className="animate-pulse">Loading next slide...</div>;
+    }
+    
+    // Handle regular slides
     if (isVideoSlide(currentSlide)) {
       return <VideoSlidePlayer slide={currentSlide} goToNextSlide={goToNextSlide} />;
     } else if (isQuizSlide(currentSlide)) {

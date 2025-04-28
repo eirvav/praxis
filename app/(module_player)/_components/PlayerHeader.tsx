@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface PlayerHeaderProps {
   moduleName: string;
@@ -25,6 +26,24 @@ export default function PlayerHeader({
   disableNext,
   courseName
 }: PlayerHeaderProps) {
+  const router = useRouter();
+  
+  // Determine if this is the last slide
+  const isLastSlide = currentSlideIndex === totalSlides - 1;
+  
+  const handleNextClick = () => {
+    if (isLastSlide) {
+      // Set flag in localStorage to trigger confetti on dashboard
+      localStorage.setItem('showModuleCompletionConfetti', 'true');
+      localStorage.setItem('completedModuleName', moduleName || 'module');
+      
+      // Immediately redirect to dashboard
+      router.push('/student/');
+    } else {
+      goToNextSlide();
+    }
+  };
+  
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       <div className="w-full bg-background/95 backdrop-blur-sm border-b">
@@ -68,11 +87,11 @@ export default function PlayerHeader({
             </Button>
             
             <Button
-              onClick={goToNextSlide}
-              disabled={disableNext}
-              className="bg-primaryStyling hover:bg-indigo-700 cursor-pointer"
+              onClick={handleNextClick}
+              disabled={isLastSlide ? false : disableNext}
+              className={`${isLastSlide ? 'bg-green-600 hover:bg-green-700' : 'bg-primaryStyling hover:bg-indigo-700'} cursor-pointer`}
             >
-              Next Step 
+              {isLastSlide ? 'Complete Module' : 'Next Step'}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

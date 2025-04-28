@@ -9,6 +9,12 @@ import { useSupabase } from "../_components/SupabaseProvider";
 import { ContentLayout } from "@/components/navbar-components/content-layout";
 import Link from "next/link";
 import StudentModuleCard from "./_components/StudentModuleCard";
+import dynamic from "next/dynamic";
+
+// Dynamically import ReactConfetti to avoid SSR issues
+const ReactConfetti = dynamic(() => import('react-confetti'), {
+  ssr: false
+});
 
 interface Module {
   id: string;
@@ -28,6 +34,53 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [modules, setModules] = useState<Module[]>([]);
   const supabase = useSupabase();
+  
+  // Confetti state
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: 0,
+    height: 0,
+  });
+  
+  // Set window size for confetti
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const updateWindowSize = () => {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+      
+      updateWindowSize();
+      window.addEventListener('resize', updateWindowSize);
+      
+      return () => window.removeEventListener('resize', updateWindowSize);
+    }
+  }, []);
+  
+  // Check for module completion flag
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const shouldShowConfetti = localStorage.getItem('showModuleCompletionConfetti') === 'true';
+      
+      if (shouldShowConfetti) {
+        setShowConfetti(true);
+        
+        // Clear the flag so it doesn't show again on refresh
+        localStorage.removeItem('showModuleCompletionConfetti');
+        
+        // Hide confetti after 6 seconds
+        const timer = setTimeout(() => {
+          setShowConfetti(false);
+        }, 6000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
   
   useEffect(() => {
     async function fetchUserData() {
@@ -128,6 +181,19 @@ export default function StudentDashboard() {
 
   return (
     <ContentLayout>
+      {/* Confetti celebration */}
+      {showConfetti && (
+        <>
+          <ReactConfetti
+            width={windowSize.width}
+            height={windowSize.height}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.2}
+          />
+        </>
+      )}
+      
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
           <div>

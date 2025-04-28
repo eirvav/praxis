@@ -52,6 +52,9 @@ export interface StudentResponseSlideConfig {
   type: 'student_response';
   severalResponses?: boolean;
   instantResponse?: boolean;
+  isRequired?: boolean;
+  maxResponses?: number;
+  responseMaxDuration?: number;
 }
 
 export interface StudentResponseSlide extends BaseSlide {

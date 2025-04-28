@@ -117,21 +117,13 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
     if (isVideoPlayed) {
       setVideoCompleted(slide.id, true);
     }
-    
-    console.log('[VideoSlidePlayer] Mounted with:', {
-      slideId: slide.id,
-      isVideoPlayed,
-      viewCount,
-      allowReplay,
-      maxReplays
-    });
+
   }, [slide.id, isVideoPlayed, viewCount, allowReplay, maxReplays, setVideoCompleted]);
 
   // Save to localStorage when values change
   useEffect(() => {
     try {
       localStorage.setItem(viewCountKey, viewCount.toString());
-      console.log('[VideoSlidePlayer] Saved viewCount to localStorage:', { viewCountKey, viewCount });
     } catch (error) {
       console.error('Error saving view count to localStorage:', error);
     }
@@ -140,7 +132,6 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
   useEffect(() => {
     try {
       localStorage.setItem(watchedKey, isVideoPlayed.toString());
-      console.log('[VideoSlidePlayer] Saved isVideoPlayed to localStorage:', { watchedKey, isVideoPlayed });
       
       // Also update the global store
       setVideoCompleted(slide.id, isVideoPlayed);
@@ -211,14 +202,12 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
 
   // Debug logs on component mount
   useEffect(() => {
-    console.log('[VideoSlidePlayer] Component mounted with video URL:', slide.config.videoUrl);
     console.log('[VideoSlidePlayer] Config:', { 
       isRequired, 
       allowReplay, 
       maxReplays,
       viewCount,
       isVideoPlayed,
-      slide_id: slide.id,
       completedInStore: completedVideos[slide.id],
       isPlaybackAllowed: isPlaybackAllowed()
     });
@@ -229,7 +218,6 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
     }
     
     return () => {
-      console.log('[VideoSlidePlayer] Component unmounted');
     };
   }, [slide.config.videoUrl, isRequired, allowReplay, maxReplays, viewCount, isVideoPlayed, slide.id, completedVideos, isPlaybackAllowed]);
 
@@ -268,7 +256,6 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
     
     // Mark as completed when reaching near the end (98%)
     if (progress > 98 && !isVideoPlayed) {
-      console.log('[VideoSlidePlayer] Video reached 98%, marking as played');
       setIsVideoPlayed(true);
     }
   };
@@ -283,7 +270,6 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
 
   // Handle video end
   const handleVideoEnd = () => {
-    console.log('[VideoSlidePlayer] Video playback ended');
     
     setIsVideoPlayed(true);
     setIsVideoEnded(true);
@@ -292,11 +278,9 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
     // Only increment view count when the video finishes playing
     // First video view sets it to 1, subsequent views increment it
     if (viewCount === 0) {
-      console.log('[VideoSlidePlayer] First viewing, setting view count to 1');
       setViewCount(1);
     } else if (viewCount < maxReplays) {
       // Increment for subsequent complete views, but don't exceed maxReplays+1
-      console.log('[VideoSlidePlayer] Incrementing view count from', viewCount);
       setViewCount(prev => Math.min(prev + 1, maxReplays + 1));
     }
   };
@@ -506,7 +490,6 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
                 playsInline
                 onTimeUpdate={handleTimeUpdate}
                 onPlay={() => {
-                  console.log('[VideoSlidePlayer] Video playback started');
                   setIsPlaying(true);
                   setShowControls(true);
                   setShowCustomControls(true);
@@ -522,9 +505,7 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
                   console.error('[VideoSlidePlayer] Video error message:', videoElement.error?.message);
                   setVideoError(true);
                 }}
-                onLoadStart={() => console.log('[VideoSlidePlayer] Video load started')}
                 onLoadedData={() => {
-                  console.log('[VideoSlidePlayer] Video data loaded successfully');
                   setVideoError(false);
                 }}
                 onEnded={handleVideoEnd}

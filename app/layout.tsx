@@ -36,7 +36,7 @@ export const metadata: Metadata = {
       { rel: 'mask-icon', url: '/favicon/safari-pinned-tab.svg', color: '#4AC6F4' },
     ],
   },
-  manifest: '/favicon/manifest.json',
+  manifest: '/manifest.webmanifest',
   appleWebApp: {
     title: 'Praxis',
     statusBarStyle: 'default',
@@ -61,6 +61,9 @@ export default async function RootLayout({
       waitlistUrl="/waitlist" 
     >
       <html lang={locale} suppressHydrationWarning>
+        <head>
+          <link rel="manifest" href="/manifest.webmanifest" />
+        </head>
         <body 
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           suppressHydrationWarning
