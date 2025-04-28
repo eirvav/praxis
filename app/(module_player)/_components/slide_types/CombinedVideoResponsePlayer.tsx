@@ -10,6 +10,7 @@ import { useVideoCompletionStore } from './VideoSlidePlayer';
 import Image from 'next/image';
 import TextToSpeech from '../TextToSpeech';
 import VideoProgressBar from '../VideoProgressBar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Add interfaces for browser compatibility with fullscreen
 interface CustomDocument extends Document {
@@ -60,6 +61,9 @@ export default function CombinedVideoResponsePlayer({
 
   // Add video completion store access
   const setVideoCompleted = useVideoCompletionStore(state => state.setVideoCompleted);
+  
+  // Add state for the warning modal
+  const [showInstantResponseWarning, setShowInstantResponseWarning] = useState(false);
   
   // Phase management
   const [phase, setPhase] = useState<'video' | 'prepare-response' | 'recording' | 'review'>('video');
@@ -289,8 +293,37 @@ export default function CombinedVideoResponsePlayer({
     }
   }, []);
 
-  // Start the video
+  // Start the video with warning check
   const playVideo = useCallback(() => {
+    if (!videoRef.current) return;
+    
+    // Check if this is an instant response video and hasn't been played yet
+    if (responseSlide.config.instantResponse === true && !isVideoPlayed && !videoEnded) {
+      // Show the warning modal instead of playing right away
+      setShowInstantResponseWarning(true);
+      return;
+    }
+    
+    // First try to enter fullscreen
+    enterFullscreen();
+    
+    // Then play the video
+    videoRef.current.play()
+      .then(() => {
+        setShowCustomControls(true);
+        setIsPlaying(true);
+        setVideoEnded(false);
+      })
+      .catch(err => {
+        console.error('Error playing video:', err);
+        setVideoError(true);
+      });
+  }, [enterFullscreen, responseSlide.config.instantResponse, isVideoPlayed, videoEnded]);
+
+  // Add a function to proceed after warning
+  const proceedAfterWarning = useCallback(() => {
+    setShowInstantResponseWarning(false);
+    
     if (!videoRef.current) return;
     
     // First try to enter fullscreen
@@ -1437,6 +1470,42 @@ export default function CombinedVideoResponsePlayer({
             className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative"
             onMouseMove={handleMouseMove}
           >
+            {/* Instant Response Warning Modal */}
+            <Dialog open={showInstantResponseWarning} onOpenChange={setShowInstantResponseWarning}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center text-xl">
+                    <AlertCircle className="h-6 w-6 text-amber-500 mr-2" />
+                    Instant Response Video
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="p-4">
+                  <DialogDescription className="mb-4 text-base">
+                    <p className="font-semibold mb-2 text-amber-600">Important:</p>
+                    <p className="mb-3">After this video finishes playing, you will <span className="font-bold">immediately</span> be prompted to record your response.</p>
+                    <p>A countdown of 3-2-1 will begin, and then recording will start automatically.</p>
+                  </DialogDescription>
+                  
+                  <div className="flex gap-4 justify-end border-t pt-4 mt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowInstantResponseWarning(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={proceedAfterWarning}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      I Understand, Play Video
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {/* Loading indicator */}
             {isVideoLoading && (
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10">
@@ -1514,7 +1583,7 @@ export default function CombinedVideoResponsePlayer({
               </div>
             )}
             
-            {/* Play overlay */}
+            {/* Play overlay - Updated with instant response indicator if needed */}
             {!isPlaying && !videoEnded && !isVideoLoading && (
               <div 
                 className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer"
@@ -1524,6 +1593,14 @@ export default function CombinedVideoResponsePlayer({
                   <Play className="h-10 w-10 text-white" />
                 </div>
                 <p className="text-white mt-4">Click to Play</p>
+                
+                {responseSlide.config.instantResponse === true && (
+                  <div className="flex items-center gap-2 mt-3 bg-amber-600/90 text-white py-2 px-4 rounded-full text-sm animate-pulse">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Instant response required after video</span>
+                    <Camera className="h-4 w-4 ml-1" />
+                  </div>
+                )}
               </div>
             )}
             
