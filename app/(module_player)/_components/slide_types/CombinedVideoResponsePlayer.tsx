@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useVideoCompletionStore } from './VideoSlidePlayer';
 import Image from 'next/image';
 import TextToSpeech from '../TextToSpeech';
+import VideoProgressBar from '../VideoProgressBar';
 
 // Add interfaces for browser compatibility with fullscreen
 interface CustomDocument extends Document {
@@ -1312,6 +1313,10 @@ export default function CombinedVideoResponsePlayer({
     }
   }, [isVideoPlayed, watchedKey, videoSlide.id, setVideoCompleted]);
 
+  // Add state for tracking video current time and duration
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   // Handle video progress updates with improved store update
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
@@ -1319,12 +1324,23 @@ export default function CombinedVideoResponsePlayer({
     const video = videoRef.current;
     const progress = (video.currentTime / video.duration) * 100;
     
+    // Update current time for progress bar
+    setCurrentTime(video.currentTime);
+    
     // Mark as completed when reaching near the end (98%)
     if (progress > 98 && !isVideoPlayed) {
       setIsVideoPlayed(true);
       // Also update the store immediately for good measure
       setVideoCompleted(videoSlide.id, true);
       console.log(`Video marked as watched at ${progress.toFixed(1)}% completion`);
+    }
+  };
+
+  // Handler for video loaded metadata to get duration
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current?.duration || 0);
+      setIsVideoLoading(false);
     }
   };
 
@@ -1442,6 +1458,7 @@ export default function CombinedVideoResponsePlayer({
               crossOrigin="anonymous"
               playsInline
               onLoadedData={() => setIsVideoLoading(false)}
+              onLoadedMetadata={handleLoadedMetadata}
               onEnded={handleVideoEnded}
               onTimeUpdate={handleTimeUpdate}
               onPlay={() => setIsPlaying(true)}
@@ -1456,6 +1473,15 @@ export default function CombinedVideoResponsePlayer({
                 setIsVideoLoading(false);
               }}
             />
+            
+            {/* Add video progress bar */}
+            {!videoEnded && !videoError && !isVideoLoading && (
+              <VideoProgressBar 
+                currentTime={currentTime} 
+                duration={duration}
+                isFullscreen={isFullscreen} 
+              />
+            )}
             
             {/* Custom video controls */}
             {showCustomControls && (
