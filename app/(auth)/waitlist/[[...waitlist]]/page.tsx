@@ -1,7 +1,8 @@
 'use client';
 
-import { Waitlist } from '@clerk/nextjs';
+import { Waitlist } from '@clerk/nextjs'
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function WaitlistPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -130,144 +131,150 @@ export default function WaitlistPage() {
       </div>
     );
   }
-  
-  // Render Clerk's waitlist component with our styling
+
   return (
-    <div className="flex justify-center w-full">
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
+    <div className="w-full px-4 sm:px-0">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Image src="/logo.svg" alt="Praxis Logo" width={27} height={28} priority />
+          <span className="text-xl font-semibold text-indigo-600">Praxis</span>
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Join the <span className="text-indigo-600">waitlist</span></h2>
+        <p className="text-gray-500">Be the first to know when we launch</p>
+      </div>
+
       <Waitlist
         appearance={{
           variables: {
             colorPrimary: '#4f46e5',
-            colorText: '#4338ca',
-            colorTextSecondary: '#4f46e5',
-            colorBackground: 'transparent',
+            colorText: '#111827',
+            colorTextSecondary: '#6B7280',
+            colorBackground: 'white',
             colorInputBackground: 'white',
-            colorInputText: '#1e1b4b',
+            colorInputText: '#111827',
             fontFamily: 'inherit',
             borderRadius: '0.5rem',
+            spacingUnit: '0.25rem',
           },
           elements: {
+            rootBox: {
+              width: '100%',
+            },
+            card: {
+              border: 'none',
+              boxShadow: 'none',
+              backgroundColor: 'transparent',
+              width: '100%',
+            },
+            form: {
+              gap: '1rem',
+              width: '100%',
+            },
             formButtonPrimary: {
               backgroundColor: '#4f46e5',
-              fontSize: '14px',
+              fontSize: '0.875rem',
               textTransform: 'none',
+              padding: '0.75rem 1.25rem',
               fontWeight: 500,
+              width: '100%',
               '&:hover': {
                 backgroundColor: '#4338ca',
               },
             },
-            card: {
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
-              width: '100%',
-              border: 'none',
-            },
-            header: {
-              display: 'none',
-            },
-            headerTitle: {
-              display: 'none',
-            },
-            headerSubtitle: {
-              display: 'none',
-            },
-            socialButtonsBlockButton: {
-              border: '1px solid #e0e7ff',
-              color: '#4f46e5',
-              '&:hover': {
-                backgroundColor: '#f5f3ff',
-              },
-            },
-            dividerLine: {
-              backgroundColor: '#c7d2fe',
-            },
-            dividerText: {
-              color: '#4f46e5',
-            },
-            formFieldLabel: {
-              color: '#4338ca',
-              fontWeight: 500,
-              fontSize: '0.875rem',
-            },
             formFieldInput: {
-              border: '1px solid #c7d2fe',
-              backgroundColor: 'white',
-              padding: '0.625rem',
+              width: '100%',
+              fontSize: '0.875rem',
+              padding: '0.75rem',
+              paddingRight: '2.5rem',
+              borderColor: '#E5E7EB',
+              '@media (max-width: 640px)': {
+                fontSize: '1rem',
+                padding: '0.875rem',
+                paddingRight: '2.75rem',
+              },
               '&:focus': {
                 borderColor: '#4f46e5',
                 boxShadow: '0 0 0 1px #4f46e5',
               },
             },
-            footerActionLink: {
-              color: '#4f46e5',
+            header: {
+              display: 'none',
+            },
+            footer: {
+              '& + div': {
+                fontSize: '0.875rem',
+                color: '#6B7280',
+                '& a': {
+                  color: '#4f46e5',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                },
+              },
+            },
+            formFieldLabel: {
+              fontSize: '0.875rem',
+              color: '#374151',
               fontWeight: 500,
-              '&:hover': {
-                color: '#4338ca',
-              },
-            },
-            logoBox: {
-              display: 'none',
-            },
-            logoImage: {
-              display: 'none',
-            },
-            identityPreviewEditButton: {
-              color: '#4f46e5',
-              '&:hover': {
-                color: '#4338ca',
-              },
-            },
-            identityPreviewText: {
-              color: '#4338ca',
-            },
-            alertText: {
-              color: '#4338ca',
+              marginBottom: '0.5rem',
             },
             formFieldAction: {
               color: '#4f46e5',
+              fontSize: '0.875rem',
               '&:hover': {
                 color: '#4338ca',
+                textDecoration: 'underline',
               },
             },
-            form: {
-              gap: '1.25rem',
+            formFieldRow: {
+              marginBottom: '0.5rem',
+              width: '100%',
             },
-            footer: {
-              backgroundColor: 'transparent',
-              borderTop: 'none',
+            formButtonRow: {
+              marginTop: '1.5rem',
+              width: '100%',
             },
-            footerAction: {
-              color: '#4f46e5',
-              backgroundColor: 'transparent',
+            otherMethods: {
+              marginTop: '1.5rem',
+              width: '100%',
             },
-            footerActionText: {
-              color: '#4f46e5',
+            dividerRow: {
+              marginTop: '1.5rem',
+              marginBottom: '1.5rem',
+              width: '100%',
             },
-            footerText: {
-              color: '#4f46e5',
+            dividerLine: {
+              borderColor: '#E5E7EB',
             },
-            main: {
-              backgroundColor: 'transparent',
+            dividerText: {
+              color: '#6B7280',
+              fontSize: '0.875rem',
             },
-            rootBox: {
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
+            alternativeMethods: {
+              width: '100%',
+              '& button': {
+                width: '100%',
+                marginBottom: '0.75rem',
+                padding: '0.75rem 1.25rem',
+                borderColor: '#E5E7EB',
+                '@media (max-width: 640px)': {
+                  padding: '0.875rem 1.25rem',
+                },
+                '&:hover': {
+                  backgroundColor: '#F9FAFB',
+                },
+              },
             },
           },
           layout: {
+            socialButtonsPlacement: "bottom",
             showOptionalFields: false,
             logoPlacement: "none",
-            logoImageUrl: "",
           },
         }}
       />
-      {/* Test button removed for production */}
     </div>
-  );
-} 
+  )
+}
