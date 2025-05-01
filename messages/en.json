@@ -30,7 +30,8 @@
   "teacher": {
     "dashboard": {
       "welcomeBack": "Welcome back",
-      "teacher": "Teacher"
+      "teacher": "Teacher",
+      "welcomeText": "Welcome to Your Dashboard"
     },
     "modules": {
       "create": {

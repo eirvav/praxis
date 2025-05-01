@@ -39,39 +39,39 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const supabase = useSupabase();
   const t = useTranslations();
-  
+
   useEffect(() => {
     async function fetchUserData() {
       if (!supabase || !user) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Fetch courses
         const { data: coursesData, error: coursesError } = await supabase
           .from('courses')
           .select('id, title, description, created_at')
           .eq('teacher_id', user.id)
           .order('created_at', { ascending: false });
-          
+
         if (coursesError) throw coursesError;
         setCourses(coursesData || []);
-        
+
         // Fetch modules
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
           .select('id, title, description, thumbnail_url, updated_at, course_id, deadline, teacher_id, users:teacher_id(username)')
           .eq('teacher_id', user.id)
           .order('updated_at', { ascending: false });
-          
+
         if (modulesError) throw modulesError;
-        
+
         // Create a mapping of course IDs to titles
         const courseTitles = (coursesData || []).reduce((acc, course) => {
           acc[course.id] = course.title;
           return acc;
         }, {} as Record<string, string>);
-        
+
         // Add course titles to modules and handle teacher usernames
         const modulesWithCourses = (modulesData || []).map(module => {
           // Handle the users join result properly
@@ -80,7 +80,7 @@ export default function TeacherDashboard() {
             // TypeScript doesn't know the structure of users from the join
             // Use type assertion to help TypeScript understand
             const usersData = module.users as { username: string } | { username: string }[];
-            
+
             // Check if users is an array or an object
             if (Array.isArray(usersData)) {
               teacherUsername = usersData[0]?.username;
@@ -88,14 +88,14 @@ export default function TeacherDashboard() {
               teacherUsername = usersData.username;
             }
           }
-          
+
           return {
             ...module,
             course_title: courseTitles[module.course_id] || 'Unknown Course',
             teacher_username: teacherUsername
           };
         });
-        
+
         setModules(modulesWithCourses);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -105,10 +105,10 @@ export default function TeacherDashboard() {
         setLoading(false);
       }
     }
-    
+
     fetchUserData();
   }, [supabase, user]);
-  
+
   if (!isLoaded) {
     return (
       <ContentLayout>
@@ -116,7 +116,7 @@ export default function TeacherDashboard() {
       </ContentLayout>
     );
   }
-  
+
   // If no user is found, redirect to sign-in
   if (!user) {
     redirect("/sign-in");
@@ -147,7 +147,7 @@ export default function TeacherDashboard() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
           <div>
             <h1 className="text-5xl font-bold tracking-tight">
-              {t('teacher.dashboard.welcomeBack')},
+              {t("teacher.dashboard.welcomeBack")},
               <br />
               <span className="block mt-2 text-primaryStyling">
                 {(user.firstName || user.username || t('teacher.dashboard.teacher'))
@@ -183,22 +183,22 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <CreateCourseModal 
-          isOpen={isCourseModalOpen} 
-          onClose={handleCourseCreated} 
+        <CreateCourseModal
+          isOpen={isCourseModalOpen}
+          onClose={handleCourseCreated}
         />
-        
+
         {/* Display create first course prompt if teacher has no courses */}
         {hasNoCourses && !loading && (
           <div className="bg-white p-15 ">
             <div className="text-center space-y-4">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground" />
-              <h2 className="text-2xl font-bold">Welcome to Your Dashboard</h2>
+              <h2 className="text-2xl font-bold">{t('teacher.dashboard.welcomeText')}</h2>
               <p className="text-muted-foreground max-w-md mx-auto">
                 To get started, create your first course.
               </p>
               <div className="pt-4">
-                <Button 
+                <Button
                   size="lg"
                   onClick={() => setIsCourseModalOpen(true)}
                   className="bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
@@ -210,17 +210,17 @@ export default function TeacherDashboard() {
             </div>
           </div>
         )}
-        
+
         {/* Display "Create your first module" prompt if there are courses but no modules */}
         {!hasNoCourses && !hasModules && !loading && (
           <CreateFirstModule />
         )}
-        
+
         {/* Only show modules section if teacher has modules */}
         {hasModules && (
           <div>
             <h2 className="text-2xl font-semibold mb-4">Your Modules</h2>
-            
+
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
