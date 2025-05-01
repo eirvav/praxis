@@ -1,6 +1,11 @@
 {
   "common": {
     "buttons": {
+      "cancel": "Avbryt",
+      "removeThumbnail": "Remove Thumbnail",
+      "nextStep": "Next Step",
+      "nextStepDes": "You can edit these settings later!",
+      "image": "Update Image",
       "createCourse": "Create Course",
       "createModule": "Create Module",
       "newModule": "New Module",
@@ -57,12 +62,31 @@
     },
     "modules": {
       "create": {
+        "imageTag": "Image",
+        "colorTag": "Solig Colors",
+        "pageOverview": "Module Overview",
+        "pageContent": "Add Content",
+        "pageReview": "Review & Publish",
+        "imageTxt": "Click to add a cover image",
+        "imageSize": "Recommended size: 1280×720",
+        "gallery": "Gallery",
+        "galleryLoad": "Loading gallery...",
+        "upload": "Upload",
         "title": "Module Title... *",
         "step": "Step",
         "select": "Select Course",
         "time": "Time Settings",
         "deadline": "Module Deadline",
+        "deadlineTxt": "Set when students need to complete this module",
         "publish": "Publish Date",
+        "publishTxt": "Schedule when this module becomes available",
+        "estimate": "Estimate Duration",
+        "estimateTxt": "Approximate time it takes to complete this module",
+        "estimateInp": "Enter duration",
+        "share": "Share With",
+        "shareTxt": "Share module with other teachers",
+        "shareInp": "Search for teachers...",
+        "minutes": "minutes",
         "description": {
           "label": "Description",
           "placeholder": "Enter a description for this module..."
@@ -81,6 +105,13 @@
   },
   "slides": {
     "common": {
+      "slideType": "Slide Types",
+      "contextCate": "Context Slides",
+      "interactiveCate": "Interaktive slides",
+      "deleteSlide": "Delete Selected Slide",
+      "preview": "Preview",
+      "slideSetting": "Slide Settings",
+      "addSlide": "Add Slide",
       "unknownSlide": "Unknown slide",
       "textSlide": "Written Response",
       "videoSlide": "Video",
@@ -93,9 +124,17 @@
     "text": {
       "title": "Written Response",
       "placeholder": "Enter instructions or prompts for students to respond to...",
-      "info": "This interactive slide lets students respond to your content with reflections, open-ended answers, or feedback."
+      "info": "This interactive slide lets students respond to your content with reflections, open-ended answers, or feedback.",
+      "maxWords": "Max words",
+      "words": "words",
+      "requiredSlide": "Required Slide"
     },
     "quiz": {
+      "description": "Description",
+      "optional": "(Optional)",
+      "descInp": "Add some context to your question...",
+      "allowMulti": "Allow multiple correct answers",
+      "optionShuffle": "Shuffle options",
       "selectOne": "Mark one option as correct for the quiz",
       "selectMultiple": "Select one or more options as correct for the quiz",
       "question": "Question",
@@ -120,6 +159,11 @@
       "replaceVideo": "Replace Video",
       "clickToUpload": "Click to upload video",
       "videoFormats": "MP4, WebM, or MOV (max. 100MB)",
+      "required": "Required to watch",
+      "replay": "Replay video",
+      "replayMax": "Maximum replays allowed",
+      "times": "times",
+      "desc": "Set how many times students can replay this video",
       "errors": {
         "videoOnly": "Please upload a video file",
         "fileSize": "File size should not exceed 100MB",

@@ -95,10 +95,10 @@ export const SliderSlideTypeBadge = () => {
 };
 
 // Individual slider item component
-const SliderItem = ({ 
-  slider, 
+const SliderItem = ({
+  slider,
   onChange,
-}: { 
+}: {
   slider: SliderConfig['sliders'][0],
   onChange: (updatedSlider: SliderConfig['sliders'][0]) => void,
   onDelete: () => void,
@@ -193,7 +193,7 @@ interface SliderSlideContentProps {
 
 export default function SliderSlideContent({ config, onConfigChange }: SliderSlideContentProps) {
   const t = useTranslations();
-  
+
   const addSlider = () => {
     const newSlider = {
       id: crypto.randomUUID(),
@@ -239,7 +239,7 @@ export default function SliderSlideContent({ config, onConfigChange }: SliderSli
         <Input
           value={config.description || ''}
           onChange={(e) => onConfigChange({ ...config, description: e.target.value })}
-          placeholder="Add some context for the slide!"
+          placeholder={t('slides.quiz.descInp')}
           className="bg-white"
         />
       </div>
@@ -270,7 +270,7 @@ export default function SliderSlideContent({ config, onConfigChange }: SliderSli
           </div>
         ))}
       </div>
-      
+
       <div className="flex items-center justify-end pt-4">
         <Button
           onClick={addSlider}

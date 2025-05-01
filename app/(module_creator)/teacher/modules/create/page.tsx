@@ -827,13 +827,13 @@ function CreateModulePageContent() {
   const getStepLabel = () => {
     switch (step) {
       case 1:
-        return "Module Overview";
+        return t('teacher.modules.create.pageOverview');
       case 2:
-        return "Add Content";
+        return t('teacher.modules.create.pageContent');
       case 3:
-        return "Review & Publish";
+        return t('teacher.modules.create.pageReview');
       default:
-        return "Module Overview";
+        return t('teacher.modules.create.pageOverview');
     }
   };
 
@@ -843,7 +843,7 @@ function CreateModulePageContent() {
       <div className="col-span-1">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Users2 className="h-4 w-4" />
-          <span className="font-medium">Share With</span>
+          <span className="font-medium">{t('teacher.modules.create.share')}</span>
         </div>
       </div>
       <div className="col-span-3 space-y-4">
@@ -879,7 +879,7 @@ function CreateModulePageContent() {
               aria-expanded={teacherSearchOpen}
               className="w-full justify-between bg-white"
             >
-              <span>Search for teachers...</span>
+              <span>{t('teacher.modules.create.shareInp')}</span>
               <Users2 className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -914,7 +914,8 @@ function CreateModulePageContent() {
         </Popover>
         <p className="text-sm text-gray-500">
           <Users2 className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
-          Share module with other teachers
+          {t('teacher.modules.create.shareTxt')}
+
         </p>
       </div>
     </div>
@@ -930,11 +931,11 @@ function CreateModulePageContent() {
           className="bg-primaryStyling hover:bg-primaryStyling/90 text-white w-full py-6 text-lg relative group transition-all duration-200"
         >
           <span className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-          Next Step
+          {t('common.buttons.nextStep')}
           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </Button>
         <p className="text-sm text-gray-500 text-center mt-3">
-          You can edit these settings later!
+          {t('common.buttons.nextStepDes')}
         </p>
       </div>
     </div>
@@ -950,8 +951,8 @@ function CreateModulePageContent() {
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-primaryStyling cursor-pointer">
                 <div className="flex flex-col items-center space-y-2">
                   <Camera className="h-10 w-10 text-white" />
-                  <span className="text-white font-medium">Click to add a cover image</span>
-                  <span className="text-white text-sm">Recommended size: 1280×720</span>
+                  <span className="text-white font-medium">{t('teacher.modules.create.imageTxt')}</span>
+                  <span className="text-white text-sm">{t('teacher.modules.create.imageSize')}</span>
                 </div>
               </div>
             }
@@ -1122,7 +1123,7 @@ function CreateModulePageContent() {
                 disabled={isSubmitting}
                 className="bg-primaryStyling hover:bg-primaryStyling/90"
               >
-                Next Step
+                {t('common.buttons.nextStep')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -1137,7 +1138,7 @@ function CreateModulePageContent() {
                 }}
                 className="bg-primaryStyling hover:bg-primaryStyling/90"
               >
-                Next Step
+                {t('common.buttons.nextStep')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -1237,7 +1238,7 @@ function CreateModulePageContent() {
                           variant="secondary"
                         >
                           <ImageIcon className="h-4 w-4 mr-2" />
-                          Update Thumbnail
+                          {t('common.buttons.image')}
                         </Button>
                       }
                       thumbnailUrl={thumbnailUrl}
@@ -1329,7 +1330,7 @@ function CreateModulePageContent() {
                           >
                             <div className="flex items-center">
                               <Plus className="h-4 w-4 mr-2" />
-                              Create new course
+                              {t('common.buttons.createCourse')}
                             </div>
                           </SelectItem>
                         </div>
@@ -1431,7 +1432,7 @@ function CreateModulePageContent() {
                       )}
                       <p className="text-sm text-gray-500">
                         <Clock className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
-                        Set when students need to complete this module
+                        {t('teacher.modules.create.deadlineTxt')}
                       </p>
                     </div>
 
@@ -1475,14 +1476,14 @@ function CreateModulePageContent() {
                       </div>
                       <p className="text-sm text-gray-500">
                         <Calendar className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
-                        Schedule when this module becomes available
+                        {t('teacher.modules.create.publishTxt')}
                       </p>
                     </div>
 
                     {/* Estimated Duration */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Estimated Duration</label>
+                        <label className="text-sm font-medium text-gray-700">{t('teacher.modules.create.estimate')}</label>
                         <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                       </div>
                       <div className="flex items-center gap-3">
@@ -1500,7 +1501,7 @@ function CreateModulePageContent() {
                                 setEstimatedDuration(null);
                               }
                             }}
-                            placeholder="Enter duration"
+                            placeholder={t('teacher.modules.create.estimateInp')}
                             className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             aria-label="Module estimated duration in minutes"
                           />
@@ -1508,11 +1509,11 @@ function CreateModulePageContent() {
                             <Clock className="h-4 w-4 text-gray-400" />
                           </div>
                         </div>
-                        <span className="text-sm text-gray-600 font-medium min-w-[60px]">minutes</span>
+                        <span className="text-sm text-gray-600 font-medium min-w-[60px]">{t('teacher.modules.create.minutes')}</span>
                       </div>
                       <p className="text-sm text-gray-500">
                         <Timer className="h-4 w-4 inline-block mr-1 relative -top-[1px]" />
-                        Approximate time it takes to complete this module
+                        {t('teacher.modules.create.estimateTxt')}
                       </p>
                     </div>
                   </div>
@@ -1528,10 +1529,10 @@ function CreateModulePageContent() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <FileText className="h-4 w-4" />
-                    <span className="font-medium">Description</span>
+                    <span className="font-medium">{t('teacher.modules.create.description.label')}</span>
                   </div>
                   <Textarea
-                    placeholder="Enter a description for this module..."
+                    placeholder={t('teacher.modules.create.description.placeholder')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="min-h-[120px] resize-none bg-white"
@@ -1745,7 +1746,7 @@ function CreateModulePageContent() {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <Calendar className="h-4 w-4" />
-                                <span className="font-medium">Publish Date</span>
+                                <span className="font-medium">{t('teacher.modules.create.publish')}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <p className="text-base text-gray-900">
@@ -1841,7 +1842,7 @@ function CreateModulePageContent() {
                                         setEstimatedDuration(null);
                                       }
                                     }}
-                                    placeholder="Enter duration"
+                                    placeholder={t('teacher.modules.create.')}
                                     className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   />
                                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -1941,7 +1942,7 @@ function CreateModulePageContent() {
               onClick={() => setIsPublishModalOpen(false)}
               className="mr-2"
             >
-              Cancel
+              {t('common.buttons.cancel')}
             </Button>
             <Button
               onClick={handlePublishModule}
