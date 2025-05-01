@@ -13,7 +13,7 @@ export default function WaitlistLayout({
   return (
     <div className="min-h-screen flex relative">
       {/* Left side - Login Form */}
-      <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-8 lg:p-12">
+      <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center sm:p-8 lg:p-12">
         <div className="w-full max-w-[420px]">
           {children}
         </div>

@@ -1,4 +1,6 @@
 import { type Metadata } from 'next'
+import Link from 'next/link'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Sign In - Praxis',
@@ -13,8 +15,12 @@ export default function SignInLayout({
   return (
     <div className="min-h-screen flex relative">
       {/* Left side - Login Form */}
-      <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-8 lg:p-12">
-        <div className="w-full max-w-[420px]">
+      <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center sm:p-8 lg:p-12">
+        <div className="w-full max-w-[420px] px-4 sm:px-0">
+          <Link href="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6 hover:opacity-80 transition-opacity">
+            <Image src="/logo.svg" alt="Praxis Logo" width={27} height={28} />
+            <span className="text-xl font-semibold text-indigo-600">Praxis</span>
+          </Link>
           {children}
         </div>
       </div>

@@ -1,15 +1,9 @@
 import { SignIn } from '@clerk/nextjs'
-import Image from 'next/image'
-import Link from 'next/link'
 
 export default function SignInPage() {
   return (
-    <div className="w-full px-4 sm:px-0">
+    <div className="w-full">
       <div className="mb-6 sm:mb-8">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6 hover:opacity-80 transition-opacity">
-          <Image src="/logo.svg" alt="Praxis Logo" width={27} height={28} />
-          <span className="text-xl font-semibold text-indigo-600">Praxis</span>
-        </Link>
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Hi there!</h2>
         <p className="text-gray-500">Welcome back to your special place</p>
       </div>
@@ -114,9 +108,14 @@ export default function SignInPage() {
             formFieldInputShowPasswordButton: {
               right: '0.75rem',
               color: '#6B7280',
+              width: '1.5rem',
+              height: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               '@media (max-width: 640px)': {
-                width: '2.5rem',
-                height: '2.5rem',
+                width: '1.5rem',
+                height: '1.5rem',
               },
               '&:hover': {
                 color: '#4B5563',

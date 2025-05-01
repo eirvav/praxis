@@ -2,7 +2,7 @@ import { SignUp } from '@clerk/nextjs'
 
 export default function SignUpPage() {
   return (
-    <div className="w-full px-4 sm:px-0">
+    <div className="w-full">
       <div className="mb-6 sm:mb-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Please, <span className="text-indigo-600">sign up!</span></h2>
         <p className="text-gray-500">Create your Praxis account</p>
@@ -65,9 +65,14 @@ export default function SignUpPage() {
             formFieldInputShowPasswordButton: {
               right: '0.75rem',
               color: '#6B7280',
+              width: '1.5rem',
+              height: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               '@media (max-width: 640px)': {
-                width: '2.5rem',
-                height: '2.5rem',
+                width: '1.5rem',
+                height: '1.5rem',
               },
               '&:hover': {
                 color: '#4B5563',
