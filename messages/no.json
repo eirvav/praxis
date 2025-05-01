@@ -31,7 +31,9 @@
     "dashboard": {
       "welcomeBack": "Velkommen tilbake",
       "teacher": "Lærer",
-      "welcomeText": "Velkommen til Dashboard"
+      "welcomeText": "Velkommen til Ditt Dashbord",
+      "getStarted": "For å komme i gang, lag ditt første fag",
+      "buttonCourse": "Opprett ditt første fag"
     },
     "modules": {
       "create": {

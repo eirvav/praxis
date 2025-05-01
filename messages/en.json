@@ -31,7 +31,9 @@
     "dashboard": {
       "welcomeBack": "Welcome back",
       "teacher": "Teacher",
-      "welcomeText": "Welcome to Your Dashboard"
+      "welcomeText": "Welcome to Your Dashboard",
+      "getStarted": "To get started, create your first course.",
+      "buttonCourse": "Create Your First Course"
     },
     "modules": {
       "create": {

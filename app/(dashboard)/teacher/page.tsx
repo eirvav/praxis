@@ -195,7 +195,7 @@ export default function TeacherDashboard() {
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground" />
               <h2 className="text-2xl font-bold">{t('teacher.dashboard.welcomeText')}</h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                To get started, create your first course.
+                {t('teacher.dashboard.getStarted')}
               </p>
               <div className="pt-4">
                 <Button
@@ -204,7 +204,7 @@ export default function TeacherDashboard() {
                   className="bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
                 >
                   <BookOpen className="h-5 w-5 mr-2" />
-                  Create Your First Course
+                  {t('teacher.dashboard.buttonCourse')}
                 </Button>
               </div>
             </div>
