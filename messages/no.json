@@ -2,15 +2,30 @@
   "common": {
     "buttons": {
       "createCourse": "Opprett Fag",
-      "createModule": "Opprett Modul",
+      "createModule": "Opprett Arbeidskrav",
+      "newModule": "Nytt Arbeidskrav",
+      "newPractice": "Ny øvlese",
+      "newModText": "Opprett et nytt arbeidskrav for studentene",
+      "newPraText": "Legges til i Kunnskapsbasen, ingen frist, ingen gradering",
       "backToContentEditor": "Tilbake til Innholdsredigering",
-      "startModule": "Start Arbeidskrav"
+      "startModule": "Start Arbeidskrav",
+      "cancelButton": "Avbryt",
+      "sort": "Sorter etter",
+      "sortDate": "Dato",
+      "sortName": "Navn",
+      "sortEnrolled": "Antall",
+      "sortCompletion": "Fullførte"
+    },
+    "inputs": {
+      "searchCourse": "Søk etter arbeidskrav...",
+      "courseTitle": "Skriv navn på fag"
     },
     "loading": {
       "textEditor": "Laster inn tekstredigering..."
     },
     "navigation": {
       "quickCreate": "Hurtigopprettelse",
+      "quickCreateText": "What are you creating?",
       "dashboard": "Dashbord",
       "courses": "Fag",
       "resources": "Ressurser",
@@ -19,7 +34,8 @@
       "content": "Innhold",
       "learning": "Læring",
       "myProgress": "Min Fremgang",
-      "contents": "Innhold"
+      "contents": "Innhold",
+      "noCourse": "Ingen fag opprettet"
     },
     "editor": {
       "imageUpload": "Laster opp bilde...",
@@ -33,10 +49,13 @@
       "teacher": "Lærer",
       "welcomeText": "Velkommen til Ditt Dashbord",
       "getStarted": "For å komme i gang, lag ditt første fag",
-      "buttonCourse": "Opprett ditt første fag"
+      "buttonCourse": "Opprett ditt første fag",
+      "firstModuleText": "Opprett Ditt Første Arbeidskrav",
+      "firstModuleDesc": "Du har opprettet ditt fag, nå kan du fylle den med arbeidskrav."
     },
     "modules": {
       "create": {
+        "step": "Steg",
         "description": {
           "label": "Beskrivelse",
           "placeholder": "Skriv inn en beskrivelse for denne modulen..."

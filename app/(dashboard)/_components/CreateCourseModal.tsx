@@ -110,14 +110,14 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <div>
-              <Label htmlFor="title" className="text-base">Course Title</Label>
+              <Label htmlFor="title" className="text-base">{t('common.navigation.courses')}</Label>
             </div>
             <div>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter course title"
+                placeholder={t('common.inputs.courseTitle')}
                 disabled={isSubmitting}
                 className="h-11"
               />
@@ -132,14 +132,14 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
               disabled={isSubmitting}
               className="min-w-[100px] bg-transparent text-red-500 hover:bg-white hover:text-red-600 cursor-pointer shadow-none"
             >
-              Cancel
+              {t('common.buttons.cancelButton')}
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
               className="min-w-[100px] bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
             >
-              {isSubmitting ? 'Creating...' : 'Create Course'}
+              {isSubmitting ? 'Creating...' : t('common.buttons.createCourse')}
             </Button>
           </DialogFooter>
         </form>

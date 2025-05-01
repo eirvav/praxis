@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { CreateFirstModule } from '@/app/(dashboard)/_components/createFirstModule';
+import { useTranslations } from 'next-intl';
 
 interface Course {
   id: string;
@@ -51,60 +52,61 @@ export default function CourseDetailPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-  
+  const t = useTranslations();
+
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
 
-  // Mock semesters for demonstration - in real app, fetch from database
-  //const semesters = [
-  //  { id: 'spring2024', label: 'Spring 2024' },
-  //  { id: 'fall2023', label: 'Fall 2023' },
-  //  { id: 'spring2023', label: 'Spring 2023' },
-  //];
+  const sortLabels: Record<typeof sortBy, string> = {
+    date: t('common.buttons.sortDate'),
+    name: t('common.buttons.sortName'),
+    enrolled: t('common.buttons.sortEnrolled'),
+    completion: t('common.buttons.sortCompletion'),
+  };
 
   useEffect(() => {
     async function fetchCourseAndModules() {
       if (!user || !supabase || !courseId) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses')
           .select('*')
           .eq('id', courseId)
           .single();
-          
+
         if (courseError) throw courseError;
-        
+
         if (!courseData) {
           toast.error('Course not found');
           router.push('/teacher/courses');
           return;
         }
-        
+
         // Check if user is the course owner
         if (courseData.teacher_id !== user.id) {
           toast.error('You do not have permission to view this course');
           router.push('/teacher/courses');
           return;
         }
-        
+
         setCourse(courseData);
-        
+
         // Fetch modules for this course
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
           .select('*, users:teacher_id(username)')
           .eq('course_id', courseId)
           .order('created_at', { ascending: false });
-          
+
         if (modulesError) throw modulesError;
-        
+
         // Add mock stats for demonstration and process teacher username
         const modulesWithStats = (modulesData || []).map(module => {
           // Handle the users join result properly
@@ -113,7 +115,7 @@ export default function CourseDetailPage() {
             // TypeScript doesn't know the structure of users from the join
             // Use type assertion to help TypeScript understand
             const usersData = module.users as { username: string } | { username: string }[];
-            
+
             // Check if users is an array or an object
             if (Array.isArray(usersData)) {
               teacherUsername = usersData[0]?.username;
@@ -121,7 +123,7 @@ export default function CourseDetailPage() {
               teacherUsername = usersData.username;
             }
           }
-          
+
           return {
             ...module,
             enrolled: Math.floor(Math.random() * 20) + 5,
@@ -130,7 +132,7 @@ export default function CourseDetailPage() {
             teacher_username: teacherUsername
           };
         });
-        
+
         setModules(modulesWithStats);
       } catch (err) {
         console.error('Error fetching course details:', err);
@@ -139,28 +141,28 @@ export default function CourseDetailPage() {
         setLoading(false);
       }
     }
-    
+
     fetchCourseAndModules();
   }, [user, supabase, courseId, router]);
 
   async function handleDeleteCourse() {
     if (!supabase || !course) return;
-    
+
     try {
       setIsDeleting(true);
-      
+
       const { error } = await supabase
         .from('courses')
         .delete()
         .eq('id', course.id);
-        
+
       if (error) throw error;
-      
+
       toast.success('Course deleted successfully');
-      
+
       // First navigate to the courses page
       router.push('/teacher/courses');
-      
+
       // Then refresh after a delay
       setTimeout(() => {
         window.location.reload();
@@ -176,21 +178,21 @@ export default function CourseDetailPage() {
 
   async function handleUpdateCourseTitle() {
     if (!supabase || !course || !newTitle.trim()) return;
-    
+
     try {
       setIsUpdating(true);
-      
+
       const { error } = await supabase
         .from('courses')
         .update({ title: newTitle.trim() })
         .eq('id', course.id);
-        
+
       if (error) throw error;
-      
+
       setCourse({ ...course, title: newTitle.trim() });
       setIsEditingTitle(false);
       toast.success('Course name updated successfully');
-      
+
       // Refresh the page to update the sidebar navigation
       window.location.reload();
     } catch (err) {
@@ -278,7 +280,7 @@ export default function CourseDetailPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="cursor-pointer"
                   onClick={() => {
                     setNewTitle(course?.title || '');
@@ -289,7 +291,7 @@ export default function CourseDetailPage() {
                   Edit Name
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-red-500 focus:text-red-500 cursor-pointer"
                   onClick={() => setIsDeleteDialogOpen(true)}
                 >
@@ -299,24 +301,32 @@ export default function CourseDetailPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Sort by: {sortBy}
+                  {t('common.buttons.sort')} : {sortLabels[sortBy]}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSortBy('date')}>Date</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('enrolled')}>Enrolled</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('completion')}>Completion Rate</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("date")}>
+                  {sortLabels.date}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("name")}>
+                  {sortLabels.name}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("enrolled")}>
+                  {sortLabels.enrolled}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("completion")}>
+                  {sortLabels.completion}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <Button
               variant="outline"
               size="icon"
@@ -328,13 +338,13 @@ export default function CourseDetailPage() {
                 <LayoutGrid className="h-4 w-4" />
               )}
             </Button>
-            
+
             {/* Only show Create Module button when modules already exist */}
             {modules.length > 0 && (
               <Link href={`/teacher/modules/create?preselectedCourseId=${course.id}`}>
                 <Button className="gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer">
                   <Plus className="h-4 w-4" />
-                  Create Module
+                  {t('common.buttons.createModule')}
                 </Button>
               </Link>
             )}
@@ -344,7 +354,7 @@ export default function CourseDetailPage() {
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search modules..."
+            placeholder={t('common.inputs.searchCourse')}
             className="pl-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -401,7 +411,7 @@ export default function CourseDetailPage() {
             </DialogHeader>
             <div className="pt-2 pb-4">
               <p className="text-sm text-amber-600 flex items-center gap-2">
-                <Trash2 className="h-4 w-4" /> 
+                <Trash2 className="h-4 w-4" />
                 This will delete all course data permanently.
               </p>
             </div>

@@ -3,14 +3,29 @@
     "buttons": {
       "createCourse": "Create Course",
       "createModule": "Create Module",
+      "newModule": "New Module",
+      "newPractice": "New Practice Task",
+      "newModText": "Create a module for your students",
+      "newPraText": "Will be placed in *Kunnskapsbasen*, no deadline, no grading",
       "backToContentEditor": "Back to Content Editor",
-      "startModule": "Start Module"
+      "startModule": "Start Module",
+      "cancelButton": "Cancel",
+      "sort": "Sort by",
+      "sortDate": "Date",
+      "sortName": "Name",
+      "sortEnrolled": "Enrolled",
+      "sortCompletion": "Completion Rate"
+    },
+    "inputs": {
+      "searchCourse": "Search modules...",
+      "courseTitle": "Course title"
     },
     "loading": {
       "textEditor": "Loading text editor..."
     },
     "navigation": {
       "quickCreate": "Quick Create",
+      "quickCreateText": "What are you creating?",
       "dashboard": "Dashboard",
       "courses": "Courses",
       "resources": "Resources",
@@ -19,7 +34,8 @@
       "content": "Content",
       "learning": "Learning",
       "myProgress": "My Progress",
-      "contents": "Contents"
+      "contents": "Contents",
+      "noCourse": "No courses created yet"
     },
     "editor": {
       "imageUpload": "Uploading image...",
@@ -33,10 +49,13 @@
       "teacher": "Teacher",
       "welcomeText": "Welcome to Your Dashboard",
       "getStarted": "To get started, create your first course.",
-      "buttonCourse": "Create Your First Course"
+      "buttonCourse": "Create Your First Course",
+      "firstModuleText": "Let's Create Your First Module",
+      "firstModuleDesc": "You've created a cnpm runourse. Now it's time to add learning content with modules."
     },
     "modules": {
       "create": {
+        "step": "Step",
         "description": {
           "label": "Description",
           "placeholder": "Enter a description for this module..."
