@@ -9,6 +9,7 @@
       "newPraText": "Will be placed in *Kunnskapsbasen*, no deadline, no grading",
       "backToContentEditor": "Back to Content Editor",
       "startModule": "Start Module",
+      "editModule": "Edit Module",
       "cancelButton": "Cancel",
       "sort": "Sort by",
       "sortDate": "Date",
@@ -46,16 +47,22 @@
   "teacher": {
     "dashboard": {
       "welcomeBack": "Welcome back",
+      "yourModules": "Your Modules",
       "teacher": "Teacher",
       "welcomeText": "Welcome to Your Dashboard",
       "getStarted": "To get started, create your first course.",
       "buttonCourse": "Create Your First Course",
       "firstModuleText": "Let's Create Your First Module",
-      "firstModuleDesc": "You've created a cnpm runourse. Now it's time to add learning content with modules."
+      "firstModuleDesc": "You've created a course. Now it's time to add learning content with modules."
     },
     "modules": {
       "create": {
+        "title": "Module Title... *",
         "step": "Step",
+        "select": "Select Course",
+        "time": "Time Settings",
+        "deadline": "Module Deadline",
+        "publish": "Publish Date",
         "description": {
           "label": "Description",
           "placeholder": "Enter a description for this module..."

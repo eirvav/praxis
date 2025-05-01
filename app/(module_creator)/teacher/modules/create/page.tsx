@@ -1268,7 +1268,7 @@ function CreateModulePageContent() {
                         setErrors({ ...errors, title: undefined });
                       }
                     }}
-                    placeholder="Module Title... *"
+                    placeholder={t('teacher.modules.create.title')}
                     disabled={isSubmitting}
                     style={{ fontSize: '32px' }}
                     className={cn(
@@ -1288,7 +1288,7 @@ function CreateModulePageContent() {
                   <div className="col-span-1">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <BookOpen className="h-4 w-4" />
-                      <span className="font-medium">Select Course</span>
+                      <span className="font-medium">{t('teacher.modules.create.select')}</span>
                       <span className="text-red-500">*</span>
                     </div>
                   </div>
@@ -1346,14 +1346,14 @@ function CreateModulePageContent() {
                   <div className="col-span-1">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">Time Settings</span>
+                      <span className="font-medium">{t('teacher.modules.create.time')}</span>
                       <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3 space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Module Deadline</label>
+                        <label className="text-sm font-medium text-gray-700">{t('teacher.modules.create.deadline')}</label>
                         <span className="text-red-500">*</span>
                       </div>
                       <div className="flex gap-2">
@@ -1439,7 +1439,7 @@ function CreateModulePageContent() {
                     {/* Publish Date */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Publish Date</label>
+                        <label className="text-sm font-medium text-gray-700">{t('teacher.modules.create.publish')}</label>
                         <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                       </div>
                       <div className="flex gap-2">

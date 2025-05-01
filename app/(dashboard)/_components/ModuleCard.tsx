@@ -38,13 +38,13 @@ const getTextColor = (backgroundColor: string): string => {
     const h = parseInt(match[1], 10);
     const s = parseInt(match[2], 10) / 100;
     const l = parseInt(match[3], 10) / 100;
-    
+
     // Calculate relative luminance using the W3C formula
     const getRGB = (h: number, s: number, l: number) => {
       const c = (1 - Math.abs(2 * l - 1)) * s;
       const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
       const m = l - c / 2;
-      
+
       let r, g, b;
       if (h >= 0 && h < 60) {
         [r, g, b] = [c, x, 0];
@@ -59,24 +59,24 @@ const getTextColor = (backgroundColor: string): string => {
       } else {
         [r, g, b] = [c, 0, x];
       }
-      
+
       return [r + m, g + m, b + m];
     };
-    
+
     const [r, g, b] = getRGB(h, s, l);
-    
+
     // Convert to sRGB for luminance calculation
     const sRGB = [r, g, b].map(c => {
       return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     });
-    
+
     // Calc relative luminance
     const luminance = 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
-    
+
     // WCAG contrast threshold is 4.5:1 for normal text
     return luminance > 0.4 ? 'text-gray-900' : 'text-white';
   }
-  
+
   // Fallback to white text if we can't determine
   return 'text-white';
 };
@@ -84,15 +84,15 @@ const getTextColor = (backgroundColor: string): string => {
 // Generate semester code and color based on deadline date
 const getSemesterInfo = (dateString: string) => {
   if (!dateString) return { code: 'N/A', color: '#9ca3af' };
-  
+
   const date = new Date(dateString);
   const year = date.getFullYear();
   const month = date.getMonth() + 1; // JavaScript months are 0-based
-  
+
   // Norwegian semester system: V = Vår (Spring), H = Høst (Fall)
   const semesterPrefix = month >= 1 && month <= 6 ? 'V' : 'H';
   const code = `${semesterPrefix}${year}`;
-  
+
   // Use consistent color generation with a unique identifier for semester
   // Prefixing with "semester-" to ensure it doesn't conflict with course names
   const semesterKey = `semester-${code}`;
@@ -105,14 +105,14 @@ const getSemesterInfo = (dateString: string) => {
 // Generate avatar color and initial for teacher
 const getTeacherAvatar = (username?: string) => {
   if (!username) return { initial: '?', color: '#9ca3af' };
-  
+
   const initial = username.charAt(0).toUpperCase();
-  
+
   // Generate color based on initial (different from course and semester colors)
   const charCode = initial.charCodeAt(0);
   const hue = (charCode * 15) % 360;
   const color = `hsl(${hue}, 75%, 65%)`;
-  
+
   return { initial, color };
 };
 
@@ -123,15 +123,15 @@ const getStudentSubmissions = () => {
   return { submitted, total };
 };
 
-const ModuleCard = ({ 
-  id, 
-  title, 
-  content, 
+const ModuleCard = ({
+  id,
+  title,
+  content,
   description,
   thumbnail_url,
   updated_at,
   createdAt,
-  courseId, 
+  courseId,
   courseName,
   isTeacher = false,
   href,
@@ -144,49 +144,49 @@ const ModuleCard = ({
   const lastUpdated = updated_at || createdAt || '';
   const displayText = description || content || '';
   const route = href || (
-    courseId 
+    courseId
       ? `/${isTeacher ? 'teacher' : 'student'}/courses/${courseId}/modules/${id}`
       : `/${isTeacher ? 'teacher' : 'student'}/modules/${id}`
   );
-  
+
   // Generate course pill styles if courseName is provided
   const coursePillBg = courseName ? generateColorFromString(courseName) : '';
   const coursePillTextColor = courseName ? getTextColor(coursePillBg) : '';
-  
+
   // Generate semester pill information based on deadline
   const deadlineDate = deadline || '';
   const { code: semesterCode, color: semesterColor } = getSemesterInfo(deadlineDate);
   const semesterTextColor = getTextColor(semesterColor);
-  
+
   // Generate teacher avatar
   const { initial: teacherInitial, color: teacherAvatarColor } = getTeacherAvatar(teacherUsername);
-  
+
   // Generate student submission count
   const { submitted, total } = getStudentSubmissions();
-  
+
   // Handle module deletion
   const handleDeleteModule = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!supabase || !id || isDeleting) return;
-    
+
     if (!confirm("Are you sure you want to delete this module? This action cannot be undone.")) {
       return;
     }
-    
+
     try {
       setIsDeleting(true);
-      
+
       const { error } = await supabase
         .from('modules')
         .delete()
         .eq('id', id);
-        
+
       if (error) throw error;
-      
+
       toast.success('Module deleted successfully');
-      
+
       // Refresh the page after deletion
       setTimeout(() => {
         window.location.reload();
@@ -198,7 +198,7 @@ const ModuleCard = ({
       setIsDeleting(false);
     }
   };
-  
+
   if (viewMode === 'list') {
     return (
       <div className="relative group">
@@ -209,13 +209,13 @@ const ModuleCard = ({
                 <div className="relative w-24 h-16 rounded-md overflow-hidden">
                   {thumbnail_url ? (
                     thumbnail_url.startsWith('#') ? (
-                      <div 
-                        className="absolute inset-0" 
+                      <div
+                        className="absolute inset-0"
                         style={{ backgroundColor: thumbnail_url }}
                       />
                     ) : (
-                      <Image 
-                        src={thumbnail_url} 
+                      <Image
+                        src={thumbnail_url}
                         alt={`${title} thumbnail`}
                         fill
                         style={{ objectFit: 'cover' }}
@@ -233,14 +233,14 @@ const ModuleCard = ({
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-2 mb-1">
                   {courseName && (
-                    <div 
+                    <div
                       className={`px-3 py-1 rounded-full text-xs font-medium ${coursePillTextColor}`}
                       style={{ backgroundColor: coursePillBg }}
                     >
                       {courseName}
                     </div>
                   )}
-                  <div 
+                  <div
                     className={`px-3 py-1 rounded-full text-xs font-medium ${semesterTextColor}`}
                     style={{ backgroundColor: semesterColor }}
                   >
@@ -253,7 +253,7 @@ const ModuleCard = ({
                 </div>
               </div>
               {teacherUsername && (
-                <div 
+                <div
                   className="absolute bottom-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-md"
                   style={{ backgroundColor: teacherAvatarColor }}
                 >
@@ -273,7 +273,7 @@ const ModuleCard = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 z-20">
                 <DropdownMenuItem>Edit Module</DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-red-600 focus:text-red-600"
                   disabled={isDeleting}
                   onClick={handleDeleteModule}
@@ -296,13 +296,13 @@ const ModuleCard = ({
           <div className="relative w-full pt-[50%] flex-shrink-0 rounded-xl overflow-hidden">
             {thumbnail_url ? (
               thumbnail_url.startsWith('#') ? (
-                <div 
+                <div
                   className="absolute inset-0 rounded-xl"
                   style={{ backgroundColor: thumbnail_url }}
                 />
               ) : (
-                <Image 
-                  src={thumbnail_url} 
+                <Image
+                  src={thumbnail_url}
                   alt={`${title} thumbnail`}
                   fill
                   style={{ objectFit: 'cover' }}
@@ -318,18 +318,18 @@ const ModuleCard = ({
               {submitted}/{total}
             </div>
           </div>
-          
+
           <div className="p-3 flex flex-col flex-1 relative">
             <div className="flex flex-wrap gap-2 mb-2">
               {courseName && (
-                <div 
+                <div
                   className={`px-3 py-1 rounded-full text-xs font-medium ${coursePillTextColor}`}
                   style={{ backgroundColor: coursePillBg }}
                 >
                   {courseName}
                 </div>
               )}
-              <div 
+              <div
                 className={`px-3 py-1 rounded-full text-xs font-medium ${semesterTextColor}`}
                 style={{ backgroundColor: semesterColor }}
               >
@@ -339,14 +339,14 @@ const ModuleCard = ({
             <div>
               <h2 className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">{title}</h2>
             </div>
-            
+
             <div className="mt-auto pt-2 flex justify-between items-center">
               <span className="text-xs font-medium text-muted-foreground">
                 Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}
               </span>
-              
+
               {teacherUsername && (
-                <div 
+                <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md"
                   style={{ backgroundColor: teacherAvatarColor }}
                 >
@@ -361,9 +361,9 @@ const ModuleCard = ({
         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-8 w-8 p-0 bg-black/80 hover:bg-black/90 text-white backdrop-blur-sm rounded-lg"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -372,7 +372,7 @@ const ModuleCard = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 z-20">
               <DropdownMenuItem>Edit Module</DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"
                 disabled={isDeleting}
                 onClick={handleDeleteModule}

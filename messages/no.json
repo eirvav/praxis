@@ -9,6 +9,7 @@
       "newPraText": "Legges til i Kunnskapsbasen, ingen frist, ingen gradering",
       "backToContentEditor": "Tilbake til Innholdsredigering",
       "startModule": "Start Arbeidskrav",
+      "editModule": "Edit Module",
       "cancelButton": "Avbryt",
       "sort": "Sorter etter",
       "sortDate": "Dato",
@@ -46,6 +47,7 @@
   "teacher": {
     "dashboard": {
       "welcomeBack": "Velkommen tilbake",
+      "yourModules": "Dine Arbeidskrav",
       "teacher": "Lærer",
       "welcomeText": "Velkommen til Ditt Dashbord",
       "getStarted": "For å komme i gang, lag ditt første fag",
@@ -55,7 +57,12 @@
     },
     "modules": {
       "create": {
+        "title": "Tittel på Arbeidskrav... *",
         "step": "Steg",
+        "select": "Velg fag",
+        "time": "Tidsinnstilinger",
+        "deadline": "Leveringsfrist for Arbeidskrav",
+        "publish": "Publiseringsdato",
         "description": {
           "label": "Beskrivelse",
           "placeholder": "Skriv inn en beskrivelse for denne modulen..."
