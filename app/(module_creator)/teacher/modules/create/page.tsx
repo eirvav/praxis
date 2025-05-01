@@ -10,12 +10,12 @@ import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plu
 import Image from 'next/image';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import SlideViewer from '@/app/(module_creator)/_components/SlideViewer';
 import { CreateCourseModal } from '@/app/(dashboard)/_components/CreateCourseModal';
 import ThumbnailPopover from '@/app/(module_creator)/_components/ThumbnailPopover';
 import { cn } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 interface Course {
   id: string;
@@ -60,6 +61,7 @@ interface SlideConfig {
 }
 
 // Add this after the imports
+
 const moduleFormSchema = z.object({
   title: z.string().min(1, "Module title is required"),
   deadline: z.string().min(1, "Module deadline is required"),
@@ -114,24 +116,24 @@ function CreateModulePageContent() {
   const [isUploading, setIsUploading] = useState(false);
   const initialLoadDoneRef = useRef(false);
   const [isLoadingPredefinedThumbnails, setIsLoadingPredefinedThumbnails] = useState(false);
-  const [predefinedThumbnails, setPredefinedThumbnails] = useState<Array<{type: 'color' | 'illustration', url: string}>>([]);
+  const [predefinedThumbnails, setPredefinedThumbnails] = useState<Array<{ type: 'color' | 'illustration', url: string }>>([]);
   const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(null);
   const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof ModuleFormData, string>>>({});
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [selectedTeachers, setSelectedTeachers] = useState<Array<{ id: string; name: string }>>([]);
   const [searchTeachers, setSearchTeachers] = useState('');
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  
+  const t = useTranslations();
   // Predefined solid colors for thumbnails
   const predefinedColors = useMemo(() => [
     "#4F39F6", // Purple
@@ -147,17 +149,17 @@ function CreateModulePageContent() {
   ], []);
 
   // Function to select a predefined thumbnail
-  const selectPredefinedThumbnail = async (item: {type: 'color' | 'illustration', url: string}) => {
+  const selectPredefinedThumbnail = async (item: { type: 'color' | 'illustration', url: string }) => {
     setSelectedThumbnail(item.url);
   };
-  
+
   // Create memoized color thumbnails
-  const colorThumbnails = useMemo(() => 
+  const colorThumbnails = useMemo(() =>
     predefinedColors.map(color => ({
       type: 'color' as const,
       url: color
     }))
-  , [predefinedColors]);
+    , [predefinedColors]);
 
   // Memoize fallback illustrations
   const fallbackIllustrations = useMemo(() => [
@@ -175,7 +177,7 @@ function CreateModulePageContent() {
       setIsLoadingPredefinedThumbnails(true);
       try {
         console.log('[Thumbnails] Loading predefined thumbnails...');
-        
+
         // Always include colors - these don't need to be in Supabase
         console.log('[Thumbnails] Loaded color thumbnails:', colorThumbnails.length);
 
@@ -211,64 +213,64 @@ function CreateModulePageContent() {
           console.log('[Thumbnails] Files found in thumbnails subfolder:', thumbnailFiles?.length || 0);
           console.log('[Thumbnails] Files details:', thumbnailFiles);
 
-          let illustrationUrls: Array<{type: 'illustration', url: string}> = [];
+          let illustrationUrls: Array<{ type: 'illustration', url: string }> = [];
 
           // If we have images in the thumbnails subfolder, use those
           if (thumbnailFiles && thumbnailFiles.length > 0) {
             console.log('[Thumbnails] Using images from thumbnails subfolder');
-            
+
             // Check each file more thoroughly
             thumbnailFiles.forEach(file => {
               console.log(`[Thumbnails] File: ${file.name}, type:`, file);
             });
-            
+
             const imageFiles = thumbnailFiles.filter(file => {
               const lowerName = file.name.toLowerCase();
-              const isImageByExtension = 
-                lowerName.endsWith('.jpg') || 
-                lowerName.endsWith('.jpeg') || 
-                lowerName.endsWith('.png') || 
-                lowerName.endsWith('.webp') || 
+              const isImageByExtension =
+                lowerName.endsWith('.jpg') ||
+                lowerName.endsWith('.jpeg') ||
+                lowerName.endsWith('.png') ||
+                lowerName.endsWith('.webp') ||
                 lowerName.endsWith('.gif');
-              
+
               // Consider folders as potential container for images too
               const isFolder = file.metadata?.mimetype === null || file.metadata?.mimetype === undefined;
-              
+
               return isImageByExtension || isFolder;
             });
-            
+
             console.log('[Thumbnails] Filtered image files:', imageFiles.length);
-            
+
             // If filtering found no images, try using all files as a fallback
             const filesToUse = imageFiles.length > 0 ? imageFiles : thumbnailFiles;
             console.log('[Thumbnails] Files to use for thumbnails:', filesToUse.length);
-            
+
             illustrationUrls = await Promise.all(
               filesToUse.map(async (file) => {
                 const { data: urlData } = supabase.storage
                   .from('module-thumbnails')
                   .getPublicUrl(`thumbnails/${file.name}`);
-                  
+
                 console.log(`[Thumbnails] Generated public URL for thumbnails/${file.name}:`, urlData.publicUrl);
-                  
+
                 return {
                   type: 'illustration' as const,
                   url: urlData.publicUrl
                 };
               })
             );
-            
+
             console.log('[Thumbnails] Final illustration URLs:', illustrationUrls.length);
           }
           // If no images found, use fallback for testing
           else {
             console.log('[Thumbnails] No images found in thumbnails subfolder, using fallback illustrations');
-            
+
             illustrationUrls = fallbackIllustrations.map(url => ({
               type: 'illustration' as const,
               url
             }));
-            
+
             console.log('[Thumbnails] Using fallback illustration URLs:', illustrationUrls.length);
           }
 
@@ -276,17 +278,17 @@ function CreateModulePageContent() {
           const allThumbnails = [...colorThumbnails, ...illustrationUrls];
           console.log('[Thumbnails] Setting all thumbnails:', allThumbnails.length);
           setPredefinedThumbnails(allThumbnails);
-          
+
         } catch (err) {
           console.error('[Thumbnails] Error with Supabase storage operations:', err);
-          
+
           // Use fallback illustrations for testing
           console.log('[Thumbnails] Using fallback illustrations due to error');
           const fallbackUrls = fallbackIllustrations.map(url => ({
             type: 'illustration' as const,
             url
           }));
-          
+
           setPredefinedThumbnails([...colorThumbnails, ...fallbackUrls]);
         }
       } catch (err) {
@@ -310,16 +312,16 @@ function CreateModulePageContent() {
   // Function to fetch slides wrapped in useCallback
   const fetchSlides = useCallback(async () => {
     if (!moduleId || !supabase) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('slides')
         .select('*')
         .eq('module_id', moduleId)
         .order('position', { ascending: true });
-        
+
       if (error) throw error;
-      
+
       if (data) {
         setSlides(data);
       }
@@ -328,7 +330,7 @@ function CreateModulePageContent() {
       toast.error('Failed to load slides');
     }
   }, [moduleId, supabase]);
-  
+
   // Mock teacher data - in production this would come from your API
   const mockTeachers = [
     { id: '1', name: 'John Smith', email: 'john@school.com' },
@@ -338,41 +340,41 @@ function CreateModulePageContent() {
     { id: '5', name: 'James Wilson', email: 'james@school.com' },
   ];
 
-  const filteredTeachers = mockTeachers.filter(teacher => 
+  const filteredTeachers = mockTeachers.filter(teacher =>
     teacher.name.toLowerCase().includes(searchTeachers.toLowerCase()) ||
     teacher.email.toLowerCase().includes(searchTeachers.toLowerCase())
   ).filter(teacher => !selectedTeachers.some(selected => selected.id === teacher.id));
-  
+
   // Track component mounting and unmounting
   useEffect(() => {
     console.log('[CreateModulePage] Component MOUNTED');
-    
+
     return () => {
       console.log('[CreateModulePage] Component UNMOUNTED');
     };
   }, []);
-  
+
   // Track router events
   useEffect(() => {
     const handleRouteChangeStart = (url: string) => {
       console.log('[CreateModulePage] Router event: route change start', url);
     };
-    
+
     const handleRouteChangeComplete = (url: string) => {
       console.log('[CreateModulePage] Router event: route change complete', url);
     };
-    
+
     const handleBeforeHistoryChange = (url: string) => {
       console.log('[CreateModulePage] Router event: before history change', url);
     };
-    
+
     // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('routeChangeStart', handleRouteChangeStart);
     // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('routeChangeComplete', handleRouteChangeComplete);
     // @ts-expect-error - Next.js types might be incomplete
     router.events?.on('beforeHistoryChange', handleBeforeHistoryChange);
-    
+
     return () => {
       // @ts-expect-error - Next.js types might be incomplete
       router.events?.off('routeChangeStart', handleRouteChangeStart);
@@ -382,46 +384,46 @@ function CreateModulePageContent() {
       router.events?.off('beforeHistoryChange', handleBeforeHistoryChange);
     };
   }, [router]);
-  
+
   // Handle file upload
   const uploadThumbnail = async (file: File) => {
     if (!file || !supabase || !user) return;
-    
+
     console.log('[CreateModulePage] Starting thumbnail upload');
     try {
       setIsUploading(true);
-      
+
       // Create a unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-      
+
       // Upload the image to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('module-thumbnails')
         .upload(filePath, file);
-        
+
       if (uploadError) throw uploadError;
-      
+
       // Get the public URL for the file
       const { data } = supabase.storage
         .from('module-thumbnails')
         .getPublicUrl(filePath);
-        
+
       // Update thumbnail URL state
       setThumbnailUrl(data.publicUrl);
       setSelectedThumbnail(data.publicUrl);
-      
+
       // If we already have a module ID, update it with the thumbnail
       if (moduleId) {
         const { error: updateError } = await supabase
           .from('modules')
           .update({ thumbnail_url: data.publicUrl })
           .eq('id', moduleId);
-          
+
         if (updateError) throw updateError;
       }
-      
+
       console.log('[CreateModulePage] Thumbnail uploaded successfully:', data.publicUrl);
       toast.success('Thumbnail uploaded successfully');
     } catch (err) {
@@ -431,7 +433,7 @@ function CreateModulePageContent() {
       setIsUploading(false);
     }
   };
-  
+
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -441,30 +443,30 @@ function CreateModulePageContent() {
         toast.error('Please upload an image file');
         return;
       }
-      
+
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size should not exceed 5MB');
         return;
       }
-      
+
       uploadThumbnail(file);
     }
   };
 
-  
+
   // Initialize state from URL parameters only once
   useEffect(() => {
     if (initialLoadDoneRef.current) return;
-    
+
     const moduleIdParam = searchParams.get('moduleId');
     const stepParam = searchParams.get('step');
     const preselectedCourseId = searchParams.get('preselectedCourseId');
-    
+
     if (moduleIdParam) {
       setModuleId(moduleIdParam);
     }
-    
+
     if (stepParam) {
       setStep(parseInt(stepParam, 10));
     }
@@ -472,41 +474,41 @@ function CreateModulePageContent() {
     if (preselectedCourseId) {
       setSelectedCourseId(preselectedCourseId);
     }
-    
+
     initialLoadDoneRef.current = true;
   }, [searchParams]);
-  
+
   // Update step when URL changes
   useEffect(() => {
     const stepParam = searchParams.get('step');
     if (stepParam) {
       const stepNumber = parseInt(stepParam, 10);
       setStep(stepNumber);
-      
+
       // If moving to step 3, refresh the slides data
       if (stepNumber === 3 && moduleId && supabase) {
         fetchSlides();
       }
     }
   }, [searchParams, moduleId, supabase, fetchSlides]);
-  
+
   // Fetch module data if editing an existing module
   useEffect(() => {
     async function fetchModuleData() {
       if (!moduleId || !supabase) return;
-      
+
       try {
         setIsLoading(true);
-        
+
         // Fetch module data
         const { data, error } = await supabase
           .from('modules')
           .select('*')
           .eq('id', moduleId)
           .single();
-          
+
         if (error) throw error;
-        
+
         if (data) {
           setTitle(data.title || '');
           setDescription(data.description || '');
@@ -521,16 +523,16 @@ function CreateModulePageContent() {
             setPublishDate(data.publish_date);
           }
         }
-        
+
         // Fetch module slides
         const { data: slidesData, error: slidesError } = await supabase
           .from('slides')
           .select('*')
           .eq('module_id', moduleId)
           .order('position', { ascending: true });
-          
+
         if (slidesError) throw slidesError;
-        
+
         if (slidesData) {
           setSlides(slidesData);
         }
@@ -541,7 +543,7 @@ function CreateModulePageContent() {
         setIsLoading(false);
       }
     }
-    
+
     fetchModuleData();
   }, [moduleId, supabase]);
 
@@ -549,20 +551,20 @@ function CreateModulePageContent() {
   useEffect(() => {
     async function fetchCourses() {
       if (!user || !supabase) return;
-      
+
       try {
         setIsLoading(true);
-        
+
         const { data, error } = await supabase
           .from('courses')
           .select('id, title')
           .eq('teacher_id', user.id)
           .order('title', { ascending: true });
-          
+
         if (error) throw error;
-        
+
         setCourses(data || []);
-        
+
         // Check for preselectedCourseId
         const preselectedCourseId = searchParams.get('preselectedCourseId');
         if (preselectedCourseId) {
@@ -579,7 +581,7 @@ function CreateModulePageContent() {
         setIsLoading(false);
       }
     }
-    
+
     fetchCourses();
   }, [user, supabase, searchParams, selectedCourseId]);
 
@@ -646,7 +648,7 @@ function CreateModulePageContent() {
         if (updateError) {
           throw updateError;
         }
-        
+
         toast.success('Module updated successfully!');
       } else {
         // Create new module
@@ -674,7 +676,7 @@ function CreateModulePageContent() {
           toast.success('Module created successfully!');
         }
       }
-      
+
       // Move to next step
       setStep(2);
       // Update URL with moduleId and step without navigation
@@ -683,15 +685,15 @@ function CreateModulePageContent() {
         params.set('moduleId', newModuleId);
       }
       params.set('step', '2');
-      
+
       // Preserve preselectedCourseId if it exists
       const preselectedCourseId = searchParams.get('preselectedCourseId');
       if (preselectedCourseId) {
         params.set('preselectedCourseId', preselectedCourseId);
       }
-      
+
       router.push(`/teacher/modules/create?${params.toString()}`);
-      
+
     } catch (err: unknown) {
       console.error('Error creating/updating module:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to save module. Please try again.';
@@ -702,7 +704,7 @@ function CreateModulePageContent() {
       setIsSubmitting(false);
     }
   };
-  
+
   // Step 3: Publish module
   async function handlePublishModule() {
     if (!moduleId) {
@@ -714,10 +716,10 @@ function CreateModulePageContent() {
       toast.error('Database connection not available');
       return;
     }
-    
+
     try {
       setIsPublishing(true);
-      
+
       // Since we're not using a published field, just consider the module published when it has slides
       if (slides.length > 0) {
         // Save all current module data
@@ -759,21 +761,21 @@ function CreateModulePageContent() {
       router.push('/teacher');
     }
   };
-  
+
   const handleBack = () => {
     if (step > 1) {
       // If on step 2, trigger save before navigating back
       if (step === 2 && moduleId) {
         // Find the save button and click it
         const slideEditorSaveButton = document.querySelector('[data-slide-editor-save]') as HTMLButtonElement;
-        
+
         if (slideEditorSaveButton) {
           // Set loading state to prevent multiple clicks
           setIsSubmitting(true);
-          
+
           // Create a temporary function to handle successful save
           const originalOnSave = window.onSaveComplete;
-          
+
           // Define a promise to wait for save completion
           const savePromise = new Promise<void>((resolve) => {
             // Set up a temporary global function to capture save completion
@@ -782,45 +784,45 @@ function CreateModulePageContent() {
               // Restore original handler if it existed
               window.onSaveComplete = originalOnSave;
             };
-            
+
             // Click the save button to trigger the save
             slideEditorSaveButton.click();
-            
+
             // Add a fallback timeout in case the save callback doesn't fire
             setTimeout(() => {
               resolve();
               window.onSaveComplete = originalOnSave;
             }, 2000);
           });
-          
+
           // After saving is complete, navigate back
           savePromise.then(() => {
             const newStep = step - 1;
             setStep(newStep);
-            
+
             // Update URL with step
             const params = new URLSearchParams(searchParams.toString());
             params.set('step', newStep.toString());
             router.push(`/teacher/modules/create?${params.toString()}`);
-            
+
             setIsSubmitting(false);
           });
-          
+
           return;
         }
       }
-      
+
       // Default behavior for other steps
       const newStep = step - 1;
       setStep(newStep);
-      
+
       // Update URL with step
       const params = new URLSearchParams(searchParams.toString());
       params.set('step', newStep.toString());
       router.push(`/teacher/modules/create?${params.toString()}`);
     }
   };
-  
+
   // Get current step label
   const getStepLabel = () => {
     switch (step) {
@@ -847,8 +849,8 @@ function CreateModulePageContent() {
       <div className="col-span-3 space-y-4">
         <div className="flex flex-wrap gap-2 mb-2">
           {selectedTeachers.map(teacher => (
-            <Badge 
-              key={teacher.id} 
+            <Badge
+              key={teacher.id}
               variant="secondary"
               className="flex items-center gap-1 pl-3 pr-2 py-1.5"
             >
@@ -857,7 +859,7 @@ function CreateModulePageContent() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setSelectedTeachers(current => 
+                  setSelectedTeachers(current =>
                     current.filter(t => t.id !== teacher.id)
                   );
                 }}
@@ -868,11 +870,11 @@ function CreateModulePageContent() {
             </Badge>
           ))}
         </div>
-        
+
         <Popover open={teacherSearchOpen} onOpenChange={setTeacherSearchOpen}>
           <PopoverTrigger asChild>
             <Button
-              variant="outline" 
+              variant="outline"
               role="combobox"
               aria-expanded={teacherSearchOpen}
               className="w-full justify-between bg-white"
@@ -922,7 +924,7 @@ function CreateModulePageContent() {
   const bottomContinueButton = (
     <div className="px-8 py-6 mt-8 border-t bg-gray-50">
       <div className="max-w-xl mx-auto">
-        <Button 
+        <Button
           onClick={handleCreateModule}
           disabled={isSubmitting}
           className="bg-primaryStyling hover:bg-primaryStyling/90 text-white w-full py-6 text-lg relative group transition-all duration-200"
@@ -943,10 +945,10 @@ function CreateModulePageContent() {
     if (!url) {
       if (showDefault) {
         return (
-          <ThumbnailPopover 
+          <ThumbnailPopover
             trigger={
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-primaryStyling cursor-pointer">
-               <div className="flex flex-col items-center space-y-2">
+                <div className="flex flex-col items-center space-y-2">
                   <Camera className="h-10 w-10 text-white" />
                   <span className="text-white font-medium">Click to add a cover image</span>
                   <span className="text-white text-sm">Recommended size: 1280×720</span>
@@ -966,7 +968,7 @@ function CreateModulePageContent() {
           />
         );
       }
-      
+
       return (
         <div className="w-full h-64 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
           <div className="text-center">
@@ -976,23 +978,23 @@ function CreateModulePageContent() {
         </div>
       );
     }
-    
+
     if (url.startsWith('#')) {
       console.log('[Thumbnail] Rendering color thumbnail:', url);
       return (
-        <div 
-          className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{ backgroundColor: url }}
         />
       );
     }
-    
+
     console.log('[Thumbnail] Rendering image thumbnail:', url);
     return (
-      <Image 
-        src={url} 
-        alt="Module thumbnail" 
-        fill 
+      <Image
+        src={url}
+        alt="Module thumbnail"
+        fill
         style={{ objectFit: 'cover' }}
         className="transition-opacity group-hover:opacity-80"
       />
@@ -1023,11 +1025,11 @@ function CreateModulePageContent() {
               >
                 <X className="h-5 w-5" />
               </Button>
-              <h1 className="text-lg font-semibold">Create Module</h1>
+              <h1 className="text-lg font-semibold">{t('common.button.createModule')}</h1>
             </div>
           </div>
         </div>
-        
+
         <div className="max-w-4xl mx-auto py-12 px-4">
           <div className="bg-white border rounded-xl p-8 shadow-sm">
             <div className="text-center space-y-4">
@@ -1035,7 +1037,7 @@ function CreateModulePageContent() {
               <h2 className="text-xl font-bold">No Courses Available</h2>
               <p className="text-muted-foreground">You need to create a course before adding modules.</p>
               <div className="pt-4">
-                <Button 
+                <Button
                   onClick={() => setIsCourseModalOpen(true)}
                   className="bg-primaryStyling text-white hover:bg-indigo-700"
                 >
@@ -1046,9 +1048,9 @@ function CreateModulePageContent() {
             </div>
           </div>
         </div>
-        
-        <CreateCourseModal 
-          isOpen={isCourseModalOpen} 
+
+        <CreateCourseModal
+          isOpen={isCourseModalOpen}
           onClose={() => {
             setIsCourseModalOpen(false);
             // Only refresh courses list without page reload
@@ -1064,7 +1066,7 @@ function CreateModulePageContent() {
                     toast.error('Failed to refresh courses list');
                     return;
                   }
-                  
+
                   setCourses(data || []);
                   if (data && data.length > 0) {
                     setSelectedCourseId(data[data.length - 1].id);
@@ -1092,15 +1094,15 @@ function CreateModulePageContent() {
               <X className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-semibold">
-              {step === 1 ? "Create Module" : title || "Module"}
+              {step === 1 ? t('common.buttons.createModule') : title || "Module"}
             </h1>
           </div>
-          
+
           <div className="flex items-center text-lg">
             <span className="font-medium">Step {step}:</span>
             <span className="ml-2 text-gray-700">{getStepLabel()}</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {step > 1 && (
               <Button
@@ -1113,9 +1115,9 @@ function CreateModulePageContent() {
                 {isSubmitting && step === 2 ? 'Saving...' : 'Back'}
               </Button>
             )}
-            
+
             {step === 1 && (
-              <Button 
+              <Button
                 onClick={handleCreateModule}
                 disabled={isSubmitting}
                 className="bg-primaryStyling hover:bg-primaryStyling/90"
@@ -1124,9 +1126,9 @@ function CreateModulePageContent() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
-            
+
             {step === 2 && moduleId && (
-              <Button 
+              <Button
                 onClick={() => {
                   const slideEditorSaveButton = document.querySelector('[data-slide-editor-save]') as HTMLButtonElement;
                   if (slideEditorSaveButton) {
@@ -1139,9 +1141,9 @@ function CreateModulePageContent() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
-            
+
             {step === 3 && (
-              <Button 
+              <Button
                 onClick={() => setIsPublishModalOpen(true)}
                 disabled={isPublishing || slides.length === 0}
                 className="bg-green-600 hover:bg-green-700"
@@ -1152,16 +1154,16 @@ function CreateModulePageContent() {
             )}
           </div>
         </div>
-        
+
         {/* Thin progress line */}
         <div className="h-1 bg-gray-200 w-full">
-          <div 
+          <div
             className="h-1 bg-primaryStyling transition-all duration-300 ease-in-out"
             style={{ width: `${(step / 3) * 100}%` }}
           ></div>
         </div>
       </div>
-      
+
       {/* Content area with dynamic width based on step */}
       <div className={`mx-auto py-8 px-4 ${step === 2 ? 'max-w-full container' : 'max-w-3xl'} mt-[57px]`}>
         {error && (
@@ -1183,22 +1185,22 @@ function CreateModulePageContent() {
                   className="hidden"
                   accept="image/*"
                 />
-                
+
                 <div className="absolute inset-0 flex items-center justify-center group">
                   {renderThumbnail(thumbnailUrl)}
-                  
+
                   {/* Overlay for existing thumbnails */}
                   {thumbnailUrl && (
-                    <ThumbnailPopover 
+                    <ThumbnailPopover
                       trigger={
                         <div className="absolute inset-0 cursor-pointer">
                           {thumbnailUrl.startsWith('#') ? (
-                            <div style={{ backgroundColor: thumbnailUrl }} className="w-full h-full"/>
+                            <div style={{ backgroundColor: thumbnailUrl }} className="w-full h-full" />
                           ) : (
-                            <Image 
-                              src={thumbnailUrl} 
-                              alt="Module thumbnail" 
-                              fill 
+                            <Image
+                              src={thumbnailUrl}
+                              alt="Module thumbnail"
+                              fill
                               style={{ objectFit: 'cover' }}
                             />
                           )}
@@ -1219,7 +1221,7 @@ function CreateModulePageContent() {
                       align="center"
                     />
                   )}
-                  
+
                   {isUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                       <div className="animate-pulse text-white">Uploading...</div>
@@ -1228,7 +1230,7 @@ function CreateModulePageContent() {
 
                   {/* Update Thumbnail button */}
                   <div className="absolute bottom-4 right-4">
-                    <ThumbnailPopover 
+                    <ThumbnailPopover
                       trigger={
                         <Button
                           className="shadow-md bg-white text-gray-800 border border-gray-200 cursor-pointer"
@@ -1248,11 +1250,11 @@ function CreateModulePageContent() {
                       selectPredefinedThumbnail={selectPredefinedThumbnail}
                       fileInputRef={fileInputRef}
                       align="start"
-                                              />
-                                            </div>
-                                      </div>
+                    />
+                  </div>
+                </div>
               </div>
-              
+
               {/* Form Fields with improved hierarchy */}
               <div className="p-8 space-y-8">
                 {/* Module Title - Made prominent */}
@@ -1266,7 +1268,7 @@ function CreateModulePageContent() {
                         setErrors({ ...errors, title: undefined });
                       }
                     }}
-                    placeholder="Module Title... *"
+                    placeholder={t('teacher.modules.create.title')}
                     disabled={isSubmitting}
                     style={{ fontSize: '32px' }}
                     className={cn(
@@ -1280,19 +1282,19 @@ function CreateModulePageContent() {
                     <p className="text-sm text-red-500 mt-1">{errors.title}</p>
                   )}
                 </div>
-                
+
                 {/* Course Selection - Second most important */}
                 <div className="grid grid-cols-4 gap-6 items-start">
                   <div className="col-span-1">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <BookOpen className="h-4 w-4" />
-                      <span className="font-medium">Select Course</span>
+                      <span className="font-medium">{t('teacher.modules.create.select')}</span>
                       <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3">
-                    <Select 
-                      value={selectedCourseId} 
+                    <Select
+                      value={selectedCourseId}
                       onValueChange={(value) => {
                         if (value === 'create_new') {
                           setIsCourseModalOpen(true);
@@ -1312,8 +1314,8 @@ function CreateModulePageContent() {
                       </SelectTrigger>
                       <SelectContent>
                         {courses.map(course => (
-                          <SelectItem 
-                            key={course.id} 
+                          <SelectItem
+                            key={course.id}
                             value={course.id}
                             className="py-2.5 text-base"
                           >
@@ -1321,7 +1323,7 @@ function CreateModulePageContent() {
                           </SelectItem>
                         ))}
                         <div className="px-2 py-2 border-t">
-                          <SelectItem 
+                          <SelectItem
                             value="create_new"
                             className="py-2.5 text-base text-primaryStyling font-medium cursor-pointer"
                           >
@@ -1338,24 +1340,24 @@ function CreateModulePageContent() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Module Deadline */}
                 <div className="grid grid-cols-4 gap-6 items-start">
                   <div className="col-span-1">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">Time Settings</span>
+                      <span className="font-medium">{t('teacher.modules.create.time')}</span>
                       <span className="text-red-500">*</span>
                     </div>
                   </div>
                   <div className="col-span-3 space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Module Deadline</label>
+                        <label className="text-sm font-medium text-gray-700">{t('teacher.modules.create.deadline')}</label>
                         <span className="text-red-500">*</span>
                       </div>
                       <div className="flex gap-2">
-                        <div 
+                        <div
                           className="relative flex-1 cursor-pointer"
                           onClick={() => {
                             const input = document.querySelector('input[name="deadline-date"]') as HTMLInputElement;
@@ -1370,17 +1372,17 @@ function CreateModulePageContent() {
                               const date = e.target.value;
                               const time = deadline ? deadline.split('T')[1] : '00:00';
                               const newDeadline = `${date}T${time}`;
-                              
+
                               const selectedDate = new Date(newDeadline);
                               const now = new Date();
                               now.setSeconds(0);
                               now.setMilliseconds(0);
-                              
+
                               if (selectedDate <= now) {
                                 toast.error("Deadline must be in the future");
                                 return;
                               }
-                              
+
                               setDeadline(newDeadline);
                               if (errors.deadline) {
                                 setErrors({ ...errors, deadline: undefined });
@@ -1401,17 +1403,17 @@ function CreateModulePageContent() {
                           onChange={(e) => {
                             const date = deadline ? deadline.split('T')[0] : new Date().toISOString().split('T')[0];
                             const newDeadline = `${date}T${e.target.value}`;
-                            
+
                             const selectedDate = new Date(newDeadline);
                             const now = new Date();
                             now.setSeconds(0);
                             now.setMilliseconds(0);
-                            
+
                             if (selectedDate <= now) {
                               toast.error("Deadline must be in the future");
                               return;
                             }
-                            
+
                             setDeadline(newDeadline);
                             if (errors.deadline) {
                               setErrors({ ...errors, deadline: undefined });
@@ -1432,16 +1434,16 @@ function CreateModulePageContent() {
                         Set when students need to complete this module
                       </p>
                     </div>
-                    
-                    
+
+
                     {/* Publish Date */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Publish Date</label>
+                        <label className="text-sm font-medium text-gray-700">{t('teacher.modules.create.publish')}</label>
                         <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                       </div>
                       <div className="flex gap-2">
-                        <div 
+                        <div
                           className="relative flex-1"
                           onClick={() => {
                             const input = document.querySelector('input[name="publish-date"]') as HTMLInputElement;
@@ -1515,13 +1517,13 @@ function CreateModulePageContent() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Teacher Sharing */}
                 {teacherSharingSection}
-                
+
                 {/* Divider */}
                 <div className="border-t border-gray-100"></div>
-                
+
                 {/* Module Description */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
@@ -1536,18 +1538,18 @@ function CreateModulePageContent() {
                   />
                 </div>
               </div>
-              
+
               {/* Bottom Continue Button */}
               {bottomContinueButton}
             </div>
           </div>
         )}
-        
+
         {/* Step 2: Add Content/Slides */}
         {step === 2 && moduleId && (
           <div>
-            <SlideEditor 
-              moduleId={moduleId} 
+            <SlideEditor
+              moduleId={moduleId}
               onSave={() => {
                 console.log('[CreateModulePage] SlideEditor onSave callback triggered');
                 // Move to next step after slides are saved
@@ -1563,7 +1565,7 @@ function CreateModulePageContent() {
             />
           </div>
         )}
-        
+
         {/* Step 3: Review & Publish */}
         {step === 3 && moduleId && (
           <div className="max-w-3xl mx-auto">
@@ -1578,10 +1580,10 @@ function CreateModulePageContent() {
                     ) : (
                       // Render image
                       <>
-                        <Image 
-                          src={thumbnailUrl} 
-                          alt="Module thumbnail" 
-                          fill 
+                        <Image
+                          src={thumbnailUrl}
+                          alt="Module thumbnail"
+                          fill
                           style={{ objectFit: 'cover' }}
                           className="transition-all duration-200"
                         />
@@ -1599,7 +1601,7 @@ function CreateModulePageContent() {
                   </div>
                 )}
               </div>
-              
+
               {/* Module Details */}
               <div className="p-8 space-y-8">
                 {/* Title and Course */}
@@ -1629,7 +1631,7 @@ function CreateModulePageContent() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  
+
                   <div className="group relative inline-flex items-center gap-2">
                     <div className="flex items-center gap-2 text-gray-600">
                       <BookOpen className="h-5 w-5 text-primaryStyling" />
@@ -1926,7 +1928,7 @@ function CreateModulePageContent() {
           <DialogHeader>
             <DialogTitle>Publish Module</DialogTitle>
           </DialogHeader>
-          
+
           <div className="py-4 space-y-4">
             <p className="text-sm text-muted-foreground">
               Are you sure you want to publish this module{publishDate ? ` on ${new Date(publishDate).toLocaleDateString()}` : " now"}?
@@ -1953,8 +1955,8 @@ function CreateModulePageContent() {
         </DialogContent>
       </Dialog>
 
-      <CreateCourseModal 
-        isOpen={isCourseModalOpen} 
+      <CreateCourseModal
+        isOpen={isCourseModalOpen}
         onClose={() => {
           setIsCourseModalOpen(false);
           // Only refresh courses list without page reload
@@ -1970,7 +1972,7 @@ function CreateModulePageContent() {
                   toast.error('Failed to refresh courses list');
                   return;
                 }
-                
+
                 setCourses(data || []);
                 if (data && data.length > 0) {
                   setSelectedCourseId(data[data.length - 1].id);

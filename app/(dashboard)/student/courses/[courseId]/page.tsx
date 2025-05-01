@@ -12,6 +12,7 @@ import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import StudentModuleCard from "../../_components/StudentModuleCard";
+import { useTranslations } from 'next-intl';
 
 interface Course {
   id: string;
@@ -39,46 +40,47 @@ export default function StudentCourseDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
-  
+
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
+  const t = useTranslations();
 
   useEffect(() => {
     async function fetchCourseAndModules() {
       if (!user || !supabase || !courseId) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses')
           .select('*')
           .eq('id', courseId)
           .single();
-          
+
         if (courseError) throw courseError;
-        
+
         if (!courseData) {
           toast.error('Course not found');
           router.push('/student/courses');
           return;
         }
-        
+
         setCourse(courseData);
-        
+
         // Fetch modules for this course with teacher username
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
           .select('*, users:teacher_id(username)')
           .eq('course_id', courseId)
           .order('created_at', { ascending: false });
-          
+
         if (modulesError) throw modulesError;
-        
+
         // Process the joined data
         const processedModules = (modulesData || []).map(module => {
           // Handle the users join result properly
@@ -87,7 +89,7 @@ export default function StudentCourseDetailPage() {
             // TypeScript doesn't know the structure of users from the join
             // Use type assertion to help TypeScript understand
             const usersData = module.users as { username: string } | { username: string }[];
-            
+
             // Check if users is an array or an object
             if (Array.isArray(usersData)) {
               teacherUsername = usersData[0]?.username;
@@ -95,13 +97,13 @@ export default function StudentCourseDetailPage() {
               teacherUsername = usersData.username;
             }
           }
-          
+
           return {
             ...module,
             teacher_username: teacherUsername
           };
         });
-        
+
         setModules(processedModules);
       } catch (err) {
         console.error('Error fetching course details:', err);
@@ -110,7 +112,7 @@ export default function StudentCourseDetailPage() {
         setLoading(false);
       }
     }
-    
+
     fetchCourseAndModules();
   }, [user, supabase, courseId, router]);
 
@@ -149,7 +151,7 @@ export default function StudentCourseDetailPage() {
     <ContentLayout>
       <div className="space-y-6">
 
-        
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">{course.title}</h1>
@@ -157,13 +159,13 @@ export default function StudentCourseDetailPage() {
               <p className="text-muted-foreground mt-1">{course.description}</p>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Sort by: {sortBy}
+                  {t('common.buttons.sort')} by: {sortBy}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -172,7 +174,7 @@ export default function StudentCourseDetailPage() {
                 <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <Button
               variant="outline"
               size="icon"
@@ -186,13 +188,13 @@ export default function StudentCourseDetailPage() {
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search modules..."
+            placeholder={t('common.inputs.searchCourse')}
             className="pl-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         {modules.length === 0 ? (
           <div className="text-center p-8 border rounded-md bg-muted/50">
             <p className="text-muted-foreground">No modules available in this course yet.</p>
