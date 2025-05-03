@@ -20,12 +20,12 @@ export function Breadcrumbs() {
     const fetchBreadcrumbData = async () => {
       const paths = pathname.split('/').filter(Boolean);
       const breadcrumbItems: BreadcrumbItem[] = [];
-      
+
       // Determine if we're in teacher or student route
       const isTeacherRoute = pathname.startsWith('/teacher');
       const isStudentRoute = pathname.startsWith('/student');
       const baseRoute = isTeacherRoute ? '/teacher' : isStudentRoute ? '/student' : '';
-      
+
       // Always start with Dashboard
       breadcrumbItems.push({
         label: 'Dashboard',
@@ -86,7 +86,7 @@ export function Breadcrumbs() {
             {index > 0 && <ChevronRight className="h-4 w-4 mx-2" />}
             <Link
               href={item.href}
-              className={index === items.length - 1 
+              className={index === items.length - 1
                 ? "font-medium text-foreground"
                 : "hover:text-foreground transition hover:underline"
               }
