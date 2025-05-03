@@ -64,7 +64,7 @@ export default async function RootLayout({
       <html lang={locale} suppressHydrationWarning>
         <head>
           <link rel="manifest" href="/manifest.webmanifest" />
-          <Script id="maze-universal" strategy="afterInteractive">
+          <Script id="maze-universal-praxis">
             {`
               (function (m, a, z, e) {
                 var s, t;
