@@ -7,7 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/waitlist(.*)',
   '/api/webhook/clerk(.*)',
-  '/mobile-warning(.*)'  // Add mobile warning to public routes
+  '/mobile-warning(.*)'  // Keep mobile warning in public routes
 ])
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -32,31 +32,31 @@ const PROTECTED_PATHS = [
   '/student'
 ]
 
-// Combine both mobile check and Clerk middleware
 export default clerkMiddleware(async (auth, request) => {
-  // First check for mobile devices
-  const userAgent = request.headers.get('user-agent') || ''
-  const isMobile = MOBILE_KEYWORDS.some(keyword => userAgent.includes(keyword))
-  const path = request.nextUrl.pathname
-
-  // Check if the current path is protected from mobile
-  const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
-    path.startsWith(protectedPath)
-  )
-
-  // If it's a mobile device and trying to access a protected path
-  if (isMobile && isProtectedPath) {
-    return NextResponse.redirect(new URL('/mobile-warning', request.url))
-  }
-
-  // If it's a mobile device trying to access the dashboard root
-  if (isMobile && path === '/') {
-    return NextResponse.redirect(new URL('/mobile-warning', request.url))
-  }
-
-  // Then proceed with Clerk authentication logic
   const { userId, sessionClaims } = await auth();
   const userRole = sessionClaims?.metadata?.role as string | undefined;
+  
+  // Check for mobile devices only if user is authenticated
+  if (userId) {
+    const userAgent = request.headers.get('user-agent') || ''
+    const isMobile = MOBILE_KEYWORDS.some(keyword => userAgent.includes(keyword))
+    const path = request.nextUrl.pathname
+
+    // Check if the current path is protected from mobile
+    const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
+      path.startsWith(protectedPath)
+    )
+
+    // If it's a mobile device and trying to access a protected path
+    if (isMobile && isProtectedPath) {
+      return NextResponse.redirect(new URL('/mobile-warning', request.url))
+    }
+
+    // If it's a mobile device trying to access the dashboard root
+    if (isMobile && path === '/') {
+      return NextResponse.redirect(new URL('/mobile-warning', request.url))
+    }
+  }
 
   // Handle admin routes
   if (isAdminRoute(request) && userRole !== 'admin') {
