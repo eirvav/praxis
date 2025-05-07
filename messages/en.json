@@ -93,6 +93,7 @@
     "text": {
       "title": "Written Response",
       "placeholder": "Enter instructions or prompts for students to respond to...",
+      "response": "Enter instructions or prompts for students to respond to...",
       "info": "This interactive slide lets students respond to your content with reflections, open-ended answers, or feedback."
     },
     "quiz": {

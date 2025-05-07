@@ -114,7 +114,7 @@ export default function TextSlidePlayer({ slide }: TextSlidePlayerProps) {
                 theme="snow"
                 value={response}
                 onChange={setResponse}
-                placeholder={f('placeholder')}
+                placeholder={f('response')}
                 modules={modules}
               />
             </div>

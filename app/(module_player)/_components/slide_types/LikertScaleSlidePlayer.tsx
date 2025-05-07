@@ -1,12 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { MoveHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SliderSlide } from './types';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ReflectionSlidePlayerProps {
   slide: SliderSlide;
@@ -15,6 +15,7 @@ interface ReflectionSlidePlayerProps {
 export default function ReflectionSlidePlayer({ slide }: ReflectionSlidePlayerProps) {
   const [selectedValues, setSelectedValues] = useState<Record<string, number>>({});
   const supabase = useSupabase();
+  const t = useTranslations('slides.common');
 
   // Load saved responses
   useEffect(() => {
@@ -63,19 +64,16 @@ export default function ReflectionSlidePlayer({ slide }: ReflectionSlidePlayerPr
   };
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <MoveHorizontal className="h-5 w-5 text-indigo-600" />
-            Scale Rating
+    <Card className="border-indigo-200 w-full flex-1">
+      <CardHeader className="pb-6 pt-8 px-8">
+        <div className="flex items-center gap-3">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <MoveHorizontal className="h-6 w-6 text-indigo-600" />
+            {t('scaleRating')}
           </CardTitle>
-          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
-            <MoveHorizontal className="h-3 w-3 mr-1" /> Scale Rating
-          </Badge>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-2 pb-8 px-8">
         <div className="space-y-8">
           {slide.config.sliders.map((slider) => {
             const boxCount = slider.max - slider.min + 1;
@@ -108,8 +106,8 @@ export default function ReflectionSlidePlayer({ slide }: ReflectionSlidePlayerPr
                             className={cn(
                               "flex-1 flex items-center justify-center h-12 rounded-md border text-sm font-medium transition-all",
                               isSelected
-                                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                : "bg-white hover:bg-emerald-50 hover:border-emerald-200 text-gray-700 hover:text-emerald-700"
+                                ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                                : "bg-white hover:bg-indigo-50 hover:border-indigo-200 text-gray-700 hover:text-indigo-700"
                             )}
                           >
                             {value}

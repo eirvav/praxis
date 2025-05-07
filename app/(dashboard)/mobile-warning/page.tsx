@@ -30,34 +30,51 @@ export default function MobileWarning() {
           
           <div className="pt-14">
             <h1 className="text-2xl font-bold text-white mt-4">
-              Hey there! 👋
+              Mobile version coming soon! 🚀
             </h1>
             
-            <div className="mt-6 space-y-6">
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
-                    <MapPin className="w-6 h-6 text-white" />
+            <p className="mt-4 text-white/90 text-base">
+              For now, we'd love to give you a personal experience:
+            </p>
+            
+            <div className="mt-8 space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500 flex-shrink-0 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <MapPin className="w-5 h-5 text-white" />
                   </div>
-                  <p className="text-white/80 text-sm">Find our booth</p>
+                  <p className="text-white/90 text-sm">
+                    <span className="font-semibold block text-white">Where to find us</span>
+                    Look for us in the main exhibition area
+                  </p>
                 </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
-                    <Sparkles className="w-6 h-6 text-white" />
+                
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 flex-shrink-0 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <p className="text-white/80 text-sm">Live demo</p>
+                  <p className="text-white/90 text-sm">
+                    <span className="font-semibold block text-white">What to expect</span>
+                    Test praxis for yourself!
+                  </p>
                 </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
-                    <Users className="w-6 h-6 text-white" />
+                
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-400 to-indigo-500 flex-shrink-0 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                  <p className="text-white/80 text-sm">Meet the team</p>
+                  <p className="text-white/90 text-sm">
+                    <span className="font-semibold block text-white">Who you'll meet</span>
+                    Our friendly team is ready to assist you
+                  </p>
                 </div>
               </div>
               
-              <p className="text-white/90 text-base">
-                Experience our product in person!
-              </p>
+              <div className="pt-2">
+                <p className="text-white/80 text-sm italic">
+                  We can't wait to show you what we've built!
+                </p>
+              </div>
             </div>
           </div>
         </div>
