@@ -45,3 +45,5 @@ instructions/
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+.cursor/

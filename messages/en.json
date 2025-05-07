@@ -15,7 +15,8 @@
       "sortDate": "Date",
       "sortName": "Name",
       "sortEnrolled": "Enrolled",
-      "sortCompletion": "Completion Rate"
+      "sortCompletion": "Completion Rate",
+      "goBack": "Go back to courses"
     },
     "inputs": {
       "searchCourse": "Search modules...",

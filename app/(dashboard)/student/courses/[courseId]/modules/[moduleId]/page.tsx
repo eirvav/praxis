@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { FileImage, Calendar, Clock, ArrowRight, Layers } from 'lucide-react';
+import { FileImage, Calendar, Clock, ArrowRight, Layers, CheckCircle } from 'lucide-react';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 import Image from 'next/image';
@@ -28,6 +28,7 @@ export default function StudentCourseModuleDetailPage() {
   const [module, setModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isCompleted, setIsCompleted] = useState(false);
   
   const { user } = useUser();
   const supabase = useSupabase();
@@ -39,26 +40,44 @@ export default function StudentCourseModuleDetailPage() {
   useEffect(() => {
     if (!user || !supabase || !moduleId || !courseId) return;
 
-    async function loadModule() {
+    const userId = user.id;
+    if (!userId) return;
+
+    async function loadModuleAndCompletionStatus() {
       setLoading(true);
       setError('');
       
       try {
-        const { data, error } = await supabase!
+        // Fetch the module data
+        const { data: moduleData, error: moduleError } = await supabase!
           .from('modules')
           .select('*')
           .eq('id', moduleId)
           .eq('course_id', courseId)
           .single();
         
-        if (error) throw error;
+        if (moduleError) throw moduleError;
         
-        if (!data) {
+        if (!moduleData) {
           setError('Module not found or you might not have permission to view it.');
           return;
         }
         
-        setModule(data);
+        setModule(moduleData);
+        
+        // Check if the module is completed by the current user
+        const { data: completionData, error: completionError } = await supabase!
+          .from('module_completions')
+          .select('*')
+          .eq('module_id', moduleId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (completionError) {
+          console.error('Error checking module completion status:', completionError);
+        } else {
+          setIsCompleted(!!completionData);
+        }
       } catch (err: Error | unknown) {
         console.error('Error loading module:', err);
         setError(err instanceof Error ? err.message : 'Failed to load module.');
@@ -67,7 +86,7 @@ export default function StudentCourseModuleDetailPage() {
       }
     }
 
-    loadModule();
+    loadModuleAndCompletionStatus();
   }, [user, supabase, moduleId, courseId]);
 
   if (loading) {
@@ -122,7 +141,7 @@ export default function StudentCourseModuleDetailPage() {
           {/* Display thumbnail if available */}
           <div className="animate-fadeIn">
             {module.thumbnail_url ? (
-              <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-xl shadow-md">
+              <div className={`relative w-full h-64 md:h-80 overflow-hidden rounded-xl shadow-md ${isCompleted ? 'grayscale' : ''}`}>
                 {isColorThumbnail ? (
                   <div 
                     className="absolute inset-0 w-full h-full" 
@@ -138,6 +157,15 @@ export default function StudentCourseModuleDetailPage() {
                     className="transition-transform hover:scale-105 duration-700"
                   />
                 )}
+                
+                {/* Completed badge overlay if completed */}
+                {isCompleted && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+                    <div className="bg-white/95 p-4 rounded-full">
+                      <CheckCircle className="h-16 w-16 text-green-500" />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="w-full h-56 md:h-72 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl flex items-center justify-center shadow-sm">
@@ -150,7 +178,17 @@ export default function StudentCourseModuleDetailPage() {
           </div>
           
           <div className="space-y-4 animate-fadeIn">
-            <h1 className="text-3xl font-bold tracking-tight">{module.title}</h1>
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold tracking-tight">{module.title}</h1>
+              
+              {/* Completion status */}
+              {isCompleted && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Completed
+                </span>
+              )}
+            </div>
             
             {module.description && (
               <p className="text-muted-foreground text-lg leading-relaxed">{module.description}</p>
@@ -183,18 +221,40 @@ export default function StudentCourseModuleDetailPage() {
             </div>
             
             <div className="pt-6">
-              <Link href={`/student/player?courseId=${courseId}&moduleId=${moduleId}`}>
-                <Button 
-                  size="lg" 
-                  className="group relative overflow-hidden w-full sm:w-auto transition-all duration-300 hover:pl-7 bg-primaryStyling hover:bg-indigo-700 cursor-pointer"
-                >
-                  <span className="relative z-10 flex items-center">
-                    {t('common.buttons.startModule') || 'Start Module'}
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <span className="absolute inset-0 bg-primary-foreground opacity-0 group-hover:opacity-20 transition-opacity"></span>
-                </Button>
-              </Link>
+              {isCompleted ? (
+                <div className="space-y-4">
+                  <Link href={`/student/player?courseId=${courseId}&moduleId=${moduleId}`}>
+                    <Button 
+                      size="lg" 
+                      className="group relative overflow-hidden w-full sm:w-auto bg-green-600 hover:bg-green-700 cursor-pointer transition-all duration-300 hover:pl-7"
+                    >
+                      <span className="relative z-10 flex items-center">
+                        <CheckCircle className="mr-2 h-5 w-5" />
+                        Review Module
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                      <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
+                    </Button>
+                  </Link>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    You've already completed this module. You can review it again if needed.
+                  </div>
+                </div>
+              ) : (
+                <Link href={`/student/player?courseId=${courseId}&moduleId=${moduleId}`}>
+                  <Button 
+                    size="lg" 
+                    className="group relative overflow-hidden w-full sm:w-auto transition-all duration-300 hover:pl-7 bg-primaryStyling hover:bg-indigo-700 cursor-pointer"
+                  >
+                    <span className="relative z-10 flex items-center">
+                      {t('common.buttons.startModule') || 'Start Module'}
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                    <span className="absolute inset-0 bg-primary-foreground opacity-0 group-hover:opacity-20 transition-opacity"></span>
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

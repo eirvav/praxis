@@ -15,7 +15,8 @@
       "sortDate": "Dato",
       "sortName": "Navn",
       "sortEnrolled": "Antall",
-      "sortCompletion": "Fullførte"
+      "sortCompletion": "Fullførte",
+      "goBack": "Tilbake til fag"
     },
     "inputs": {
       "searchCourse": "Søk etter arbeidskrav...",
