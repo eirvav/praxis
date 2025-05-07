@@ -119,6 +119,7 @@ export default function CombinedVideoResponsePlayer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   
   // Get max duration from config with a default of 120 seconds (2 minutes)
   const maxDuration = responseSlide.config.responseMaxDuration || 120;
@@ -468,9 +469,11 @@ export default function CombinedVideoResponsePlayer({
         const countdownInterval = setInterval(() => {
           timeRemaining -= 1000;
           
+          // Update countdown number based on remaining time
+          setCountdown(Math.max(Math.ceil(timeRemaining / 1000), 0));
+          
           if (timeRemaining <= 0) {
             clearInterval(countdownInterval);
-            setCountdown(0);
             setCountdownHeader(null);
             
             // After countdown, start recording directly
@@ -495,14 +498,10 @@ export default function CombinedVideoResponsePlayer({
                 
                 mediaRecorderRef.current = recorder;
                 
-                // Keep a local array of chunks for reliability
-                const chunks: Blob[] = [];
-                
                 // Handle data available events
                 recorder.ondataavailable = (e) => {
                   if (e.data && e.data.size > 0) {
                     console.log('Recording chunk received, size:', e.data.size);
-                    chunks.push(e.data);
                     setRecordedChunks(prev => [...prev, e.data]);
                   }
                 };
@@ -511,8 +510,8 @@ export default function CombinedVideoResponsePlayer({
                 recorder.onstop = () => {
                   console.log('Recording stopped after instantResponse, processing video');
                   
-                  if (chunks.length > 0) {
-                    const blob = new Blob(chunks, { type: mimeType });
+                  if (recordedChunks.length > 0) {
+                    const blob = new Blob(recordedChunks, { type: mimeType });
                     const videoURL = URL.createObjectURL(blob);
                     
                     // Capture accurate duration from recording timer
@@ -604,7 +603,7 @@ export default function CombinedVideoResponsePlayer({
       });
     }
     // Otherwise, stay on the video phase with an overlay showing options
-  }, [captureVideoThumbnail, initializeCamera, responseSlide.config.instantResponse, maxDuration, getSupportedMimeType, playCount, canRecordMore, recordingTimeElapsed]);
+  }, [captureVideoThumbnail, initializeCamera, responseSlide.config.instantResponse, maxDuration, getSupportedMimeType, playCount, canRecordMore, recordingTimeElapsed, recordedChunks]);
 
   // Replay video function
   const replayVideo = useCallback(() => {
@@ -771,9 +770,11 @@ export default function CombinedVideoResponsePlayer({
       const countdownInterval = setInterval(() => {
         timeRemaining -= 1000;
         
+        // Update countdown number based on remaining time
+        setCountdown(Math.max(Math.ceil(timeRemaining / 1000), 0));
+        
         if (timeRemaining <= 0) {
           clearInterval(countdownInterval);
-          setCountdown(0);
           setCountdownHeader(null);
           
           // Inline recording logic instead of calling beginRecording
@@ -946,16 +947,18 @@ export default function CombinedVideoResponsePlayer({
       const countdownDuration = 5000; // 5 seconds total
       const numberStart = 5;
       let timeRemaining = countdownDuration;
-      let currentNumber = numberStart;
+      const currentNumber = numberStart;
       
       setCountdown(currentNumber);
       
       const countdownInterval = setInterval(() => {
         timeRemaining -= 1000;
         
+        // Update countdown number based on remaining time
+        setCountdown(Math.max(Math.ceil(timeRemaining / 1000), 0));
+        
         if (timeRemaining <= 0) {
           clearInterval(countdownInterval);
-          setCountdown(0);
           setCountdownHeader(null);
           
           // After countdown, start recording with the same logic as before
@@ -1089,13 +1092,6 @@ export default function CombinedVideoResponsePlayer({
             console.error('No stream available for direct recording');
             setError('Camera not initialized. Please try again.');
           }
-        } else if (timeRemaining <= (countdownDuration - (numberStart * 1000))) {
-          // We've counted down all numbers
-          setCountdown(0);
-        } else {
-          // Update the countdown number
-          currentNumber -= 1;
-          setCountdown(currentNumber);
         }
       }, 1000);
     }).catch(err => {
@@ -1147,16 +1143,18 @@ export default function CombinedVideoResponsePlayer({
         const countdownDuration = 5000; // 5 seconds total
         const numberStart = 5;
         let timeRemaining = countdownDuration;
-        let currentNumber = numberStart;
+        const currentNumber = numberStart;
         
         setCountdown(currentNumber);
         
         const countdownInterval = setInterval(() => {
           timeRemaining -= 1000;
           
+          // Update countdown number based on remaining time
+          setCountdown(Math.max(Math.ceil(timeRemaining / 1000), 0));
+          
           if (timeRemaining <= 0) {
             clearInterval(countdownInterval);
-            setCountdown(0);
             setCountdownHeader(null);
             
             // After countdown, start recording directly
@@ -1262,13 +1260,6 @@ export default function CombinedVideoResponsePlayer({
               console.error('No stream available for recording after skip');
               setError('Camera not initialized. Please try again.');
             }
-          } else if (timeRemaining <= (countdownDuration - (numberStart * 1000))) {
-            // We've counted down all numbers
-            setCountdown(0);
-          } else {
-            // Update the countdown number
-            currentNumber -= 1;
-            setCountdown(currentNumber);
           }
         }, 1000);
       }).catch(err => {
@@ -1287,22 +1278,43 @@ export default function CombinedVideoResponsePlayer({
     // Exit fullscreen before proceeding
     exitFullscreen();
     
-    // If no recording is selected, use the most recent one
-    const selectedRecording = selectedRecordingId ? 
-      recordings.find(r => r.id === selectedRecordingId) : 
-      recordings[recordings.length - 1];
-      
-    if (!selectedRecording) {
-      console.error('No recording selected for submission');
-      return;
-    }
-    
-    console.log('Submitting response:', selectedRecording);
-    
-    // Clean up media resources
+    // Clean up all media resources
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        console.log('Stopping track:', track.kind);
+        track.stop();
+      });
+      streamRef.current = null;
     }
+
+    // Clean up video preview
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = null;
+      videoPreviewRef.current.src = '';
+    }
+
+    // Clean up audio context
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+    }
+
+    // Clean up all recorded video URLs
+    recordings.forEach(recording => {
+      if (recording.url) {
+        URL.revokeObjectURL(recording.url);
+      }
+    });
+    
+    // Clean up video blob
+    if (videoBlob) {
+      URL.revokeObjectURL(videoBlob);
+    }
+
+    // Reset all state
+    setIsRecording(false);
+    setIsPaused(false);
+    setRecordingTimeElapsed(0);
+    setIsInitialized(false);
     
     // Move to the slide after the response slide (skip both)
     if (goToNextSlide) {
@@ -1313,7 +1325,7 @@ export default function CombinedVideoResponsePlayer({
         goToNextSlide();
       }, 50);
     }
-  }, [exitFullscreen, goToNextSlide, recordings, selectedRecordingId]);
+  }, [exitFullscreen, goToNextSlide, recordings, videoBlob]);
   
   // Clean up resources when component unmounts - with improved blob cleanup
   useEffect(() => {
@@ -1535,19 +1547,19 @@ export default function CombinedVideoResponsePlayer({
                   <DialogDescription className="mb-4 text-base">
                     <p className="font-semibold mb-2 text-amber-600">Important:</p>
                     <p className="mb-3">After this video finishes playing, you will <span className="font-bold">immediately</span> be prompted to record your response.</p>
-                    <p>A countdown of 3-2-1 will begin, and then recording will start automatically.</p>
+                    <p>A countdown of <span className="font-bold">3-2-1</span> will begin, and then recording will start automatically.</p>
                   </DialogDescription>
                   
                   <div className="flex gap-4 justify-between border-t pt-4 mt-2">
                     <Button
                       variant="outline"
                       onClick={() => setShowInstantResponseWarning(false)}
-                      className="flex-1"
+                      className="flex-1 cursor-pointer"
                     >
                       Cancel
                     </Button>
                     <Button 
-                      className="bg-amber-600 hover:bg-amber-700 text-white flex-1"
+                      className="bg-primaryStyling hover:bg-indigo-700 text-white flex-1 cursor-pointer"
                       onClick={proceedAfterWarning}
                     >
                       <Play className="h-4 w-4 mr-2" />

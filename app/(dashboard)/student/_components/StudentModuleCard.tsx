@@ -205,12 +205,12 @@ const StudentModuleCard = ({
   return (
     <div className="relative group h-full">
       <Link href={route} className="block h-full">
-        <div className="bg-transparent rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
-          <div className="relative w-full pt-[50%] flex-shrink-0 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-transparent hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
+          <div className="relative w-full pt-[50%] flex-shrink-0 rounded-t-xl overflow-hidden">
             {thumbnail_url ? (
               thumbnail_url.startsWith('#') ? (
                 <div 
-                  className="absolute inset-0 rounded-xl"
+                  className="absolute inset-0 rounded-t-xl"
                   style={{ backgroundColor: thumbnail_url }}
                 />
               ) : (
@@ -219,16 +219,16 @@ const StudentModuleCard = ({
                   alt={`${title} thumbnail`}
                   fill
                   style={{ objectFit: 'cover' }}
-                  className="group-hover:scale-105 transition-transform duration-500 rounded-xl"
+                  className="group-hover:scale-105 transition-transform duration-500 rounded-t-xl"
                 />
               )
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-t-xl" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-t-xl" />
           </div>
           
-          <div className="p-3 flex flex-col flex-1 relative">
+          <div className="p-3 flex flex-col flex-1 relative rounded-b-xl">
             <div className="flex flex-wrap gap-2 mb-2">
               {courseName && (
                 <div 

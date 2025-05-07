@@ -2,7 +2,6 @@
 
 import { Waitlist } from '@clerk/nextjs'
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 export default function WaitlistPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -135,10 +134,6 @@ export default function WaitlistPage() {
   return (
     <div className="w-full px-4 sm:px-0">
       <div className="mb-6 sm:mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Image src="/logo.svg" alt="Praxis Logo" width={27} height={28} priority />
-          <span className="text-xl font-semibold text-indigo-600">Praxis</span>
-        </div>
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Join the <span className="text-indigo-600">waitlist!</span></h2>
         <p className="text-gray-500">Be the first to know when we launch</p>
       </div>
