@@ -47,3 +47,6 @@ instructions/
 /.clerk/
 
 .cursor/
+SQL/
+
+app/(module_player)/_components/slide_types/config_types/

@@ -60,6 +60,9 @@ export default function StudentDashboard() {
   const [moduleStatus, setModuleStatus] = useState<ModuleStatus>('all');
   const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<FilterItem[]>([]);
+  // States for welcome message animation and DOM presence
+  const [displayWelcomeMessage, setDisplayWelcomeMessage] = useState(true);
+  const [animateWelcomeMessageOut, setAnimateWelcomeMessageOut] = useState(false);
   
   // Generate semester options from 2023 to current year
   const currentYear = new Date().getFullYear();
@@ -147,7 +150,7 @@ export default function StudentDashboard() {
         
         // Display completion message if module name available
         if (completedModuleName) {
-          setCompletionMessage(`Congratulations! You've completed "${completedModuleName}"`);
+          setCompletionMessage(`You've completed "${completedModuleName}"`);
         }
         
         // Clear the flag so it doesn't show again on refresh
@@ -168,6 +171,39 @@ export default function StudentDashboard() {
       }
     }
   }, []);
+  
+  // Welcome message visibility, animation, and session storage
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const welcomeCompletedInSession = sessionStorage.getItem('studentDashboardWelcomeCompleted');
+
+      if (welcomeCompletedInSession === 'true') {
+        setDisplayWelcomeMessage(false); // Already completed in this session, so don't display
+        return;
+      }
+
+      // Not completed yet, so ensure it's displayed and visible initially
+      setDisplayWelcomeMessage(true);
+      setAnimateWelcomeMessageOut(false);
+
+      const visibilityTimer = setTimeout(() => {
+        setAnimateWelcomeMessageOut(true); // Start fade out animation
+
+        // Timer to remove from DOM after animation completes
+        const removalTimer = setTimeout(() => {
+          setDisplayWelcomeMessage(false); // Remove from DOM
+          sessionStorage.setItem('studentDashboardWelcomeCompleted', 'true');
+        }, 900); // Increased duration to 900ms (CSS animation is 800ms) for smoother DOM removal
+
+        // Cleanup removalTimer if component unmounts during fade-out
+        return () => clearTimeout(removalTimer);
+      }, 5000); // 5 seconds to start hiding process
+
+      // Cleanup visibilityTimer if component unmounts before it fires
+      return () => clearTimeout(visibilityTimer);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
   
   useEffect(() => {
     async function fetchUserData() {
@@ -349,24 +385,34 @@ export default function StudentDashboard() {
       
       {/* Completion message */}
       <div className="space-y-8">
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-bold tracking-tight mb-4">
-              Welcome back,
-            <span className="text-primaryStyling ml-2">
-                {(user.firstName || user.username || 'student')
-                  .toLowerCase()
-                  .replace(/^./, str => str.toUpperCase())}
-              </span>
-            <span className="ml-2">👋</span>
-            </h1>
-            
-            {/* Completion message */}
-            {completionMessage && (
-              <div className="mt-4 p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 animate-pulse">
-                {completionMessage}
+        {/* Animated Welcome Message Div - conditionally rendered and animated */}
+        {displayWelcomeMessage && (
+          <div
+            className={`transition-all duration-800 ease-in-out overflow-hidden ${
+              animateWelcomeMessageOut ? 'max-h-0 opacity-0' : 'max-h-28 opacity-100'
+            }`}
+          >
+            <h1 className="text-5xl font-bold tracking-tight flex flex-col gap-3">
+              <div>Welcome back,</div>
+              <div>
+                <span className="text-primaryStyling">
+                  {(user.firstName || user.username || 'student')
+                    .toLowerCase()
+                    .replace(/^./, str => str.toUpperCase())}
+                </span>
+                <span className="ml-1">👋</span>
               </div>
-            )}
+            </h1>
           </div>
+        )}
+
+        {/* Completion Message - now a direct child of space-y-8, flex flex-col removed */}
+        {completionMessage && (
+          <div className="p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 animate-pulse">
+            {completionMessage}
+          </div>
+        )}
+
         {/* Most Recent Section */}
         {hasModules && (
           <div className="space-y-4">

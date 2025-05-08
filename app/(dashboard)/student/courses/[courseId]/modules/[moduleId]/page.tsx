@@ -223,22 +223,25 @@ export default function StudentCourseModuleDetailPage() {
             <div className="pt-6">
               {isCompleted ? (
                 <div className="space-y-4">
-                  <Link href={`/student/player?courseId=${courseId}&moduleId=${moduleId}`}>
-                    <Button 
-                      size="lg" 
-                      className="group relative overflow-hidden w-full sm:w-auto bg-green-600 hover:bg-green-700 cursor-pointer transition-all duration-300 hover:pl-7"
-                    >
-                      <span className="relative z-10 flex items-center">
-                        <CheckCircle className="mr-2 h-5 w-5" />
-                        Review Module
-                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                      <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
-                    </Button>
-                  </Link>
+                  <Button 
+                    size="lg" 
+                    className="group relative overflow-hidden w-full sm:w-auto bg-gray-400 cursor-not-allowed opacity-60"
+                    disabled
+                  >
+                    <span className="relative z-10 flex items-center">
+                      <Clock className="mr-2 h-5 w-5" />
+                      Module Completed
+                    </span>
+                  </Button>
                   
                   <div className="text-sm text-muted-foreground">
-                    You've already completed this module. You can review it again if needed.
+                    You've already completed this module.{" "}
+                    <Link 
+                      href={`/student/player?courseId=${courseId}&moduleId=${moduleId}`}
+                      className="text-primary underline hover:text-primary/80 font-medium cursor-pointer text-primaryStyling"
+                    >
+                      Review it again
+                    </Link>
                   </div>
                 </div>
               ) : (

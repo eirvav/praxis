@@ -1440,6 +1440,23 @@ export default function CombinedVideoResponsePlayer({
   // Add state for the countdown header text
   const [countdownHeader, setCountdownHeader] = useState<string | null>(null);
 
+  // Add a new handler for clicks on the video container
+  const handleVideoContainerClick = useCallback(() => {
+    if (phase !== 'video') return; // Only act in video phase
+
+    // Condition for showing the instant response warning
+    const shouldShowWarning = responseSlide.config.instantResponse === true && !isVideoPlayed && !videoEnded;
+
+    if (shouldShowWarning) {
+      setShowInstantResponseWarning(true);
+    } else if (!isPlaying && !videoEnded && !isVideoLoading && videoRef.current) {
+      // If warning is not needed, and video is in a playable state, try to play it.
+      playVideo();
+    }
+    // If none of the above, the click does nothing specific here,
+    // allowing other controls (like custom controls if visible) to handle clicks.
+  }, [phase, responseSlide.config.instantResponse, isVideoPlayed, videoEnded, isPlaying, isVideoLoading, playVideo, setShowInstantResponseWarning]);
+
   // Render the response list panel
   const renderResponseListPanel = () => {
     console.log('Rendering response list panel, recordings:', recordings.length);
@@ -1532,6 +1549,7 @@ export default function CombinedVideoResponsePlayer({
             ref={videoContainerRef}
             className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative"
             onMouseMove={handleMouseMove}
+            onClick={handleVideoContainerClick}
           >
             {/* Instant Response Warning Modal */}
             <Dialog open={showInstantResponseWarning} onOpenChange={setShowInstantResponseWarning}>
@@ -1651,7 +1669,6 @@ export default function CombinedVideoResponsePlayer({
             {!isPlaying && !videoEnded && !isVideoLoading && (
               <div 
                 className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer"
-                onClick={playVideo}
               >
                 <div className="rounded-full bg-primaryStyling hover:bg-indigo-700 p-4 transition-colors duration-300 shadow-lg">
                   <Play className="h-10 w-10 text-white" />
