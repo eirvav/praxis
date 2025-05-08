@@ -132,7 +132,7 @@ export default function WaitlistPage() {
   }
 
   return (
-    <div className="w-full px-4 sm:px-0">
+    <div className="w-full">
       <div className="mb-6 sm:mb-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Join the <span className="text-indigo-600">waitlist!</span></h2>
         <p className="text-gray-500">Be the first to know when we launch</p>
