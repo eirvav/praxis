@@ -418,12 +418,6 @@ export default function StudentDashboard() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Most Recent</h2>
-              <Link 
-                href="" 
-                className="text-primaryStyling relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-primaryStyling after:transition-transform after:duration-300 hover:after:scale-x-100"
-              >
-                View All
-              </Link>
             </div>
                 
                 {loading ? (

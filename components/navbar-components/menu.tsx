@@ -130,7 +130,11 @@ export function Menu({ isOpen }: MenuProps) {
                                     className={cn(
                                       "w-full justify-start h-10 mb-1",
                                       translationKey === "common.navigation.quickCreate" && "bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white",
-                                      ((active === undefined && pathname.startsWith(href)) || active) && 
+                                      // STUDENT DASHBOARD ACTIVE STATE
+                                      userRole === "student" && translationKey === TRANSLATION_KEYS.DASHBOARD && ((active === undefined && pathname.startsWith(href)) || active) &&
+                                      "bg-primaryStyling text-white hover:bg-indigo-600 hover:text-white dark:bg-red-700 dark:hover:bg-indigo-800",
+                                      // DEFAULT ACTIVE STATE (if not student dashboard)
+                                      !(userRole === "student" && translationKey === TRANSLATION_KEYS.DASHBOARD) && ((active === undefined && pathname.startsWith(href)) || active) && 
                                       "bg-indigo-100 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-foreground"
                                     )}
                                     onClick={(e) => {
