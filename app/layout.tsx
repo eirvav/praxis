@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+import Script from 'next/script'
 
 
 const geistSans = Geist({
@@ -63,6 +64,29 @@ export default async function RootLayout({
       <html lang={locale} suppressHydrationWarning>
         <head>
           <link rel="manifest" href="/manifest.webmanifest" />
+          <Script id="maze-universal-praxis">
+            {`
+              (function (m, a, z, e) {
+                var s, t;
+                try {
+                  t = m.sessionStorage.getItem('maze-us');
+                } catch (err) {}
+
+                if (!t) {
+                  t = new Date().getTime();
+                  try {
+                    m.sessionStorage.setItem('maze-us', t);
+                  } catch (err) {}
+                }
+
+                s = a.createElement('script');
+                s.src = z + '?apiKey=' + e;
+                s.async = true;
+                a.getElementsByTagName('head')[0].appendChild(s);
+                m.mazeUniversalSnippetApiKey = e;
+              })(window, document, 'https://snippet.maze.co/maze-universal-loader.js', 'cccb25ac-0092-411f-8ebf-ab3d039e01f7');
+            `}
+          </Script>
         </head>
         <body 
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}

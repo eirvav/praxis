@@ -5,7 +5,7 @@ export default function SignInPage() {
     <div className="w-full">
       <div className="mb-6 sm:mb-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Hi there!</h2>
-        <p className="text-gray-500">Welcome back to your special place</p>
+        <p className="text-gray-500">Please sign in to praXis!</p>
       </div>
 
       <SignIn

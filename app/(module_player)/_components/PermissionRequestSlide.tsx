@@ -278,6 +278,21 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
 
   // Handle accepting permissions and continuing
   const handleAccept = () => {
+    // Clean up media resources before proceeding
+    cleanupMediaResources();
+    
+    // Reset state
+    setStream(null);
+    setAudioLevel(0);
+    setIsTestingMic(false);
+    setErrorMessage(null);
+    setIsVideoLoading(true);
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '';
+    }
+
     if (permissionStatus.camera === 'granted' && permissionStatus.microphone === 'granted') {
       onPermissionsGranted();
     } else {
@@ -287,6 +302,21 @@ export default function PermissionRequestSlide({ onPermissionsGranted }: Permiss
 
   // Handle declining and returning to dashboard
   const handleDecline = () => {
+    // Clean up media resources before leaving
+    cleanupMediaResources();
+    
+    // Reset state
+    setStream(null);
+    setAudioLevel(0);
+    setIsTestingMic(false);
+    setErrorMessage(null);
+    setIsVideoLoading(true);
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '';
+    }
+
     router.push('/student/');
   };
 

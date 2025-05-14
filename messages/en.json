@@ -21,6 +21,8 @@
       "sortName": "Name",
       "sortEnrolled": "Enrolled",
       "sortCompletion": "Completion Rate"
+      "sortCompletion": "Completion Rate",
+      "goBack": "Go back to courses"
     },
     "inputs": {
       "searchCourse": "Search modules...",
@@ -87,6 +89,7 @@
         "shareTxt": "Share module with other teachers",
         "shareInp": "Search for teachers...",
         "minutes": "minutes",
+        "publish": "Publish Date",
         "description": {
           "label": "Description",
           "placeholder": "Enter a description for this module..."
@@ -128,6 +131,8 @@
       "maxWords": "Max words",
       "words": "words",
       "requiredSlide": "Required Slide"
+      "response": "Enter instructions or prompts for students to respond to...",
+      "info": "This interactive slide lets students respond to your content with reflections, open-ended answers, or feedback."
     },
     "quiz": {
       "description": "Description",

@@ -20,6 +20,8 @@
       "sortName": "Navn",
       "sortEnrolled": "Antall",
       "sortCompletion": "Fullførte"
+      "sortCompletion": "Fullførte",
+      "goBack": "Tilbake til fag"
     },
     "inputs": {
       "searchCourse": "Søk etter arbeidskrav...",
@@ -87,6 +89,7 @@
         "shareTxt": "Del arbeidskravet med andre lærere",
         "shareInp": "Søk etter lærere...",
         "minutes": "minutter",
+        "publish": "Publiseringsdato",
         "description": {
           "label": "Beskrivelse",
           "placeholder": "Skriv inn en beskrivelse for denne modulen..."
@@ -114,7 +117,7 @@
       "addSlide": "Legg til Slide",
       "unknownSlide": "Ukjent lysbilde",
       "textSlide": "Skriftlig Tilbakemelding",
-      "videoSlide": "Last opp Video",
+      "videoSlide": "Se video",
       "quizSlide": "Kunnskapstest",
       "videoResponse": "Videorespons",
       "scaleRating": "Likert Skala",
@@ -128,6 +131,8 @@
       "maxWords": "Maks antall ord",
       "words": "ord",
       "requiredSlide": "Påkrevd Slide"
+      "response": "Skriv inn svaret ditt her!",
+      "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger."
     },
     "quiz": {
       "description": "Beskrivelse",

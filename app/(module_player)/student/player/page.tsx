@@ -168,6 +168,7 @@ export default function StudentModulePlayerPage() {
         {/* Header with navigation */}
         <PlayerHeader 
           moduleName={moduleDetails?.title || 'Module Player'}
+          moduleId={moduleId as string}
           currentSlideIndex={currentSlideIndex}
           totalSlides={slides.length}
           goToPreviousSlide={goToPreviousSlide}

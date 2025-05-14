@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { generateColorFromString } from '@/lib/menu-list';
+import { CheckCircle2 } from 'lucide-react';
 
 export type StudentModuleCardProps = {
   id: string;
@@ -17,6 +18,7 @@ export type StudentModuleCardProps = {
   viewMode?: 'grid' | 'list';
   deadline?: string;
   teacherUsername?: string;
+  isCompleted?: boolean;
 };
 
 // Function to determine if text should be white or black based on background color
@@ -116,7 +118,8 @@ const StudentModuleCard = ({
   href,
   viewMode = 'grid',
   deadline,
-  teacherUsername
+  teacherUsername,
+  isCompleted = false
 }: StudentModuleCardProps) => {
   const lastUpdated = updated_at || createdAt || '';
   const displayText = description || '';
@@ -142,14 +145,15 @@ const StudentModuleCard = ({
     return (
       <div className="relative group">
         <Link href={route} className="block">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-primary/50 hover:shadow-xl shadow-sm transition-all h-24">
-            <div className="flex items-center gap-4 h-full">
+          <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-all h-28 group-hover:scale-[1.02] duration-300
+              ${isCompleted ? 'opacity-70 hover:opacity-100' : 'hover:border-primary/50 hover:shadow-xl'}`}>
+            <div className="flex items-center gap-6 h-full p-5">
               <div className="relative flex-shrink-0">
                 <div className="relative w-24 h-16 rounded-md overflow-hidden">
                   {thumbnail_url ? (
                     thumbnail_url.startsWith('#') ? (
                       <div 
-                        className="absolute inset-0" 
+                        className={`absolute inset-0 ${isCompleted ? 'grayscale group-hover:grayscale-0' : ''}`}
                         style={{ backgroundColor: thumbnail_url }}
                       />
                     ) : (
@@ -158,41 +162,40 @@ const StudentModuleCard = ({
                         alt={`${title} thumbnail`}
                         fill
                         style={{ objectFit: 'cover' }}
+                        className={isCompleted ? 'grayscale group-hover:grayscale-0 transition-all duration-300' : ''}
                       />
                     )
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200" />
+                    <div className={`w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 ${isCompleted ? 'grayscale group-hover:grayscale-0 transition-all duration-300' : ''}`} />
                   )}
                 </div>
               </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
-                <div className="flex items-center gap-2 mb-1">
-                  {courseName && (
-                    <div 
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${coursePillTextColor}`}
-                      style={{ backgroundColor: coursePillBg }}
-                    >
-                      {courseName}
-                    </div>
-                  )}
-                  <div 
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${semesterTextColor}`}
-                    style={{ backgroundColor: semesterColor }}
-                  >
-                    {semesterCode}
-                  </div>
-                </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full pr-4">
                 <div>
-                  <h2 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">{title}</h2>
-                  <p className="text-sm text-muted-foreground line-clamp-1">{displayText}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    {courseName && (
+                      <div 
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${coursePillTextColor}`}
+                        style={{ backgroundColor: coursePillBg }}
+                      >
+                        {courseName}
+                      </div>
+                    )}
+                    <div 
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${semesterTextColor}`}
+                      style={{ backgroundColor: semesterColor }}
+                    >
+                      {semesterCode}
+                    </div>
+                  </div>
+                  <h2 className={`text-lg font-semibold ${isCompleted ? 'text-gray-500 group-hover:text-primary' : 'group-hover:text-primary'} transition-colors truncate`}>{title}</h2>
+                  <p className="text-sm text-muted-foreground truncate mt-0.5">{displayText}</p>
                 </div>
               </div>
-              {teacherUsername && (
-                <div 
-                  className="absolute bottom-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-md"
-                  style={{ backgroundColor: teacherAvatarColor }}
-                >
-                  {teacherInitial}
+              {isCompleted && (
+                <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full h-fit flex-shrink-0">
+                  <span className="text-xs font-medium">Completed</span>
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
               )}
             </div>
@@ -205,12 +208,22 @@ const StudentModuleCard = ({
   return (
     <div className="relative group h-full">
       <Link href={route} className="block h-full">
-        <div className="bg-transparent rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl transition-all h-full flex flex-col group-hover:scale-[1.02] duration-300">
-          <div className="relative w-full pt-[50%] flex-shrink-0 rounded-xl overflow-hidden">
+        {/* Keep completed badge at top-right for grid view */}
+        {isCompleted && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full shadow-md z-10">
+            <span className="text-xs font-medium">Completed</span>
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+        )}
+        <div className={`bg-white dark:bg-gray-800 rounded-xl border transition-all h-full flex flex-col duration-300 group-hover:scale-[1.02]
+          ${isCompleted 
+            ? 'border-gray-200 opacity-70 hover:opacity-100 hover:shadow-md' 
+            : 'border-transparent hover:shadow-xl'}`}>
+          <div className="relative w-full pt-[50%] flex-shrink-0 rounded-t-xl overflow-hidden">
             {thumbnail_url ? (
               thumbnail_url.startsWith('#') ? (
                 <div 
-                  className="absolute inset-0 rounded-xl"
+                  className={`absolute inset-0 rounded-t-xl ${isCompleted ? 'grayscale group-hover:grayscale-0 transition-all duration-300' : ''}`}
                   style={{ backgroundColor: thumbnail_url }}
                 />
               ) : (
@@ -219,16 +232,16 @@ const StudentModuleCard = ({
                   alt={`${title} thumbnail`}
                   fill
                   style={{ objectFit: 'cover' }}
-                  className="group-hover:scale-105 transition-transform duration-500 rounded-xl"
+                  className={`${isCompleted ? 'grayscale group-hover:grayscale-0' : 'group-hover:scale-105'} transition-transform duration-500 rounded-t-xl`}
                 />
               )
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl" />
+              <div className={`absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-t-xl ${isCompleted ? 'grayscale group-hover:grayscale-0 transition-all duration-300' : ''}`} />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-t-xl" />
           </div>
           
-          <div className="p-3 flex flex-col flex-1 relative">
+          <div className="p-3 flex flex-col flex-1 relative rounded-b-xl">
             <div className="flex flex-wrap gap-2 mb-2">
               {courseName && (
                 <div 
@@ -246,12 +259,12 @@ const StudentModuleCard = ({
               </div>
             </div>
             <div>
-              <h2 className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">{title}</h2>
+              <h2 className={`text-base font-semibold ${isCompleted ? 'text-gray-500 group-hover:text-primary' : 'group-hover:text-primary'} transition-colors line-clamp-2`}>{title}</h2>
             </div>
             
             <div className="mt-auto pt-2 flex justify-between items-center">
               <span className="text-xs font-medium text-muted-foreground">
-                Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}
+                {isCompleted ? 'Completed' : `Last updated: ${lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}`}
               </span>
               
               {teacherUsername && (

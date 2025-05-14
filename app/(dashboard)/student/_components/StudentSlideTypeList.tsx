@@ -109,17 +109,17 @@ export default function StudentSlideTypeList({ moduleId }: SlideTypeListProps) {
       case 'text':
         return {
           icon: <FileText className="h-4 w-4 text-blue-600" />,
-          label: config.title || t('slides.common.textSlide') || getSlideTitle(config, 'Text')
+          label: t('slides.common.textSlide') || getSlideTitle(config, 'Text')
         };
       case 'video':
         return {
           icon: <Video className="h-4 w-4 text-purple-600" />,
-          label: config.title || t('slides.common.videoSlide') || getSlideTitle(config, 'Video')
+          label: t('slides.common.videoSlide') || getSlideTitle(config, 'Video')
         };
       case 'quiz':
         return {
           icon: <ListTodo className="h-4 w-4 text-amber-600" />,
-          label: config.title || t('slides.common.quizSlide') || getSlideTitle(config, 'Quiz')
+          label: t('slides.common.quizSlide') || getSlideTitle(config, 'Quiz')
         };
       case 'student_response':
         return {

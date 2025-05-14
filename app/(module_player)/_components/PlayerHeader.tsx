@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
+import { useUser } from '@clerk/nextjs';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface PlayerHeaderProps {
   moduleName: string;
+  moduleId: string;
   currentSlideIndex: number;
   totalSlides: number;
   goToPreviousSlide: () => void;
@@ -18,6 +23,7 @@ interface PlayerHeaderProps {
 
 export default function PlayerHeader({
   moduleName,
+  moduleId,
   currentSlideIndex,
   totalSlides,
   goToPreviousSlide,
@@ -27,18 +33,57 @@ export default function PlayerHeader({
   courseName
 }: PlayerHeaderProps) {
   const router = useRouter();
+  const supabase = useSupabase();
+  const { user } = useUser();
+  const [isCompleting, setIsCompleting] = useState(false);
   
   // Determine if this is the last slide
   const isLastSlide = currentSlideIndex === totalSlides - 1;
   
-  const handleNextClick = () => {
+  const handleNextClick = async () => {
     if (isLastSlide) {
-      // Set flag in localStorage to trigger confetti on dashboard
-      localStorage.setItem('showModuleCompletionConfetti', 'true');
-      localStorage.setItem('completedModuleName', moduleName || 'module');
-      
-      // Immediately redirect to dashboard
-      router.push('/student/');
+      // Handle module completion
+      if (user && moduleId) {
+        try {
+          setIsCompleting(true);
+          
+          // Record module completion in the database
+          const { error } = await supabase!.from('module_completions').insert({
+            user_id: user.id,
+            module_id: moduleId,
+            completed_at: new Date().toISOString()
+          });
+          
+          if (error) {
+            // If it's a duplicate entry, just proceed (user already completed this module)
+            if (error.code === '23505') { // Unique violation
+              console.log('Module already completed, proceeding to dashboard');
+            } else {
+              throw error;
+            }
+          }
+          
+          // Set flag in localStorage to trigger confetti on dashboard
+          localStorage.setItem('showModuleCompletionConfetti', 'true');
+          localStorage.setItem('completedModuleName', moduleName || 'module');
+          
+          // Show success message
+          toast.success(`You've completed ${moduleName}!`);
+          
+          // Redirect to dashboard
+          router.push('/student/');
+        } catch (err) {
+          console.error('Error recording module completion:', err);
+          toast.error('Failed to record your progress. Please try again.');
+        } finally {
+          setIsCompleting(false);
+        }
+      } else {
+        // Fallback if user or moduleId not available (shouldn't happen)
+        localStorage.setItem('showModuleCompletionConfetti', 'true');
+        localStorage.setItem('completedModuleName', moduleName || 'module');
+        router.push('/student/');
+      }
     } else {
       goToNextSlide();
     }
@@ -88,10 +133,15 @@ export default function PlayerHeader({
             
             <Button
               onClick={handleNextClick}
-              disabled={isLastSlide ? false : disableNext}
+              disabled={(isLastSlide ? false : disableNext) || isCompleting}
               className={`${isLastSlide ? 'bg-green-600 hover:bg-green-700' : 'bg-primaryStyling hover:bg-indigo-700'} cursor-pointer`}
             >
-              {isLastSlide ? 'Complete Module' : 'Next Step'}
+              {isCompleting 
+                ? 'Saving...' 
+                : isLastSlide 
+                  ? 'Complete Module' 
+                  : 'Next Step'
+              }
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
