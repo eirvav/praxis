@@ -5,6 +5,13 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { ContentLayout } from '@/components/navbar-components/content-layout';
 import { toast } from 'sonner';
@@ -17,6 +24,7 @@ import ModuleFilters, {
   ViewMode,
   FilterType
 } from '../../_components/ModuleFilters';
+import { ChevronDown, Filter, LayoutGrid, Search } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -43,8 +51,6 @@ export default function StudentCourseDetailPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [moduleStatus, setModuleStatus] = useState<ModuleStatus>('all');
@@ -261,9 +267,8 @@ export default function StudentCourseDetailPage() {
             placeholder={t('common.inputs.searchCourse')}
             className="pl-9"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           />
-        </div>
         </div>
 
         {/* Module Filters Component */}

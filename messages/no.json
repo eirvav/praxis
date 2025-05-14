@@ -19,7 +19,6 @@
       "sortDate": "Dato",
       "sortName": "Navn",
       "sortEnrolled": "Antall",
-      "sortCompletion": "Fullførte"
       "sortCompletion": "Fullførte",
       "goBack": "Tilbake til fag"
     },
@@ -89,7 +88,6 @@
         "shareTxt": "Del arbeidskravet med andre lærere",
         "shareInp": "Søk etter lærere...",
         "minutes": "minutter",
-        "publish": "Publiseringsdato",
         "description": {
           "label": "Beskrivelse",
           "placeholder": "Skriv inn en beskrivelse for denne modulen..."
@@ -130,9 +128,8 @@
       "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger.",
       "maxWords": "Maks antall ord",
       "words": "ord",
-      "requiredSlide": "Påkrevd Slide"
-      "response": "Skriv inn svaret ditt her!",
-      "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger."
+      "requiredSlide": "Påkrevd Slide",
+      "response": "Skriv inn svaret ditt her!"
     },
     "quiz": {
       "description": "Beskrivelse",
