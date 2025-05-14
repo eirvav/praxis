@@ -8,7 +8,6 @@ import { useUser } from '@clerk/nextjs';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from 'next-intl';
-import VideoProgressBar from '@/app/(module_player)/_components/VideoProgressBar';
 
 export interface VideoSlideConfig {
   type: 'video';
@@ -35,9 +34,6 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
   const supabase = useSupabase();
   const { user } = useUser();
   
-  // Add state for tracking video progress
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   
   // Add an error handler to the window for tracking unhandled promise rejections
   useEffect(() => {
@@ -161,20 +157,6 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
     videoFileInputRef.current?.click();
   };
 
-  // Handle video time update for progress bar
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
-  };
-  
-  // Handle loaded metadata to get duration
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-    }
-  };
-
   // Log the rendering conditions
   console.log('[VideoSlide] Render conditions:', { 
     isUploading, 
@@ -228,7 +210,7 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
           ) : config.videoUrl ? (
             <div className="relative">
               {/* Video Preview */}
-              <div className="aspect-video relative">
+              <div className="max-w-[500px] mx-auto aspect-video relative">
                 <video 
                   src={config.videoUrl} 
                   className="w-full h-full"
@@ -237,8 +219,6 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
                   crossOrigin="anonymous"
                   preload="metadata"
                   playsInline
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={handleLoadedMetadata}
                   onError={(e) => {
                     console.error('[VideoSlide] Video load error:', e);
                     // Try to provide more details about the error
@@ -254,16 +234,6 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
                   }}
                 />
                 
-                {/* Add video progress bar */}
-                {!videoError && (
-                  <div className="absolute bottom-14 left-0 right-0 z-10">
-                    <VideoProgressBar 
-                      currentTime={currentTime} 
-                      duration={duration} 
-                    />
-                  </div>
-                )}
-                
                 {/* Fallback in case of video error */}
                 {videoError && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20">
@@ -273,23 +243,22 @@ export const VideoSlideContent = ({ config, onConfigChange }: VideoSlideProps) =
                     </div>
                   </div>
                 )}
-              </div>
-              
-              {/* Replace Video Button Overlay */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  videoFileInputRef.current?.click();
-                }}
-              >
-                <Button 
-                  variant="outline" 
-                  className="bg-white/90 hover:bg-white"
-                >
-                  <Video className="h-4 w-4 mr-2" />
-                  {t('slides.video.replaceVideo')}
-                </Button>
+                
+                {/* Replace Video Button - positioned in top right corner */}
+                <div className="absolute top-2 right-2 z-20">
+                  <Button 
+                    variant="outline" 
+                    className="bg-white/90 hover:bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      videoFileInputRef.current?.click();
+                    }}
+                    size="sm"
+                  >
+                    <Video className="h-3 w-3 mr-1" />
+                    {t('slides.video.replaceVideo')}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

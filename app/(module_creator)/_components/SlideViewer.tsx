@@ -3,26 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../../(dashboard)/_components/SupabaseProvider';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal, Clock, Camera } from 'lucide-react';
+import { FileText, Video, ListTodo, AlertCircle, MessageSquare, MoveHorizontal, Clock, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { Slide, TextSlideConfig, VideoSlideConfig, QuizSlideConfig, StudentResponseSlideConfig, SliderSlideConfig, ContextSlideConfig } from './SlideEditor';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
-
-// Helper function to strip HTML tags for preview text
-const stripHtmlTags = (html: string | undefined): string => {
-  if (!html) return '';
-  // For server-side rendering safety
-  if (typeof window === 'undefined') return html.replace(/<[^>]*>?/gm, '');
-  
-  // Create a temporary DOM element
-  const tempElement = document.createElement('div');
-  tempElement.innerHTML = html;
-  // Get the text content
-  return tempElement.textContent || tempElement.innerText || '';
-};
 
 interface SlideViewerProps {
   moduleId: string;
@@ -112,19 +97,6 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
     loadSlides();
   }, [supabase, moduleId]);
 
-  // Navigation functions
-  const goToNextSlide = () => {
-    if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
-    }
-  };
-
-  const goToPreviousSlide = () => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1);
-    }
-  };
-
   // Handle quiz answer selection
   const selectQuizAnswer = (slideIndex: number, optionIndex: number) => {
     setQuizAnswers({
@@ -153,47 +125,51 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
     }
   };
 
-  // Get slide type badge
-  const getSlideTypeBadge = (type: string) => {
+  // Get slide type info
+  const getSlideTypeInfo = (type: string) => {
     switch (type) {
       case 'text':
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
-            <FileText className="h-3 w-3 mr-1" /> {t('slides.common.textSlide')}
-          </Badge>
-        );
+        return {
+          icon: <FileText className="h-5 w-5" />,
+          label: t('slides.common.textSlide'),
+          color: 'text-blue-600'
+        };
       case 'video':
-        return (
-          <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50 border-purple-200">
-            <Video className="h-3 w-3 mr-1" /> {t('slides.common.videoSlide')}
-          </Badge>
-        );
+        return {
+          icon: <Video className="h-5 w-5" />,
+          label: t('slides.common.videoSlide'),
+          color: 'text-purple-600'
+        };
       case 'quiz':
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200">
-            <ListTodo className="h-3 w-3 mr-1" /> {t('slides.common.quizSlide')}
-          </Badge>
-        );
+        return {
+          icon: <ListTodo className="h-5 w-5" />,
+          label: t('slides.common.quizSlide'),
+          color: 'text-amber-600'
+        };
       case 'student_response':
-        return (
-          <Badge variant="outline" className="bg-rose-50 text-rose-700 hover:bg-rose-50 border-rose-200">
-            <Camera className="h-3 w-3 mr-1" /> {t('slides.common.videoResponse')}
-          </Badge>
-        );
+        return {
+          icon: <Camera className="h-5 w-5" />,
+          label: t('slides.common.videoResponse'),
+          color: 'text-rose-600'
+        };
       case 'slider':
-        return (
-          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
-            <MoveHorizontal className="h-3 w-3 mr-1" /> {t('slides.common.scaleRating')}
-          </Badge>
-        );
+        return {
+          icon: <MoveHorizontal className="h-5 w-5" />,
+          label: t('slides.common.scaleRating'),
+          color: 'text-indigo-600'
+        };
       case 'context':
-        return (
-          <Badge variant="outline" className="bg-teal-50 text-teal-700 hover:bg-teal-50 border-teal-200">
-            <MessageSquare className="h-3 w-3 mr-1" /> {t('slides.common.contextSlide')}
-          </Badge>
-        );
+        return {
+          icon: <MessageSquare className="h-5 w-5" />,
+          label: t('slides.common.contextSlide'),
+          color: 'text-teal-600'
+        };
       default:
-        return null;
+        return {
+          icon: <AlertCircle className="h-5 w-5" />,
+          label: 'Unknown',
+          color: 'text-gray-600'
+        };
     }
   };
 
@@ -201,38 +177,35 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
   const renderCurrentSlide = () => {
     if (slides.length === 0) {
       return (
-        <Card>
-          <CardContent className="py-10">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4">{t('slides.viewer.noSlides.title')}</p>
-              <span className="text-sm text-gray-500">{t('slides.viewer.noSlides.subtitle')}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg p-10">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">{t('slides.viewer.noSlides.title')}</p>
+            <span className="text-sm text-gray-500">{t('slides.viewer.noSlides.subtitle')}</span>
+          </div>
+        </div>
       );
     }
 
     const currentSlide = slides[currentSlideIndex];
     console.log('[SlideViewer] Rendering slide:', currentSlide);
+    const slideTypeInfo = getSlideTypeInfo(currentSlide.slide_type);
 
     switch (currentSlide.slide_type) {
       case 'text':
         if (!isTextSlide(currentSlide)) return <p>Invalid text slide configuration</p>;
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2 py-3">
-              <div className="flex items-center gap-2">
-                <CardTitle>{t('slides.text.title')}</CardTitle>
-                {getSlideTypeBadge('text')}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-3">
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6">
               <div 
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: currentSlide.config.content }}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       
       case 'video':
@@ -242,22 +215,20 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
         const allowReplay = currentSlide.config.allowReplay !== false; // Default to true if not specified
         
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle>{currentSlide.config.title || 'Video Slide'}</CardTitle>
-                {getSlideTypeBadge('video')}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{currentSlide.config.title || slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6 space-y-4">
               {/* Context field */}
               {currentSlide.config.context && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-800">
+                <div className="bg-blue-50 rounded-md p-3 text-blue-800">
                   <p className="text-sm">{currentSlide.config.context}</p>
                 </div>
               )}
               
-              <div className="aspect-video overflow-hidden rounded-md border bg-muted relative">
+              <div className="aspect-video overflow-hidden rounded-md bg-muted relative">
                 {currentSlide.config.videoUrl ? (
                   <>
                     <video 
@@ -338,21 +309,19 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       
       case 'quiz':
         if (!isQuizSlide(currentSlide)) return <p>Invalid quiz slide configuration</p>;
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle>Quiz Question</CardTitle>
-                {getSlideTypeBadge('quiz')}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-6">
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6 space-y-6">
               <h3 className="text-xl font-medium">{currentSlide.config.question}</h3>
               
               <div className="space-y-3">
@@ -396,29 +365,27 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
               )}
               
               {quizResults[currentSlideIndex] !== undefined && (
-                <div className={`p-4 rounded-md ${quizResults[currentSlideIndex] ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <div className={`p-4 rounded-md ${quizResults[currentSlideIndex] ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                   {quizResults[currentSlideIndex]
                     ? 'Correct! Great job!'
                     : `Incorrect. The correct answer is: ${currentSlide.config.options[currentSlide.config.correctOptionIndex]}`
                   }
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       
       case 'student_response':
         if (!isStudentResponseSlide(currentSlide)) return <p>Invalid student response slide configuration</p>;
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle>Video Response Required</CardTitle>
-                {getSlideTypeBadge('student_response')}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="bg-rose-50 border border-rose-200 rounded-md p-4">
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-rose-50 rounded-md p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center">
                     <Camera className="h-5 w-5 text-rose-600" />
@@ -449,23 +416,19 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       
       case 'slider':
         if (!isSliderSlide(currentSlide)) return <p>Invalid slider slide configuration</p>;
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle className="flex items-center gap-2">
-                  <MoveHorizontal className="h-5 w-5 text-indigo-600" />
-                  Scale Rating
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6">
               <div className="space-y-8">
                 {currentSlide.config.sliders.map((slider) => {
                   const boxCount = slider.max - slider.min + 1;
@@ -507,28 +470,24 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
 
       case 'context':
         if (!isContextSlide(currentSlide)) return <p>Invalid context slide configuration</p>;
         return (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle>{t('slides.common.contextSlide')}</CardTitle>
-                {getSlideTypeBadge('context')}
+          <div className="bg-white rounded-lg">
+            <div className={`flex items-center gap-3 p-4 ${slideTypeInfo.color}`}>
+              {slideTypeInfo.icon}
+              <span className="font-medium">{slideTypeInfo.label}</span>
+            </div>
+            <div className="p-6">
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: currentSlide.config.content }} />
               </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="bg-teal-50 border border-teal-200 rounded-md p-4">
-                <div className="prose max-w-none text-teal-900">
-                  <div dangerouslySetInnerHTML={{ __html: currentSlide.config.content }} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       
       default:
@@ -542,88 +501,47 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
 
   return (
     <div className="space-y-6">
-      <div className="bg-muted/30 rounded-lg p-3 flex justify-between items-center">
-        <Button 
-          variant="outline" 
-          onClick={goToPreviousSlide}
-          disabled={currentSlideIndex === 0}
-          size="sm"
-          className="h-8"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-        </Button>
-        
-        <div className="flex items-center gap-4">
-          <div className="text-sm font-medium">
-            {slides.length > 0 ? `Slide ${currentSlideIndex + 1} of ${slides.length}` : 'No Slides'}
-          </div>
-          {estimatedDuration && (
-            <>
-              <div className="h-4 w-px bg-gray-300" />
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{estimatedDuration} min</span>
-              </div>
-            </>
-          )}
+      {/* Module info */}
+      {estimatedDuration && (
+        <div className="flex items-center justify-end gap-1.5 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>{estimatedDuration} min</span>
         </div>
-        
-        <Button 
-          variant="outline" 
-          onClick={goToNextSlide}
-          disabled={currentSlideIndex === slides.length - 1}
-          size="sm"
-          className="h-8"
-        >
-          Next <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
+      )}
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Main content area */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Slide thumbnails sidebar */}
-        <div className="hidden md:block md:col-span-1">
-          <div className="border rounded-lg bg-muted/30">
-            <div className="p-3 border-b bg-muted/50">
-              <h3 className="text-sm font-medium">Slides ({slides.length})</h3>
-            </div>
-            <div className="p-2 max-h-[500px] overflow-y-auto">
+        <div className="hidden md:block md:col-span-4">
+          <div className="bg-white rounded-lg">
+            <div className="p-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               <div className="space-y-1">
                 {slides.map((slide, index) => {
-                  // Safe content extraction based on slide type
-                  let slideContent = t('slides.common.unknownSlide');
-                  
-                  if (slide.slide_type === 'text' && isTextSlide(slide)) {
-                    slideContent = stripHtmlTags(slide.config.content)?.slice(0, 20) || t('slides.common.textSlide');
-                  } else if (slide.slide_type === 'video' && isVideoSlide(slide)) {
-                    slideContent = slide.config.title || t('slides.common.videoSlide');
-                  } else if (slide.slide_type === 'quiz' && isQuizSlide(slide)) {
-                    slideContent = slide.config.question || t('slides.common.quizSlide');
-                  } else if (slide.slide_type === 'student_response') {
-                    slideContent = t('slides.common.videoResponse');
-                  } else if (slide.slide_type === 'slider' && isSliderSlide(slide)) {
-                    slideContent = t('slides.common.scaleRating');
-                  } else if (slide.slide_type === 'context' && isContextSlide(slide)) {
-                    slideContent = t('slides.common.contextSlide');
-                  }
+                  const slideTypeInfo = getSlideTypeInfo(slide.slide_type);
                   
                   return (
                     <div
                       key={index}
                       className={`
-                        flex items-center p-2 rounded-md cursor-pointer text-sm 
-                        ${currentSlideIndex === index ? 'bg-muted/80 border border-muted-foreground/20' : 'hover:bg-muted/50'}
+                        flex items-center p-2 rounded-md cursor-pointer
+                        ${currentSlideIndex === index ? 
+                          `bg-${slideTypeInfo.color.split('-')[1]}-50` : 
+                          'hover:bg-gray-50'}
                       `}
                       onClick={() => setCurrentSlideIndex(index)}
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded bg-background border text-xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full 
+                            bg-white text-xs font-medium">
                           {index + 1}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate">{slideContent}</p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          {getSlideTypeBadge(slide.slide_type)}
+                        <div className="flex items-center gap-2 truncate">
+                          <div className={`flex-shrink-0 ${currentSlideIndex === index ? slideTypeInfo.color : 'text-gray-500'}`}>
+                            {slideTypeInfo.icon}
+                          </div>
+                          <span className={`text-sm truncate ${currentSlideIndex === index ? slideTypeInfo.color : 'text-gray-700'}`}>
+                            {slideTypeInfo.label}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -635,7 +553,7 @@ export default function SlideViewer({ moduleId, estimatedDuration }: SlideViewer
         </div>
         
         {/* Current slide content */}
-        <div className="md:col-span-3">
+        <div className="md:col-span-8">
           {renderCurrentSlide()}
         </div>
       </div>

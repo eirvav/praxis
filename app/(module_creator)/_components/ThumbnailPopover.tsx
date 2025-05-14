@@ -182,7 +182,7 @@ export default function ThumbnailPopover({
                   }
                 }}
               >
-                {t('teacher.modules.create.removeThumbnail')}
+                {t('common.buttons.removeThumbnail')}
               </Button>
             </PopoverClose>
             <div className="space-x-2">

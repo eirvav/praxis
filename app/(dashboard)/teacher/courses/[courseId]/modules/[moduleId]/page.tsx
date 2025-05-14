@@ -168,7 +168,7 @@ export default function CourseModuleDetailPage() {
             </TabsList>
             
             <TabsContent value="preview" className="mt-0">
-              <div className="bg-card rounded-lg shadow-sm p-6 border">
+              <div className="p-6">
                 <SlideViewer moduleId={moduleId} estimatedDuration={module?.estimated_duration} />
               </div>
             </TabsContent>

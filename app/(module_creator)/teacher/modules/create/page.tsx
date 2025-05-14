@@ -1166,7 +1166,7 @@ function CreateModulePageContent() {
       </div>
 
       {/* Content area with dynamic width based on step */}
-      <div className={`mx-auto py-8 px-4 ${step === 2 ? 'max-w-full container' : 'max-w-3xl'} mt-[57px]`}>
+      <div className={cn("mx-auto py-8 px-4", step === 1 ? 'max-w-3xl' : step === 2 ? 'max-w-full container' : 'max-w-4xl', "mt-[57px]")}>
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
             {error}
@@ -1569,7 +1569,7 @@ function CreateModulePageContent() {
 
         {/* Step 3: Review & Publish */}
         {step === 3 && moduleId && (
-          <div className="max-w-3xl mx-auto">
+          <div>
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
               {/* Cover Image */}
               <div className="relative w-full h-64">
@@ -1897,7 +1897,7 @@ function CreateModulePageContent() {
                       </div>
                     </div>
                   ) : (
-                    <div className="border rounded-lg divide-y bg-white">
+                    <div className="divide-y bg-white">
                       <SlideViewer moduleId={moduleId} estimatedDuration={estimatedDuration} />
                     </div>
                   )}
