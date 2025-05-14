@@ -1,6 +1,10 @@
 {
   "common": {
     "buttons": {
+      "cancel": "Avbryt",
+      "nextStep": "Neste steg",
+      "nextStepDes": "Du kan endre på instillingene senere",
+      "image": "Velg bilde",
       "createCourse": "Opprett Fag",
       "createModule": "Opprett Arbeidskrav",
       "newModule": "Nytt Arbeidskrav",
@@ -15,6 +19,7 @@
       "sortDate": "Dato",
       "sortName": "Navn",
       "sortEnrolled": "Antall",
+      "sortCompletion": "Fullførte"
       "sortCompletion": "Fullførte",
       "goBack": "Tilbake til fag"
     },
@@ -58,11 +63,32 @@
     },
     "modules": {
       "create": {
+        "imageTag": "Bilder",
+        "colorTag": "Fargebilder",
+        "removeThumbnail": "Fjern banner",
+        "pageOverview": "Arbeidskrav Oversikt",
+        "pageContent": "Bygg Arbeidskrav",
+        "pageReview": "Oversikt & Publiser",
+        "imageTxt": "Klikk for å bytte bilde",
+        "imageSize": "Annbefalt størrelse: 1280×720",
+        "gallery": "Galleri",
+        "galleryLoad": "Laster galleri...",
+        "upload": "Last opp",
         "title": "Tittel på Arbeidskrav... *",
         "step": "Steg",
         "select": "Velg fag",
         "time": "Tidsinnstilinger",
         "deadline": "Leveringsfrist for Arbeidskrav",
+        "deadlineTxt": "Sett tidsfrist for når arbeiskravet skal leveres",
+        "publish": "Publiseringsdato",
+        "publishTxt": "Velg tidspunkt for når modulen åpnes",
+        "estimate": "Estimert tid",
+        "estimateTxt": "Anntatt tid brukt på å gjennomføre arbeidskravet",
+        "estimateInp": "Skriv tid",
+        "share": "Del Med",
+        "shareTxt": "Del arbeidskravet med andre lærere",
+        "shareInp": "Søk etter lærere...",
+        "minutes": "minutter",
         "publish": "Publiseringsdato",
         "description": {
           "label": "Beskrivelse",
@@ -82,6 +108,13 @@
   },
   "slides": {
     "common": {
+      "slideType": "Typer slides",
+      "contextCate": "Kontekst slides",
+      "interactiveCate": "Interaktive slides",
+      "deleteSlide": "Slett valgte slide",
+      "preview": "Forhåndsvisning",
+      "slideSetting": "Slide instillinger",
+      "addSlide": "Legg til Slide",
       "unknownSlide": "Ukjent lysbilde",
       "textSlide": "Skriftlig Tilbakemelding",
       "videoSlide": "Se video",
@@ -94,10 +127,19 @@
     "text": {
       "title": "Skriftlig Tilbakemelding",
       "placeholder": "Skriv inn instruksjoner eller spørsmål som studentene skal svare på...",
+      "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger.",
+      "maxWords": "Maks antall ord",
+      "words": "ord",
+      "requiredSlide": "Påkrevd Slide"
       "response": "Skriv inn svaret ditt her!",
       "info": "Dette er et interaktivt lysbilde hvor studentene vil svare på ditt innhold. Bruk dette for reflekterende spørsmål, åpne svar, eller for å samle studentenes tanker og tilbakemeldinger."
     },
     "quiz": {
+      "description": "Beskrivelse",
+      "optional": "(Valgfritt)",
+      "descInp": "Gi kontekst til spørsmålet...",
+      "allowMulti": "Mulig med flere riktige svar",
+      "optionShuffle": "Bland alternativene",
       "selectOne": "Merk ett alternativ som riktig for quizen",
       "selectMultiple": "Velg ett eller flere alternativer som riktige for quizen",
       "question": "Spørsmål",
@@ -122,6 +164,11 @@
       "replaceVideo": "Erstatt video",
       "clickToUpload": "Klikk for å laste opp video",
       "videoFormats": "MP4, WebM eller MOV (maks. 100MB)",
+      "required": "Tvunget videoavspilling",
+      "replay": "Tillat å spille video på nytt",
+      "replayMax": "Maksimalt antall tillatte avspillinger",
+      "times": "avspillinger",
+      "desc": "Bestem hvor mange avspillinger som er tillat til å se video",
       "errors": {
         "videoOnly": "Vennligst last opp en videofil",
         "fileSize": "Filstørrelsen må ikke overstige 100MB",

@@ -43,12 +43,13 @@ export default function StudentCourseDetailPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [moduleStatus, setModuleStatus] = useState<ModuleStatus>('all');
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<FilterItem[]>([]);
-
   const { user } = useUser();
   const supabase = useSupabase();
   const router = useRouter();
@@ -228,6 +229,41 @@ export default function StudentCourseDetailPage() {
               <p className="text-muted-foreground mt-1">{course.description}</p>
             )}
           </div>
+
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  {t('common.buttons.sort')} by: {sortBy}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setSortBy('date')}>Date</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('common.inputs.searchCourse')}
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         </div>
 
         {/* Module Filters Component */}

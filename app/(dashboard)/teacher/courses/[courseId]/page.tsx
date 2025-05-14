@@ -422,7 +422,7 @@ export default function CourseDetailPage() {
                 disabled={isDeleting}
                 className="sm:w-auto flex-1 sm:flex-initial cursor-pointer"
               >
-                Cancel
+                {t('common.buttons.cancel')}
               </Button>
               <Button
                 variant="destructive"

@@ -15,34 +15,34 @@ interface QuizSlideProps {
 }
 
 // Sortable option component
-const SortableOption = ({ 
-  id, 
-  option, 
-  index, 
-  isCorrect, 
-  multipleCorrect, 
-  onUpdate, 
-  onRemove, 
+const SortableOption = ({
+  id,
+  option,
+  index,
+  isCorrect,
+  multipleCorrect,
+  onUpdate,
+  onRemove,
   onToggleCorrect,
   t
-}: { 
-  id: string; 
-  option: string; 
-  index: number; 
-  isCorrect: boolean; 
+}: {
+  id: string;
+  option: string;
+  index: number;
+  isCorrect: boolean;
   multipleCorrect: boolean;
-  onUpdate: (value: string) => void; 
-  onRemove: () => void; 
+  onUpdate: (value: string) => void;
+  onRemove: () => void;
   onToggleCorrect: () => void;
   t: (key: string, values?: Record<string, string | number>) => string;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  
+
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2">
       <div className="cursor-grab" {...attributes} {...listeners}>
@@ -81,7 +81,7 @@ const SortableOption = ({
 
 export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => {
   const t = useTranslations();
-  
+
   // Sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -89,13 +89,13 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   // Add a quiz option
   const addQuizOption = () => {
     const updatedOptions = [...config.options, ''];
     const updatedExplanations = [...(config.explanations || []), ''];
     const updatedOptionImages = [...(config.optionImages || []), ''];
-    
+
     onConfigChange({
       options: updatedOptions,
       explanations: updatedExplanations,
@@ -107,16 +107,16 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
   const removeQuizOption = (optionIndex: number) => {
     const updatedOptions = [...config.options];
     updatedOptions.splice(optionIndex, 1);
-    
+
     const updatedExplanations = [...(config.explanations || [])];
     updatedExplanations.splice(optionIndex, 1);
-    
+
     const updatedOptionImages = [...(config.optionImages || [])];
     updatedOptionImages.splice(optionIndex, 1);
-    
+
     // Update correct option indices if needed
     let updatedCorrectOptionIndices = [...(config.correctOptionIndices || [])];
-    
+
     if (config.multipleCorrect) {
       // For multiple correct answers
       updatedCorrectOptionIndices = updatedCorrectOptionIndices
@@ -130,7 +130,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       } else if (optionIndex < correctOptionIndex) {
         correctOptionIndex--;
       }
-      
+
       onConfigChange({
         options: updatedOptions,
         explanations: updatedExplanations,
@@ -139,7 +139,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       });
       return;
     }
-    
+
     onConfigChange({
       options: updatedOptions,
       explanations: updatedExplanations,
@@ -152,7 +152,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
   const updateQuizOption = (optionIndex: number, value: string) => {
     const updatedOptions = [...config.options];
     updatedOptions[optionIndex] = value;
-    
+
     onConfigChange({
       options: updatedOptions
     });
@@ -164,13 +164,13 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       // For multiple correct answers
       const updatedCorrectOptionIndices = [...(config.correctOptionIndices || [])];
       const index = updatedCorrectOptionIndices.indexOf(optionIndex);
-      
+
       if (index === -1) {
         updatedCorrectOptionIndices.push(optionIndex);
       } else {
         updatedCorrectOptionIndices.splice(index, 1);
       }
-      
+
       onConfigChange({
         correctOptionIndices: updatedCorrectOptionIndices
       });
@@ -181,26 +181,26 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       });
     }
   };
-  
+
   // Handle drag end for reordering options
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       const oldIndex = config.options.findIndex((_, i) => `option-${i}` === active.id);
       const newIndex = config.options.findIndex((_, i) => `option-${i}` === over.id);
-      
+
       const updatedOptions = arrayMove([...config.options], oldIndex, newIndex);
-      
+
       // Also update explanations and images if they exist
-      const updatedExplanations = config.explanations 
+      const updatedExplanations = config.explanations
         ? arrayMove([...config.explanations], oldIndex, newIndex)
         : undefined;
-      
+
       const updatedOptionImages = config.optionImages
         ? arrayMove([...config.optionImages], oldIndex, newIndex)
         : undefined;
-      
+
       // Update correct option indices
       if (config.multipleCorrect) {
         const updatedCorrectOptionIndices = config.correctOptionIndices?.map(index => {
@@ -208,7 +208,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
           if (index === newIndex) return oldIndex;
           return index;
         });
-        
+
         onConfigChange({
           options: updatedOptions,
           explanations: updatedExplanations,
@@ -222,7 +222,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
         } else if (correctOptionIndex === newIndex) {
           correctOptionIndex = oldIndex;
         }
-        
+
         onConfigChange({
           options: updatedOptions,
           explanations: updatedExplanations,
@@ -238,16 +238,16 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Description</label>
-            <span className="text-xs text-muted-foreground">(Optional)</span>
+            <label className="text-sm font-medium">{t('slides.quiz.description')}</label>
+            <span className="text-xs text-muted-foreground">{t('slides.quiz.optional')}</span>
           </div>
           <Input
-            placeholder="Add some context to your question..."
+            placeholder={t('slides.quiz.descInp')}
             value={config.description || ''}
             onChange={(e) => onConfigChange({ description: e.target.value })}
           />
         </div>
-        
+
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('slides.quiz.question')}</label>
           <Input
@@ -257,13 +257,13 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
           />
         </div>
       </div>
-      
+
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium">{t('slides.quiz.options')}</label>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             size="sm"
             onClick={addQuizOption}
             className="h-7 px-2"
@@ -271,7 +271,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
             <Plus className="h-3.5 w-3.5 mr-1" /> {t('slides.quiz.addOption')}
           </Button>
         </div>
-        
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -287,7 +287,7 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
                   id={`option-${optionIndex}`}
                   option={option}
                   index={optionIndex}
-                  isCorrect={config.multipleCorrect 
+                  isCorrect={config.multipleCorrect
                     ? (config.correctOptionIndices || []).includes(optionIndex)
                     : config.correctOptionIndex === optionIndex
                   }
@@ -301,9 +301,9 @@ export const QuizSlideContent = ({ config, onConfigChange }: QuizSlideProps) => 
             ))}
           </SortableContext>
         </DndContext>
-        
+
         <p className="text-xs text-muted-foreground">
-          {config.multipleCorrect 
+          {config.multipleCorrect
             ? t('slides.quiz.selectMultiple')
             : t('slides.quiz.selectOne')}
         </p>
@@ -323,11 +323,11 @@ export const QuizSlideTypeBadge = () => {
 
 // Get default quiz config
 export const getDefaultQuizSlideConfig = (): QuizSlideConfig => {
-  return { 
-    type: 'quiz', 
-    question: '', 
+  return {
+    type: 'quiz',
+    question: '',
     description: '',
-    options: ['', '', ''], 
+    options: ['', '', ''],
     correctOptionIndex: 0,
     explanations: ['', '', ''],
     optionImages: ['', '', ''],
