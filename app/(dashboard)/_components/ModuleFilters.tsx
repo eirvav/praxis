@@ -17,6 +17,7 @@ export type FilterType = 'course' | 'semester';
 export type ModuleStatus = 'all' | 'not-started' | 'completed';
 export type SortBy = 'date' | 'name';
 export type ViewMode = 'grid' | 'list';
+export type UserRole = 'teacher' | 'student';
 
 export interface FilterItem {
   type: FilterType;
@@ -50,6 +51,7 @@ interface ModuleFiltersProps {
   filterSections: PopoverFilterSection[];
   onFilterChange?: (type: FilterType, value: string | null) => void;
   onClearFilters?: () => void;
+  role?: UserRole;
 }
 
 export const ModuleFilters = ({
@@ -65,6 +67,7 @@ export const ModuleFilters = ({
   setSelectedFilters,
   filterSections,
   onFilterChange,
+  role = 'student',
 }: ModuleFiltersProps) => {
   
   // Add a filter tag
@@ -91,10 +94,40 @@ export const ModuleFilters = ({
     }
   };
 
-  return (
-    <>
-      {/* Status filter pills */}
-      <div className="rounded-lg flex gap-2 mb-6">
+  const getStatusButtons = () => {
+    if (role === 'teacher') {
+      return (
+        <>
+          <Button 
+            variant={moduleStatus === 'all' ? "default" : "outline"}
+            size="sm"
+            className={moduleStatus === 'all' ? "bg-primaryStyling hover:bg-indigo-700 rounded-full " : "rounded-full"}
+            onClick={() => setModuleStatus('all')}
+          >
+            All Modules
+          </Button>
+          <Button 
+            variant={moduleStatus === 'not-started' ? "default" : "outline"}
+            size="sm"
+            className={moduleStatus === 'not-started' ? "bg-amber-500 hover:bg-amber-600 rounded-full " : "rounded-full"}
+            onClick={() => setModuleStatus('not-started')}
+          >
+            Not Graded
+          </Button>
+          <Button 
+            variant={moduleStatus === 'completed' ? "default" : "outline"}
+            size="sm"
+            className={moduleStatus === 'completed' ? "bg-green-600 hover:bg-green-700 rounded-full " : "rounded-full"}
+            onClick={() => setModuleStatus('completed')}
+          >
+            Graded
+          </Button>
+        </>
+      );
+    }
+
+    return (
+      <>
         <Button 
           variant={moduleStatus === 'all' ? "default" : "outline"}
           size="sm"
@@ -119,6 +152,15 @@ export const ModuleFilters = ({
         >
           Completed
         </Button>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {/* Status filter pills */}
+      <div className="rounded-lg flex gap-2 mb-6">
+        {getStatusButtons()}
       </div>
 
       {/* Filter Controls Row */}

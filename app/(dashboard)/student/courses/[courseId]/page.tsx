@@ -23,7 +23,7 @@ import ModuleFilters, {
   SortBy,
   ViewMode,
   FilterType
-} from '../../_components/ModuleFilters';
+} from '../../../_components/ModuleFilters';
 import { ChevronDown, Filter, LayoutGrid, Search } from 'lucide-react';
 
 interface Course {

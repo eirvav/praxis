@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Users, MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
 import { useSupabase } from './SupabaseProvider';
@@ -116,13 +116,6 @@ const getTeacherAvatar = (username?: string) => {
   return { initial, color };
 };
 
-// Generate a random student submission count
-const getStudentSubmissions = () => {
-  const total = 30;
-  const submitted = Math.floor(Math.random() * (total + 1)); // Random number between 0 and total
-  return { submitted, total };
-};
-
 const ModuleCard = ({
   id,
   title,
@@ -160,9 +153,6 @@ const ModuleCard = ({
 
   // Generate teacher avatar
   const { initial: teacherInitial, color: teacherAvatarColor } = getTeacherAvatar(teacherUsername);
-
-  // Generate student submission count
-  const { submitted, total } = getStudentSubmissions();
 
   // Handle module deletion
   const handleDeleteModule = async (e: React.MouseEvent) => {
@@ -225,10 +215,6 @@ const ModuleCard = ({
                     <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200" />
                   )}
                 </div>
-                <div className="absolute top-1 left-1 bg-black/80 rounded-md px-2 py-0.5 text-white text-xs flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {submitted}/{total}
-                </div>
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-2 mb-1">
@@ -264,17 +250,25 @@ const ModuleCard = ({
           </div>
         </Link>
         {isTeacher && (
-          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ zIndex: 100 }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-50 z-10" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 bg-indigo-600/90 hover:bg-indigo-600 text-white hover:text-white backdrop-blur-sm rounded-full shadow-sm border border-indigo-500/20" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 z-20">
-                <DropdownMenuItem>Edit Module</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-40" style={{ zIndex: 101 }}>
+                <DropdownMenuItem className="hover:text-indigo-600 focus:text-indigo-600">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Module
+                </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-red-600 focus:text-red-600"
+                  className="text-red-600 focus:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
                   disabled={isDeleting}
                   onClick={handleDeleteModule}
                 >
@@ -313,10 +307,6 @@ const ModuleCard = ({
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl" />
-            <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-sm rounded-md px-2 py-0.5 text-white text-xs flex items-center gap-1 font-medium">
-              <Users className="h-3 w-3" />
-              {submitted}/{total}
-            </div>
           </div>
 
           <div className="p-3 flex flex-col flex-1 relative">
@@ -358,22 +348,25 @@ const ModuleCard = ({
         </div>
       </Link>
       {isTeacher && (
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ zIndex: 100 }}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 bg-black/80 hover:bg-black/90 text-white backdrop-blur-sm rounded-lg"
+                className="h-8 w-8 p-0 bg-indigo-600/90 hover:bg-indigo-600 text-white hover:text-white backdrop-blur-sm rounded-full shadow-sm border border-indigo-500/20"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 z-20">
-              <DropdownMenuItem>Edit Module</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-40" style={{ zIndex: 101 }}>
+              <DropdownMenuItem className="hover:text-indigo-600 focus:text-indigo-600">
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Module
+              </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-red-600 focus:text-red-600"
+                className="text-red-600 focus:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
                 disabled={isDeleting}
                 onClick={handleDeleteModule}
               >

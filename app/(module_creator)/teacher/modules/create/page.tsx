@@ -6,7 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, ImageIcon, PencilLine, Timer } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, CheckCircle, FileImage, Camera, BookOpen, Plus, Edit2, FileText, Clock, Calendar, Users2, AlertCircle, ImageIcon, PencilLine, Timer, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { useSupabase } from '@/app/(dashboard)/_components/SupabaseProvider';
 import { toast } from 'sonner';
@@ -18,7 +18,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { z } from "zod";
@@ -849,25 +848,14 @@ function CreateModulePageContent() {
       <div className="col-span-3 space-y-4">
         <div className="flex flex-wrap gap-2 mb-2">
           {selectedTeachers.map(teacher => (
-            <Badge
+            <Button
               key={teacher.id}
               variant="secondary"
-              className="flex items-center gap-1 pl-3 pr-2 py-1.5"
+              className="text-base font-medium px-3 py-1"
             >
-              {teacher.name}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedTeachers(current =>
-                    current.filter(t => t.id !== teacher.id)
-                  );
-                }}
-                className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
           ))}
         </div>
 
@@ -1842,7 +1830,7 @@ function CreateModulePageContent() {
                                         setEstimatedDuration(null);
                                       }
                                     }}
-                                    placeholder={t('teacher.modules.create.')}
+                                    placeholder={t('teacher.modules.create.estimateInp')}
                                     className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primaryStyling focus:border-primaryStyling sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   />
                                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -1866,9 +1854,10 @@ function CreateModulePageContent() {
                       <FileText className="h-5 w-5 text-primaryStyling" />
                       <h2 className="text-lg font-semibold text-gray-900">Module Content</h2>
                     </div>
-                    <Badge variant="secondary" className="text-base font-medium px-3 py-1">
-                      {slides.length} {slides.length === 1 ? 'slide' : 'slides'}
-                    </Badge>
+                    <Button className="text-base font-medium px-3 h-10 bg-primaryStyling text-white cursor-pointer hover:bg-indigo-700 transition-all duration-200">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Preview Module
+                    </Button>
                   </div>
 
                   {slides.length === 0 ? (

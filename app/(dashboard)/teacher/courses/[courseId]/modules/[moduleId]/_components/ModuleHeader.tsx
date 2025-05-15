@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar, Edit, MoreVertical, Share2, Trash2, Radio, Layers } from "lucide-react";
 import Image from "next/image";
-import { ModuleStats } from "./ModuleStats";
 import { format } from "date-fns";
 
 interface ModuleHeaderProps {
@@ -32,9 +31,6 @@ export const ModuleHeader = ({
   thumbnailUrl,
   deadline,
   totalSlides,
-  completionRate,
-  submissions,
-  avgCompletionTime,
   onEdit,
   onDelete,
   isDeleting,
@@ -96,14 +92,6 @@ export const ModuleHeader = ({
                 <span>{totalSlides} Slides</span>
               </div>
             </div>
-          </div>
-
-          <div>
-            <ModuleStats
-              completionRate={completionRate}
-              submissions={submissions}
-              avgCompletionTime={avgCompletionTime}
-            />
           </div>
         </div>
 

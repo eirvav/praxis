@@ -16,7 +16,7 @@ import ModuleFilters, {
   SortBy,
   ViewMode,
   FilterType
-} from "./_components/ModuleFilters";
+} from "../_components/ModuleFilters";
 
 // Dynamically import ReactConfetti to avoid SSR issues
 const ReactConfetti = dynamic(() => import('react-confetti'), {
@@ -386,7 +386,7 @@ export default function StudentDashboard() {
       {/* Completion message */}
       <div className="space-y-8">
         {/* Animated Welcome Message Div - conditionally rendered and animated */}
-        {displayWelcomeMessage && (
+        {displayWelcomeMessage ? (
           <div
             className={`transition-all duration-800 ease-in-out overflow-hidden ${
               animateWelcomeMessageOut ? 'max-h-0 opacity-0' : 'max-h-28 opacity-100'
@@ -404,9 +404,9 @@ export default function StudentDashboard() {
               </div>
             </h1>
           </div>
-        )}
+        ) : null}
 
-        {/* Completion Message - now a direct child of space-y-8, flex flex-col removed */}
+        {/* Completion Message */}
         {completionMessage && (
           <div className="p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 animate-pulse">
             {completionMessage}

@@ -1,39 +1,32 @@
 'use client';
 
-import { BookOpen, ChartBar, GraduationCap } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { BookOpen, ChartBar } from 'lucide-react';
 
 interface ModuleNavigationProps {
   moduleId: string;
   courseId: string;
+  activeTab: string;
+  onTabChange: (tabHref: string) => void;
 }
 
 export const ModuleNavigation = ({
-  moduleId,
-  courseId,
+  activeTab,
+  onTabChange,
 }: ModuleNavigationProps) => {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const isActive = (path: string) => {
-    return pathname === `/teacher/courses/${courseId}/modules/${moduleId}${path}`;
+  const isActive = (tabIdentifier: string) => {
+    return activeTab === tabIdentifier;
   };
 
   const tabs = [
     {
-      label: "Overview",
+      label: "#1 WORK IN PROGRESS",
       icon: BookOpen,
       href: "",
     },
     {
-      label: "Statistics",
+      label: "#2 WORK IN PROGRESS",
       icon: ChartBar,
       href: "/statistics",
-    },
-    {
-      label: "Grading",
-      icon: GraduationCap,
-      href: "/grading",
     },
   ];
 
@@ -45,7 +38,7 @@ export const ModuleNavigation = ({
             key={tab.label}
             role="tab"
             aria-selected={isActive(tab.href)}
-            onClick={() => router.push(`/teacher/courses/${courseId}/modules/${moduleId}${tab.href}`)}
+            onClick={() => onTabChange(tab.href)}
             className={`
               group px-1 py-4 text-sm font-medium cursor-pointer
               ${isActive(tab.href)

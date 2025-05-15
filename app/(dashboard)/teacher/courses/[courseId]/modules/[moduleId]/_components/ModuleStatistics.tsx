@@ -25,6 +25,7 @@ const data = [
 export const ModuleStatistics = () => {
   return (
     <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Module Statistics</h1>
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>

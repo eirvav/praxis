@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { CreateCourseModal } from "../_components/CreateCourseModal";
@@ -11,6 +11,7 @@ import { useSupabase } from "../_components/SupabaseProvider";
 import { ContentLayout } from "@/components/navbar-components/content-layout";
 import { useTranslations } from 'next-intl';
 import { CreateFirstModule } from "../_components/createFirstModule";
+import { ModuleFilters, FilterType, ModuleStatus, SortBy, ViewMode, FilterItem } from "../_components/ModuleFilters";
 
 interface Module {
   id: string;
@@ -39,6 +40,101 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const supabase = useSupabase();
   const t = useTranslations();
+  // States for welcome message animation and DOM presence
+  const [displayWelcomeMessage, setDisplayWelcomeMessage] = useState(true);
+  const [animateWelcomeMessageOut, setAnimateWelcomeMessageOut] = useState(false);
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [moduleStatus, setModuleStatus] = useState<ModuleStatus>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedFilters, setSelectedFilters] = useState<FilterItem[]>([]);
+
+  // Create filter sections based on courses
+  const filterSections = useMemo(() => {
+    return [
+      {
+        title: 'Courses',
+        type: 'course' as FilterType,
+        options: courses.map(course => ({
+          value: course.id,
+          label: course.title
+        })),
+        layout: 'list' as 'list' | 'grid'
+      }
+    ];
+  }, [courses]);
+
+  // Welcome message visibility, animation, and session storage
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const welcomeCompletedInSession = sessionStorage.getItem('teacherDashboardWelcomeCompleted');
+
+      if (welcomeCompletedInSession === 'true') {
+        setDisplayWelcomeMessage(false); // Already completed in this session, so don't display
+        return;
+      }
+
+      // Not completed yet, so ensure it's displayed and visible initially
+      setDisplayWelcomeMessage(true);
+      setAnimateWelcomeMessageOut(false);
+
+      const visibilityTimer = setTimeout(() => {
+        setAnimateWelcomeMessageOut(true); // Start fade out animation
+
+        // Timer to remove from DOM after animation completes
+        const removalTimer = setTimeout(() => {
+          setDisplayWelcomeMessage(false); // Remove from DOM
+          sessionStorage.setItem('teacherDashboardWelcomeCompleted', 'true');
+        }, 900); // Increased duration to 900ms (CSS animation is 800ms) for smoother DOM removal
+
+        // Cleanup removalTimer if component unmounts during fade-out
+        return () => clearTimeout(removalTimer);
+      }, 5000); // 5 seconds to start hiding process
+
+      // Cleanup visibilityTimer if component unmounts before it fires
+      return () => clearTimeout(visibilityTimer);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // Filter and sort modules based on selected filters
+  const filteredModules = useMemo(() => {
+    return modules
+      .filter(module => {
+        // Search filter
+        if (searchQuery) {
+          const searchLower = searchQuery.toLowerCase();
+          const matchesSearch = 
+            module.title.toLowerCase().includes(searchLower) ||
+            module.description?.toLowerCase().includes(searchLower) ||
+            module.course_title?.toLowerCase().includes(searchLower);
+          if (!matchesSearch) return false;
+        }
+
+        // Course filter
+        const courseFilter = selectedFilters.find(f => f.type === 'course');
+        if (courseFilter && module.course_id !== courseFilter.value) {
+          return false;
+        }
+
+        // Status filter (you'll need to add a status field to your modules)
+        if (moduleStatus !== 'all') {
+          // Implement status filtering logic here when you add status to modules
+          return true; // Placeholder
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'date') {
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        } else {
+          return a.title.localeCompare(b.title);
+        }
+      });
+  }, [modules, searchQuery, selectedFilters, moduleStatus, sortBy]);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -74,14 +170,9 @@ export default function TeacherDashboard() {
 
         // Add course titles to modules and handle teacher usernames
         const modulesWithCourses = (modulesData || []).map(module => {
-          // Handle the users join result properly
           let teacherUsername;
           if (module.users) {
-            // TypeScript doesn't know the structure of users from the join
-            // Use type assertion to help TypeScript understand
             const usersData = module.users as { username: string } | { username: string }[];
-
-            // Check if users is an array or an object
             if (Array.isArray(usersData)) {
               teacherUsername = usersData[0]?.username;
             } else {
@@ -144,44 +235,34 @@ export default function TeacherDashboard() {
   return (
     <ContentLayout>
       <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
-          <div>
-            <h1 className="text-5xl font-bold tracking-tight">
-              {t("teacher.dashboard.welcomeBack")},
-              <br />
-              <span className="block mt-2 text-primaryStyling">
-                {(user.firstName || user.username || t('teacher.dashboard.teacher'))
-                  .toLowerCase()
-                  .replace(/^./, str => str.toUpperCase())}
-              </span>
-            </h1>
-          </div>
+        {/* Wrap both welcome message and buttons in conditional rendering */}
+        {displayWelcomeMessage ? (
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
+            <div
+              className={`transition-all duration-800 ease-in-out overflow-hidden ${
+                animateWelcomeMessageOut ? 'max-h-0 opacity-0' : 'max-h-28 opacity-100'
+              }`}
+            >
+              <h1 className="text-5xl font-bold tracking-tight">
+                {t("teacher.dashboard.welcomeBack")},
+                <br />
+                <span className="block mt-2 text-primaryStyling">
+                  {(user.firstName || user.username || t('teacher.dashboard.teacher')) 
+                    .toLowerCase()
+                    .replace(/^./, str => str.toUpperCase())} 👋
+                </span>
+              </h1>
+            </div>
 
-          <div className="flex gap-4">
-            {/* Only show navigation buttons when there are modules */}
-            {hasModules && !hasNoCourses && (
-              <>
-                {/*<Button 
-                  size="lg"
-                  className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
-                  onClick={() => setIsCourseModalOpen(true)}
-                >
-                  <BookOpen className="h-5 w-5" />
-                  {t('common.buttons.createCourse')}
-                </Button>*/}
-                {/*<Link href="/teacher/modules/create">
-                  <Button 
-                    size="lg"
-                    className="flex items-center gap-2 bg-primaryStyling text-white hover:bg-indigo-700 cursor-pointer"
-                  >
-                    <PlusCircle className="h-5 w-5" />
-                    {t('common.buttons.createModule')}
-                  </Button>
-                </Link>*/}
-              </>
-            )}
+            <div className="flex gap-4">
+              {/* Only show navigation buttons when there are modules */}
+              {hasModules && !hasNoCourses && (
+                <>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <CreateCourseModal
           isOpen={isCourseModalOpen}
@@ -221,6 +302,23 @@ export default function TeacherDashboard() {
           <div>
             <h2 className="text-2xl font-semibold mb-4">{t('teacher.dashboard.yourModules')}</h2>
 
+            <div className="mb-6">
+              <ModuleFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                moduleStatus={moduleStatus}
+                setModuleStatus={setModuleStatus}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                selectedFilters={selectedFilters}
+                setSelectedFilters={setSelectedFilters}
+                filterSections={filterSections}
+                role="teacher"
+              />
+            </div>
+
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
@@ -228,8 +326,11 @@ export default function TeacherDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modules.map((module) => (
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                : "flex flex-col gap-4"
+              }>
+                {filteredModules.map((module) => (
                   <ModuleCard
                     key={module.id}
                     id={module.id}
@@ -240,7 +341,7 @@ export default function TeacherDashboard() {
                     courseId={module.course_id}
                     courseName={module.course_title}
                     isTeacher={true}
-                    viewMode="grid"
+                    viewMode={viewMode}
                     deadline={module.deadline}
                     teacherUsername={module.teacher_username}
                   />
