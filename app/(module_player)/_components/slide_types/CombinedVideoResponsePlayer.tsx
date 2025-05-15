@@ -484,10 +484,11 @@ export default function CombinedVideoResponsePlayer({
               setIsRecording(true);
               setRecordingTimeElapsed(0);
               setIsPaused(false);
-              setRecordedChunks([]);
+              // setRecordedChunks([]); // Intentionally removed, will be set after processing.
               
               // Get the supported MIME type
               const mimeType = getSupportedMimeType();
+              const localInstantResponseChunks: Blob[] = []; // Initialize local chunk storage
               
               try {
                 // Create and configure media recorder
@@ -502,7 +503,8 @@ export default function CombinedVideoResponsePlayer({
                 recorder.ondataavailable = (e) => {
                   if (e.data && e.data.size > 0) {
                     console.log('Recording chunk received, size:', e.data.size);
-                    setRecordedChunks(prev => [...prev, e.data]);
+                    localInstantResponseChunks.push(e.data); // Add to local array
+                    setRecordedChunks(prev => [...prev, e.data]); // Keep state updated for UI if needed
                   }
                 };
                 
@@ -510,8 +512,8 @@ export default function CombinedVideoResponsePlayer({
                 recorder.onstop = () => {
                   console.log('Recording stopped after instantResponse, processing video');
                   
-                  if (recordedChunks.length > 0) {
-                    const blob = new Blob(recordedChunks, { type: mimeType });
+                  if (localInstantResponseChunks.length > 0) { // Use local array for check
+                    const blob = new Blob(localInstantResponseChunks, { type: mimeType }); // Use local array for blob
                     const videoURL = URL.createObjectURL(blob);
                     
                     // Capture accurate duration from recording timer
@@ -539,6 +541,7 @@ export default function CombinedVideoResponsePlayer({
                     // Move to review phase
                     setTimeout(() => {
                       setPhase('review');
+                      setRecordedChunks([]); // Clear state chunks after processing
                       
                       if (videoPreviewRef.current) {
                         videoPreviewRef.current.srcObject = null;
@@ -551,6 +554,7 @@ export default function CombinedVideoResponsePlayer({
                       }
                     }, 100);
                   }
+                  setIsRecording(false);
                 };
                 
                 // Start recording
@@ -603,7 +607,7 @@ export default function CombinedVideoResponsePlayer({
       });
     }
     // Otherwise, stay on the video phase with an overlay showing options
-  }, [captureVideoThumbnail, initializeCamera, responseSlide.config.instantResponse, maxDuration, getSupportedMimeType, playCount, canRecordMore, recordingTimeElapsed, recordedChunks]);
+  }, [captureVideoThumbnail, initializeCamera, responseSlide.config.instantResponse, maxDuration, getSupportedMimeType, playCount, canRecordMore, recordingTimeElapsed]);
 
   // Replay video function
   const replayVideo = useCallback(() => {
