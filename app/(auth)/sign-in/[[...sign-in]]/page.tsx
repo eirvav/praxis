@@ -1,6 +1,38 @@
+'use client'
+
 import { SignIn } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function SignInPage() {
+  const { isSignedIn, user, isLoaded } = useUser()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Only proceed if Clerk has loaded and user is signed in
+    if (isLoaded && isSignedIn && user) {
+      // Add a small delay to ensure all authentication processes are complete
+      const timeoutId = setTimeout(() => {
+        // Get user role from public metadata
+        const userRole = user.publicMetadata?.role as string | undefined
+        
+        // Determine redirect path based on role
+        let redirectPath = '/student' // default
+        if (userRole === 'admin') {
+          redirectPath = '/admin'
+        } else if (userRole === 'teacher') {
+          redirectPath = '/teacher'
+        }
+        
+        // Force navigation - this helps with Safari's redirect issues
+        router.push(redirectPath)
+      }, 100) // Small delay to ensure state is settled
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [isLoaded, isSignedIn, user, router])
+
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">

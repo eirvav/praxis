@@ -12,11 +12,6 @@ export default function AuthLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Skip layout for admin section
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-    return children
-  }
-
   return (
     <div className="min-h-screen flex relative">
       {/* Left side - Form */}

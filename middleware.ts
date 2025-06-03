@@ -36,6 +36,14 @@ export default clerkMiddleware(async (auth, request) => {
   const { userId, sessionClaims } = await auth();
   const userRole = sessionClaims?.metadata?.role as string | undefined;
   
+  // Create response object to add Safari-specific headers
+  let response = NextResponse.next();
+  
+  // Add Safari-specific headers to improve compatibility
+  response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  
   // Check for mobile devices only if user is authenticated
   if (userId) {
     const userAgent = request.headers.get('user-agent') || ''
@@ -49,19 +57,26 @@ export default clerkMiddleware(async (auth, request) => {
 
     // If it's a mobile device and trying to access a protected path
     if (isMobile && isProtectedPath) {
-      return NextResponse.redirect(new URL('/mobile-warning', request.url))
+      const redirectResponse = NextResponse.redirect(new URL('/mobile-warning', request.url))
+      // Add Safari-specific headers to redirect response
+      redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return redirectResponse
     }
 
     // If it's a mobile device trying to access the dashboard root
     if (isMobile && path === '/') {
-      return NextResponse.redirect(new URL('/mobile-warning', request.url))
+      const redirectResponse = NextResponse.redirect(new URL('/mobile-warning', request.url))
+      redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return redirectResponse
     }
   }
 
   // Handle admin routes
   if (isAdminRoute(request) && userRole !== 'admin') {
     const url = new URL('/', request.url)
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return redirectResponse
   }
 
   // Handle teacher routes
@@ -69,11 +84,15 @@ export default clerkMiddleware(async (auth, request) => {
     // Students trying to access teacher routes should be redirected to student dashboard
     if (userRole === 'student') {
       const url = new URL('/student', request.url)
-      return NextResponse.redirect(url)
+      const redirectResponse = NextResponse.redirect(url)
+      redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return redirectResponse
     }
     // Others are redirected to the home page
     const url = new URL('/', request.url)
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return redirectResponse
   }
   
   // Handle student player routes - ensure only students can access
@@ -85,14 +104,20 @@ export default clerkMiddleware(async (auth, request) => {
     if (userRole !== 'student') {
       if (userRole === 'teacher') {
         const url = new URL('/teacher', request.url)
-        return NextResponse.redirect(url)
+        const redirectResponse = NextResponse.redirect(url)
+        redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return redirectResponse
       } else if (userRole === 'admin') {
         const url = new URL('/admin', request.url)
-        return NextResponse.redirect(url)
+        const redirectResponse = NextResponse.redirect(url)
+        redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return redirectResponse
       } else {
         // No recognized role, redirect to home
         const url = new URL('/', request.url)
-        return NextResponse.redirect(url)
+        const redirectResponse = NextResponse.redirect(url)
+        redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return redirectResponse
       }
     }
   }
@@ -108,7 +133,9 @@ export default clerkMiddleware(async (auth, request) => {
     }
 
     const url = new URL(redirectPath, request.url)
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    redirectResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return redirectResponse
   }
 
   // Protect non-public routes
@@ -116,7 +143,7 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect()
   }
 
-  return NextResponse.next();
+  return response;
 })
 
 export const config = {

@@ -30,6 +30,28 @@ const nextConfig = {
             value: 'same-origin'
           }
         ]
+      },
+      // Safari-specific headers for authentication pages
+      {
+        source: '/(sign-in|sign-up)/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate'
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache'
+          },
+          {
+            key: 'Expires',
+            value: '0'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          }
+        ]
       }
     ]
   }
