@@ -1451,15 +1451,11 @@ export default function CombinedVideoResponsePlayer({
 
   // Add a new handler for clicks on the video container
   const handleVideoContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    console.log('[DEBUG] Video container clicked', e.target);
-    
     if (phase !== 'video') return; // Only act in video phase
 
     // Check if the click target is a button or inside a button
     const target = e.target as HTMLElement;
     const isButtonClick = target.tagName === 'BUTTON' || target.closest('button');
-    
-    console.log('[DEBUG] Is button click?', isButtonClick);
     
     // If it's a button click, don't handle it here
     if (isButtonClick) {
@@ -1658,14 +1654,13 @@ export default function CombinedVideoResponsePlayer({
             )}
             
             {/* Custom video controls */}
-            {showCustomControls && (
+            {showCustomControls && isPlaying && (
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center z-50" style={{ pointerEvents: 'auto' }}>
                 <Button
                   variant="outline"
                   className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white border-none cursor-pointer relative"
                   style={{ pointerEvents: 'auto' }}
                   onClick={(e) => {
-                    console.log('[DEBUG] Skip to Recording button clicked');
                     e.stopPropagation();
                     skipToRecording();
                   }}
@@ -1677,14 +1672,13 @@ export default function CombinedVideoResponsePlayer({
             )}
             
             {/* Add fullscreen button to top left */}
-            {showCustomControls && (
+            {showCustomControls && isPlaying && (
               <div className="absolute top-4 left-4 z-50" style={{ pointerEvents: 'auto' }}>
                 <Button
                   size="sm"
                   className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white cursor-pointer relative"
                   style={{ pointerEvents: 'auto' }}
                   onClick={(e) => {
-                    console.log('[DEBUG] Fullscreen button clicked');
                     e.stopPropagation();
                     toggleFullscreen();
                   }}
