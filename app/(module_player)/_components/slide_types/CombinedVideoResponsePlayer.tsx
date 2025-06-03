@@ -242,7 +242,7 @@ export default function CombinedVideoResponsePlayer({
 
   // Handle mouse movement to show/hide controls
   const handleMouseMove = useCallback(() => {
-    if (phase !== 'video' || !isPlaying) return;
+    if (phase !== 'video') return;
     
     setShowCustomControls(true);
     
@@ -251,7 +251,7 @@ export default function CombinedVideoResponsePlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    // Hide controls after 3 seconds of inactivity
+    // Hide controls after 3 seconds of inactivity, but only if video is playing
     controlsTimeoutRef.current = setTimeout(() => {
       if (isPlaying && phase === 'video') {
         setShowCustomControls(false);
@@ -1386,6 +1386,11 @@ export default function CombinedVideoResponsePlayer({
         }
       }
     }
+    
+    // When entering video phase, make sure controls are visible
+    if (phase === 'video') {
+      setShowCustomControls(true);
+    }
   }, [phase, recordings, selectedRecordingId]);
 
   // Update localStorage when values change
@@ -1445,8 +1450,21 @@ export default function CombinedVideoResponsePlayer({
   const [countdownHeader, setCountdownHeader] = useState<string | null>(null);
 
   // Add a new handler for clicks on the video container
-  const handleVideoContainerClick = useCallback(() => {
+  const handleVideoContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    console.log('[DEBUG] Video container clicked', e.target);
+    
     if (phase !== 'video') return; // Only act in video phase
+
+    // Check if the click target is a button or inside a button
+    const target = e.target as HTMLElement;
+    const isButtonClick = target.tagName === 'BUTTON' || target.closest('button');
+    
+    console.log('[DEBUG] Is button click?', isButtonClick);
+    
+    // If it's a button click, don't handle it here
+    if (isButtonClick) {
+      return;
+    }
 
     // Condition for showing the instant response warning
     const shouldShowWarning = responseSlide.config.instantResponse === true && !isVideoPlayed && !videoEnded;
@@ -1552,6 +1570,7 @@ export default function CombinedVideoResponsePlayer({
           <div 
             ref={videoContainerRef}
             className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative"
+            style={{ position: 'relative', touchAction: 'auto' }}
             onMouseMove={handleMouseMove}
             onClick={handleVideoContainerClick}
           >
@@ -1640,11 +1659,16 @@ export default function CombinedVideoResponsePlayer({
             
             {/* Custom video controls */}
             {showCustomControls && (
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center z-50" style={{ pointerEvents: 'auto' }}>
                 <Button
                   variant="outline"
-                  className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white border-none cursor-pointer"
-                  onClick={skipToRecording}
+                  className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white border-none cursor-pointer relative"
+                  style={{ pointerEvents: 'auto' }}
+                  onClick={(e) => {
+                    console.log('[DEBUG] Skip to Recording button clicked');
+                    e.stopPropagation();
+                    skipToRecording();
+                  }}
                 >
                   Skip to Recording
                   <Camera className="ml-2 h-4 w-4" />
@@ -1654,11 +1678,16 @@ export default function CombinedVideoResponsePlayer({
             
             {/* Add fullscreen button to top left */}
             {showCustomControls && (
-              <div className="absolute top-4 left-4 z-50">
+              <div className="absolute top-4 left-4 z-50" style={{ pointerEvents: 'auto' }}>
                 <Button
                   size="sm"
-                  className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white cursor-pointer"
-                  onClick={toggleFullscreen}
+                  className="bg-black/40 backdrop-blur-sm hover:bg-black/60 text-white hover:text-white cursor-pointer relative"
+                  style={{ pointerEvents: 'auto' }}
+                  onClick={(e) => {
+                    console.log('[DEBUG] Fullscreen button clicked');
+                    e.stopPropagation();
+                    toggleFullscreen();
+                  }}
                 >
                   {isFullscreen ? (
                     <Minimize className="h-4 w-4" />
@@ -1672,7 +1701,7 @@ export default function CombinedVideoResponsePlayer({
             {/* Play overlay - Updated with instant response indicator if needed */}
             {!isPlaying && !videoEnded && !isVideoLoading && (
               <div 
-                className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer"
+                className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer z-10"
               >
                 <div className="rounded-full bg-primaryStyling hover:bg-indigo-700 p-4 transition-colors duration-300 shadow-lg">
                   <Play className="h-10 w-10 text-white" />
@@ -2013,7 +2042,8 @@ export default function CombinedVideoResponsePlayer({
                 style={{ 
                   display: videoSlide.config.maxReplays && playCount >= videoSlide.config.maxReplays ? 'none' : 'flex' 
                 }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   console.log('Going back to video phase');
                   
                   // Clean up recording state but preserve recordings

@@ -520,15 +520,19 @@ export default function VideoSlidePlayer({ slide, goToNextSlide }: VideoSlidePla
               
               {/* Custom video controls */}
               {isPlaybackAllowed() && showCustomControls && (
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent" style={{ pointerEvents: 'auto' }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                     </div>
                     
                     {/* Fullscreen toggle */}
                     <button 
-                      onClick={toggleFullscreen} 
-                      className="text-white hover:text-primary-foreground transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFullscreen();
+                      }} 
+                      className="text-white hover:text-primary-foreground transition relative"
+                      style={{ pointerEvents: 'auto' }}
                     >
                       {isFullscreen ? (
                         <Minimize className="h-5 w-5" />
