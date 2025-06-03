@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Radio, ChevronDown, MoreHorizontal, Play, Edit2, GraduationCap, Trash } from 'lucide-react';
 import { format } from 'date-fns';
+{/*
 import { ModuleNavigation } from './_components/ModuleNavigation';
-import { CoursePill } from '@/app/(dashboard)/teacher/courses/[courseId]/modules/[moduleId]/_components/CoursePill';
-import { SemesterPill } from '@/app/(dashboard)/teacher/courses/[courseId]/modules/[moduleId]/_components/SemesterPill';
 import { ModuleStatistics } from './_components/ModuleStatistics';
 import { ModuleOverviewTab } from './_components/ModuleOverviewTab';
+*/}
+import { CoursePill } from '@/app/(dashboard)/teacher/courses/[courseId]/modules/[moduleId]/_components/CoursePill';
+import { SemesterPill } from '@/app/(dashboard)/teacher/courses/[courseId]/modules/[moduleId]/_components/SemesterPill';
 import { SubmissionStatusChart } from './_components/charts/SubmissionStatusChart';
 import {
   DropdownMenu,
@@ -54,7 +56,7 @@ export default function CourseModuleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState(''); // Default to overview tab (href: "")
+  // const [activeTab, setActiveTab] = useState(''); // Default to overview tab (href: "")
   
   const chartData = [
     { date: 'Oct 1', Inprogress: 30, Completed: 10 },
@@ -236,12 +238,12 @@ export default function CourseModuleDetailPage() {
           )}
 
           {/* ModuleNavigation moved here */}
-          <ModuleNavigation 
+          {/* <ModuleNavigation 
             moduleId={moduleId} 
             courseId={courseId} 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
-          />
+          /> */}
         </div>
 
         <div className="w-full lg:w-1/3 space-y-4">
@@ -324,19 +326,21 @@ export default function CourseModuleDetailPage() {
 
       {/* Conditional rendering for tab content */}
       <div className="mt-6">
-        {activeTab === '' && module && (
+        {/* Always show ModuleOverviewTab since navigation is disabled 
+        {module && (
           <ModuleOverviewTab 
             moduleId={moduleId} 
             moduleUpdatedAt={module.updated_at} 
             estimatedDuration={module.estimated_duration} 
           />
         )}
-
-        {activeTab === '/statistics' && (
+*/}
+        {/* Statistics tab disabled along with navigation */}
+        {/* {activeTab === '/statistics' && (
           <div className="p-4 md:p-6">
             <ModuleStatistics />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
