@@ -154,7 +154,7 @@
       "titlePlaceholder": "Enter a title for this video",
       "context": "Video Context (Optional)",
       "contextPlaceholder": "Provide context about what the video is about",
-      "contextHelp": "This context will be shown to students to help them understand what to focus on",
+      "contextHelp": "This context will be shown to students to help them understand what to focus on.",
       "uploadVideo": "Upload Video",
       "uploading": "Uploading...",
       "uploadWait": "Please wait while your video is being uploaded",
