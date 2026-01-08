@@ -19,12 +19,15 @@ This comprehensive guide outlines best practices, conventions, and standards for
   - `layout.tsx` - root layout with theme provider and font setup
   - `globals.css` - global styles and theme tokens
   - `CHANGES.md` - notes for modifications inside `app`
+  - `(admin)/admin/` - admin-only dashboard with Shadcn data table + role actions
+  - `(dashboard)/_components/` - shared dashboard shell + role badge utilities
+  - `(dashboard)/teacher/` - guarded teacher workspace layout and overview page
+  - `(dashboard)/student/` - guarded student workspace layout and overview page
+  - `protected/` - now redirects authenticated users to their role-based dashboard
 - `tailwind.config.ts` - Tailwind and theme tokens config
 - `AGENTS.md` - project-wide guide and history
-
-## Recent Updates
-- 2026-01-08: Default theme set to light via `ThemeProvider` in `app/layout.tsx`.
-- 2026-01-08: Root page (`app/page.tsx`) now redirects to `/auth/login` as the default landing page.
+- `components/ui/table.tsx` & `components/ui/data-table.tsx` - Shadcn data table primitives
+- `lib/auth.ts` & `lib/roles.ts` - centralized Supabase role helpers and route mapping
 
 ## Development Guidelines
 
@@ -322,12 +325,17 @@ SUPABASE_SECRET_KEY=XXXXX
 
 ## LMS Auth Implementation
 
-- Supabase `user_role` enum: `admin|teacher|student|pending`; `users` table
-  keyed to `auth.users` with role, approved_by, timestamps.
-- Trigger auto-promotes the first inserted user to `admin`; everyone else
-  defaults to `pending`.
-- RLS: users can insert their own row; admins can select/update all rows.
-- Auth flows: signup creates auth user then inserts `users` row; login uses
-  Supabase email/password; dashboard shows current role.
-- Admin UI lists all users (never hidden after approval) and lets admins set
-  roles, including granting admin.
+- Supabase `user_role` enum: `admin|teacher|student`; the column lives on
+  `public.users` and defaults to `student` via the `handle_new_user` trigger
+  that mirrors inserts from `auth.users`. The same trigger captures
+  `first_name` / `last_name` from the sign-up metadata so dashboards can show
+  friendly greetings without trusting client-side role changes.
+- `is_admin()` helper powers RLS policies so authenticated users can select
+  their own row while only admins can update roles.
+- `updateUserRoleAction` (see `app/(admin)/admin/actions.ts`) requires admin
+  privileges before updating Supabase and revalidates `/admin`.
+- `getUserWithRole` / `requireRole` enforce access guards in layouts, while
+  the login form redirects users to `/admin`, `/teacher`, or `/student`
+  according to the stored role.
+- The admin dashboard is the only supported way to promote users; seed the
+  first admin manually in Supabase if needed.
