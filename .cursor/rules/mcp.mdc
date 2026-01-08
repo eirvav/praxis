@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+The MCP servers for the following is enabled:
+
+- Shadcn
+- Supabase
+- next-devtools
+
+If asked to do something related to either, look into if using the MCP server is viable. 
+
+The database we want to interact with for the Supabse MCP is called "praxis-new"
+
+Use the Next.js MCP server to debug.

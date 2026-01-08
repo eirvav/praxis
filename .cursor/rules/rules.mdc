@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+Always document changes done, so that the next agent or person that looks at this project understands whats going on. We have an AGENTS.md document that is for general documentation. I also want you to create .md files in subfolders and update those in regards to changes done, so we are aware of whats going on in those subfolders.
+
+I also want you to update the Project Structure in the root AGENTS.md file when things are added or removed. 
+
