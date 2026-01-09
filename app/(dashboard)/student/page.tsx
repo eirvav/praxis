@@ -63,4 +63,3 @@ export default async function StudentPage() {
     </section>
   );
 }
-

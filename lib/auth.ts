@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -13,6 +14,9 @@ export interface RoleAwareUser {
 }
 
 export async function getUserWithRole(): Promise<RoleAwareUser> {
+  "use cache: private";
+  cacheLife("seconds");
+
   const supabase = await createClient();
   const {
     data: { user },

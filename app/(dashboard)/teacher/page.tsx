@@ -62,4 +62,3 @@ export default async function TeacherPage() {
     </section>
   );
 }
-

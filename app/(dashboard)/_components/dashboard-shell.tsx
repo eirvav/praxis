@@ -1,9 +1,7 @@
-import Link from "next/link";
-
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
-import { ROLE_TO_PATH } from "@/lib/roles";
 import type { RoleAwareUser } from "@/lib/auth";
+import { ROLE_TO_PATH } from "@/lib/roles";
 
 interface DashboardShellProps {
   user: RoleAwareUser;
@@ -20,12 +18,12 @@ export function DashboardShell({
   activePath,
   children,
 }: DashboardShellProps) {
-  const selectedPath = activePath ?? ROLE_TO_PATH[user.role];
   const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
   const headerLabel = displayName || user.email;
+  const currentPath = activePath ?? ROLE_TO_PATH[user.role];
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="min-h-svh bg-background" data-active-path={currentPath}>
       <header className="border-b bg-card">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
           <div>

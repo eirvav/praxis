@@ -59,7 +59,7 @@ export function SignUpForm({
             first_name: trimmedFirstName,
             last_name: trimmedLastName,
           },
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
       if (error) throw error;
