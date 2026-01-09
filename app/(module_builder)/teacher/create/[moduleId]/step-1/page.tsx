@@ -1,12 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import {
 	type ChangeEvent,
 	useState,
 	useTransition,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import { z } from 'zod'
+import { toast } from 'sonner'
 
 import { saveModuleAction } from '../actions'
 import { useBuilder } from '../_components/builder-context'
@@ -30,12 +31,13 @@ export default function ModuleOverviewPage() {
 		updateModule,
 		setLastSyncedAt,
 	} = useBuilder()
+	const router = useRouter()
 
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState<string | null>(null)
-	const [isSaving, startSaving] = useTransition()
+	const [isAdvancing, startAdvancing] = useTransition()
 
-	async function handleSave() {
+	async function handleNext() {
 		setError(null)
 		setSuccess(null)
 
@@ -51,7 +53,7 @@ export default function ModuleOverviewPage() {
 			return
 		}
 
-		startSaving(async () => {
+		startAdvancing(async () => {
 			const result = await saveModuleAction({
 				moduleId,
 				title: parsed.data.title,
@@ -62,11 +64,14 @@ export default function ModuleOverviewPage() {
 
 			if (!result.ok) {
 				setError(result.message ?? 'Could not save module')
+				toast.error(result.message ?? 'Could not save module')
 				return
 			}
 
 			setLastSyncedAt(new Date().toISOString())
 			setSuccess('Saved')
+			toast.success('Overview saved')
+			router.push(`/teacher/create/${moduleId}/step-2`)
 		})
 	}
 
@@ -150,24 +155,13 @@ export default function ModuleOverviewPage() {
 						</div>
 					) : null}
 
-					<div className='flex items-center justify-between gap-3 pt-2'>
+					<div className='flex items-center justify-end gap-3 pt-2'>
 						<Button
 							type='button'
-							variant='outline'
-							asChild
+							onClick={handleNext}
+							disabled={isAdvancing}
 						>
-							<Link
-								href={`/teacher/create/${moduleId}/step-2`}
-							>
-								Continue to Step 2
-							</Link>
-						</Button>
-						<Button
-							type='button'
-							onClick={handleSave}
-							disabled={isSaving}
-						>
-							{isSaving ? 'Saving…' : 'Save overview'}
+							{isAdvancing ? 'Saving…' : 'Next Step'}
 						</Button>
 					</div>
 				</CardContent>

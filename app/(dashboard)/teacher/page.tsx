@@ -10,6 +10,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { createClient } from "@/lib/supabase/server"
+import { getUserWithRole } from "@/lib/auth"
 
 type PublishedModule = {
   id: string
@@ -33,6 +34,8 @@ async function fetchPublishedModules(): Promise<PublishedModule[]> {
 
 export default async function TeacherPage() {
   const modules = await fetchPublishedModules()
+  const user = await getUserWithRole()
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email
 
   return (
     <Suspense fallback={<DashboardFallback />}>
@@ -44,11 +47,17 @@ export default async function TeacherPage() {
           } as React.CSSProperties
         }
       >
-        <AppSidebar variant="inset" />
+        <AppSidebar
+          variant="inset"
+          user={{
+            name: displayName,
+            email: user.email,
+          }}
+        />
         <SidebarInset>
           <SiteHeader />
           <div className="flex flex-1 flex-col">
-            <div className="@container/main flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <div className="@container/main flex flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:px-6 md:py-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Published modules</h1>
                 <Link
