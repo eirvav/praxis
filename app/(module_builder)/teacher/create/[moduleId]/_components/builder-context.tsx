@@ -25,10 +25,12 @@ type BuilderState = {
 type BuilderContextValue = BuilderState & {
 	moduleId: string
 	updateModule: (input: Partial<ModuleDraft>) => void
-	addSlide: () => void
+	addSlide: (type?: SlideDraft['type']) => void
 	updateSlide: (id: string, input: Partial<SlideDraft>) => void
 	deleteSlide: (id: string) => void
 	moveSlide: (id: string, direction: 'up' | 'down') => void
+	reorderSlides: (activeId: string, overId: string) => void
+	duplicateSlide: (id: string) => void
 	selectSlide: (id: string | null) => void
 	setLastSyncedAt: (value: string | null) => void
 	resetFromServer: (moduleData: ModuleDraft, slidesData: SlideDraft[]) => void
@@ -44,11 +46,12 @@ const emptyModule: ModuleDraft = {
 	publishAt: null,
 }
 
-function resequence(slides: SlideDraft[]): SlideDraft[] {
-	return slides
-		.slice()
-		.sort((a, b) => a.position - b.position)
-		.map((slide, idx) => ({ ...slide, position: idx + 1 }))
+function resequence(slides: SlideDraft[], sortSlides = true): SlideDraft[] {
+	const ordered = sortSlides
+		? slides.slice().sort((a, b) => a.position - b.position)
+		: slides.slice()
+
+	return ordered.map((slide, idx) => ({ ...slide, position: idx + 1 }))
 }
 
 function storageKey(moduleId: string) {
@@ -132,18 +135,22 @@ export function BuilderProvider({
 		}))
 	}, [])
 
-	const addSlide = useCallback(() => {
+	const addSlide = useCallback((type: SlideDraft['type'] = 'context') => {
 		setState((prev) => {
+			let title = 'New context slide'
+			if (type === 'video') title = 'New video slide'
+			else if (type === 'writtenResponse') title = 'New written response'
+
 			const newSlide: SlideDraft = {
 				id: generateId(),
 				position: prev.slides.length + 1,
-				type: 'context',
-				title: 'New context slide',
+				type,
+				title,
 				content: { body: '' },
 				settings: {},
 			}
 
-			const slides = resequence([...prev.slides, newSlide])
+			const slides = resequence([...prev.slides, newSlide], false)
 			return {
 				...prev,
 				slides,
@@ -162,7 +169,7 @@ export function BuilderProvider({
 				)
 				return {
 					...prev,
-					slides: resequence(slides),
+					slides: resequence(slides, false),
 				}
 			})
 		},
@@ -173,6 +180,7 @@ export function BuilderProvider({
 		setState((prev) => {
 			const slides = resequence(
 				prev.slides.filter((slide) => slide.id !== id),
+				false,
 			)
 			const selectedSlideId =
 				prev.selectedSlideId === id
@@ -209,12 +217,58 @@ export function BuilderProvider({
 
 				return {
 					...prev,
-					slides: resequence(slides),
+					slides: resequence(slides, false),
 				}
 			})
 		},
 		[],
 	)
+
+	const reorderSlides = useCallback((activeId: string, overId: string) => {
+		if (activeId === overId) return
+
+		setState((prev) => {
+			const fromIdx = prev.slides.findIndex((slide) => slide.id === activeId)
+			const toIdx = prev.slides.findIndex((slide) => slide.id === overId)
+			if (fromIdx === -1 || toIdx === -1) return prev
+
+			const slides = prev.slides.slice()
+			const [moved] = slides.splice(fromIdx, 1)
+			slides.splice(toIdx, 0, moved)
+
+			return { ...prev, slides: resequence(slides, false) }
+		})
+	}, [])
+
+	const duplicateSlide = useCallback((id: string) => {
+		setState((prev) => {
+			const sourceIdx = prev.slides.findIndex((slide) => slide.id === id)
+			if (sourceIdx === -1) return prev
+
+			const source = prev.slides[sourceIdx]
+			const clone: SlideDraft = {
+				...source,
+				id: generateId(),
+				content: { ...source.content },
+				settings: { ...source.settings },
+			}
+
+			const slides = resequence(
+				[
+					...prev.slides.slice(0, sourceIdx + 1),
+					clone,
+					...prev.slides.slice(sourceIdx + 1),
+				],
+				false,
+			)
+
+			return {
+				...prev,
+				slides,
+				selectedSlideId: clone.id,
+			}
+		})
+	}, [])
 
 	const selectSlide = useCallback((id: string | null) => {
 		setState((prev) => ({ ...prev, selectedSlideId: id }))
@@ -246,6 +300,8 @@ export function BuilderProvider({
 			updateSlide,
 			deleteSlide,
 			moveSlide,
+			reorderSlides,
+			duplicateSlide,
 			selectSlide,
 			setLastSyncedAt,
 			resetFromServer,
@@ -255,6 +311,8 @@ export function BuilderProvider({
 			deleteSlide,
 			moduleId,
 			moveSlide,
+			reorderSlides,
+			duplicateSlide,
 			resetFromServer,
 			selectSlide,
 			setLastSyncedAt,
@@ -278,4 +336,3 @@ export function useBuilder() {
 	}
 	return ctx
 }
-

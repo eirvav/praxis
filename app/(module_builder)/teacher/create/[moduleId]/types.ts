@@ -9,11 +9,14 @@ export type ModuleDraft = {
 export type SlideDraft = {
 	id: string
 	position: number
-	type: 'context'
+	type: 'context' | 'video' | 'writtenResponse'
 	title: string
 	content: {
-		body: string
+		body?: string
+		videoTitle?: string
+		videoContext?: string
+		videoUrl?: string
+		question?: string
 	}
 	settings: Record<string, unknown>
 }
-

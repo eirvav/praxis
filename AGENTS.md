@@ -22,7 +22,7 @@ This comprehensive guide outlines best practices, conventions, and standards for
   - `page.tsx` - dynamic entry point that loads the authenticated user and redirects to the matching role dashboard
   - `(admin)/_components/` - shared dashboard shell + role badge utilities (moved from `(dashboard)/_components/`)
   - `(admin)/admin/` - admin-only dashboard with Shadcn data table + role actions
-  - `(module_builder)/teacher/create/[moduleId]/` - full-screen teacher module builder with shared layout and three steps (overview, slides, review/publish)
+  - `(module_builder)/teacher/create/[moduleId]/` - full-screen teacher module builder with shared layout and three steps (overview, slides, review/publish); Step 2 slide manager now uses drag-and-drop ordering plus a context menu for duplicate/delete actions on each slide card
   - `(dashboard)/teacher/` - guarded teacher workspace layout with dashboard component (includes `page.tsx` and `data.json`)
   - `(dashboard)/student/` - guarded student workspace layout with dashboard component (includes `page.tsx` and `data.json`)
   - _Removed_ `protected/` route group; its redirect lived in `page.tsx`
