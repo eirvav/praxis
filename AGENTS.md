@@ -20,10 +20,10 @@ This comprehensive guide outlines best practices, conventions, and standards for
   - `globals.css` - global styles and theme tokens
   - `CHANGES.md` - notes for modifications inside `app`
   - `page.tsx` - dynamic entry point that loads the authenticated user and redirects to the matching role dashboard
+  - `(admin)/_components/` - shared dashboard shell + role badge utilities (moved from `(dashboard)/_components/`)
   - `(admin)/admin/` - admin-only dashboard with Shadcn data table + role actions
-  - `(dashboard)/_components/` - shared dashboard shell + role badge utilities
-  - `(dashboard)/teacher/` - guarded teacher workspace layout and overview page
-  - `(dashboard)/student/` - guarded student workspace layout and overview page
+  - `(dashboard)/teacher/` - guarded teacher workspace layout and simple greeting page
+  - `(dashboard)/student/` - guarded student workspace layout and simple greeting page
   - _Removed_ `protected/` route group; its redirect lived in `page.tsx`
 - `tailwind.config.ts` - Tailwind and theme tokens config
 - `AGENTS.md` - project-wide guide and history

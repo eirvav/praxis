@@ -1,4 +1,4 @@
-import { RoleGate } from "@/app/(dashboard)/_components/role-gate";
+import { RoleGate } from "@/app/(admin)/_components/role-gate";
 
 export default function AdminLayout({
   children,

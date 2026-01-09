@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { DashboardShell } from "@/app/(dashboard)/_components/dashboard-shell";
+import { DashboardShell } from "@/app/(admin)/_components/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/roles";
 

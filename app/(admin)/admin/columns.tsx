@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RoleBadge } from "@/app/(dashboard)/_components/role-badge";
+import { RoleBadge } from "@/app/(admin)/_components/role-badge";
 import type { UserRole } from "@/lib/roles";
 import { updateUserRoleAction } from "./actions";
 

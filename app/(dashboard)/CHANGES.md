@@ -1,11 +1,7 @@
 # Dashboard route group changes
 
 ## 2026-01-09
-- Ensured the `/admin`, `/teacher`, and `/student` dashboards rely on the updated cache-safe auth helpers so role-gated routes stay accurate under Cache Components.
-
-## 2026-01-08
-- Added `dashboard-shell.tsx` and `role-badge.tsx` for consistent dashboard chrome, nav, and role labeling.
-- Implemented guarded layouts plus first-pass content for the `/teacher` and `/student` dashboards driven by Supabase-authenticated role data.
-- Introduced `role-gate.tsx` to wrap each dashboard layout in Suspense, keeping Cache Components happy while names and roles load from Supabase.
-- Removed Admin navigation link from `dashboard-shell.tsx` NAV_ITEMS array.
+- Simplified `/teacher` and `/student` pages to display only a greeting message: "Hello firstName, you are <ROLE>".
+- Moved `_components` folder from `(dashboard)` to `(admin)` route group. All shared dashboard components (dashboard-shell, role-badge, role-gate) are now located in `app/(admin)/_components/`.
+- Updated all import paths to reference the new `_components` location.
 
