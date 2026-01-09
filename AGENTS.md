@@ -22,12 +22,15 @@ This comprehensive guide outlines best practices, conventions, and standards for
   - `page.tsx` - dynamic entry point that loads the authenticated user and redirects to the matching role dashboard
   - `(admin)/_components/` - shared dashboard shell + role badge utilities (moved from `(dashboard)/_components/`)
   - `(admin)/admin/` - admin-only dashboard with Shadcn data table + role actions
-  - `(dashboard)/teacher/` - guarded teacher workspace layout and simple greeting page
-  - `(dashboard)/student/` - guarded student workspace layout and simple greeting page
+  - `(module_builder)/teacher/create/[moduleId]/` - full-screen teacher module builder with shared layout and three steps (overview, slides, review/publish)
+  - `(dashboard)/teacher/` - guarded teacher workspace layout with dashboard component (includes `page.tsx` and `data.json`)
+  - `(dashboard)/student/` - guarded student workspace layout with dashboard component (includes `page.tsx` and `data.json`)
   - _Removed_ `protected/` route group; its redirect lived in `page.tsx`
+  - _Removed_ `dashboard/` folder; dashboard content moved to teacher and student folders
 - `tailwind.config.ts` - Tailwind and theme tokens config
 - `AGENTS.md` - project-wide guide and history
 - `components/ui/table.tsx` & `components/ui/data-table.tsx` - Shadcn data table primitives
+- `components/dashboard-fallback.tsx` - Suspense skeleton used while dashboard client widgets hydrate
 - `lib/auth.ts` & `lib/roles.ts` - centralized Supabase role helpers and route mapping
 
 ## Development Guidelines

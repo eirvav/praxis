@@ -1,8 +1,12 @@
 # App folder changes
 
 ## 2026-01-09
+- Teacher and student dashboards now list all published modules (with slide counts) pulled from Supabase.
+- Added a teacher-only module builder flow under `teacher/create/[moduleId]` with shared layout and three steps (overview, slides, review/publish), leveraging local drafts plus explicit save/publish actions.
 - Removed the `/protected` route group and folded its redirect logic into `app/page.tsx`, which now loads the authenticated user and forwards them to their role dashboard in a cache-safe way under Cache Components.
 - Updated signup and password-reset flows to return users to `/`, letting the new root redirect handle dashboard routing automatically.
+- Added a `--spacing` design token to `globals.css` so the dashboard utilities exported by Shadcn compile without CSS parse errors under Turbopack.
+- Tuned the light-theme background and sidebar colors in `globals.css` to a subtle gray so dashboard cards pop while the shell matches the reference design.
 
 ## 2026-01-08
 - **Root page redirect**: Updated `app/page.tsx` to redirect to `/auth/login` as the default landing page. The root route now automatically redirects users to the login page when they first visit the site.

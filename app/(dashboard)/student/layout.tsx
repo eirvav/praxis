@@ -1,19 +1,22 @@
-import { RoleGate } from "@/app/(admin)/_components/role-gate";
+import { Suspense } from "react"
+import type { ReactNode } from "react"
+
+import { DashboardFallback } from "@/components/dashboard-fallback"
+import { requireRole } from "@/lib/auth"
+
+async function StudentRoleGate({ children }: { children: ReactNode }) {
+  await requireRole(["student"])
+  return <>{children}</>
+}
 
 export default function StudentLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode
 }) {
   return (
-    <RoleGate
-      roles={["student"]}
-      activePath="/student"
-      title="Student dashboard"
-      description="Track assignments and stay up to date."
-    >
-      {children}
-    </RoleGate>
-  );
+    <Suspense fallback={<DashboardFallback />}>
+      <StudentRoleGate>{children}</StudentRoleGate>
+    </Suspense>
+  )
 }
-
