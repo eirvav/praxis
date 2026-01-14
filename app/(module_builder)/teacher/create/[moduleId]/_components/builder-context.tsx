@@ -74,6 +74,28 @@ function generateId() {
 	)
 }
 
+function createLikertSlider() {
+	return {
+		id: generateId(),
+		question: '',
+		labels: {
+			left: 'Not at all',
+			middle: 'Somewhat',
+			right: 'Very much',
+		},
+		min: 0,
+		max: 5,
+	}
+}
+
+function createQuizOption(label: string) {
+	return {
+		id: generateId(),
+		text: '',
+		isCorrect: false,
+	}
+}
+
 export function BuilderProvider({
 	moduleId,
 	initialModule,
@@ -140,14 +162,53 @@ export function BuilderProvider({
 			let title = 'New context slide'
 			if (type === 'video') title = 'New video slide'
 			else if (type === 'writtenResponse') title = 'New written response'
+			else if (type === 'likertScale') title = 'New likert scale'
+			else if (type === 'videoResponse') title = 'New video response'
+			else if (type === 'knowledgeTest') title = 'New knowledge test'
+
+			const likertSlider = createLikertSlider()
+			const quizOptions = [
+				createQuizOption('Option 1'),
+				createQuizOption('Option 2'),
+				createQuizOption('Option 3'),
+			]
 
 			const newSlide: SlideDraft = {
 				id: generateId(),
 				position: prev.slides.length + 1,
 				type,
 				title,
-				content: { body: '' },
-				settings: {},
+				content:
+					type === 'likertScale'
+						? {
+								description: '',
+								sliders: [likertSlider],
+							}
+						: type === 'knowledgeTest'
+							? {
+									description: '',
+									question: '',
+									options: quizOptions,
+								}
+							: { body: '' },
+				settings:
+					type === 'likertScale'
+						? { activeSliderId: likertSlider.id }
+						: type === 'videoResponse'
+							? {
+									requiredSlide: false,
+									allowMultipleResponses: false,
+									maxResponses: 2,
+									maxDurationSeconds: 120,
+									forceInstantResponse: false,
+								}
+							: type === 'knowledgeTest'
+								? {
+										requiredSlide: false,
+										allowMultipleCorrect: false,
+										shuffleOptions: false,
+									}
+							: {},
 			}
 
 			const slides = resequence([...prev.slides, newSlide], false)

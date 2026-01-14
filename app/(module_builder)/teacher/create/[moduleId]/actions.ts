@@ -18,14 +18,52 @@ const moduleSchema = z.object({
 	deadlineAt: z.string().nullable().optional(),
 })
 
+const likertSliderSchema = z.object({
+	id: z.string().uuid(),
+	question: z.string().default(''),
+	labels: z
+		.object({
+			left: z.string().default('Not at all'),
+			middle: z.string().default('Somewhat'),
+			right: z.string().default('Very much'),
+		})
+		.default({
+			left: 'Not at all',
+			middle: 'Somewhat',
+			right: 'Very much',
+		}),
+	min: z.number().int().min(0).max(9).default(0),
+	max: z.number().int().min(1).max(10).default(5),
+})
+
+const quizOptionSchema = z.object({
+	id: z.string(),
+	text: z.string().default(''),
+	isCorrect: z.boolean().default(false),
+})
+
 const slideSchema = z.object({
 	id: z.string().uuid(),
 	position: z.number().int().positive(),
-	type: z.literal('context'),
+	type: z.enum([
+		'context',
+		'video',
+		'writtenResponse',
+		'likertScale',
+		'videoResponse',
+		'knowledgeTest',
+	]),
 	title: z.string().default(''),
 	content: z
 		.object({
 			body: z.string().nullable().optional(),
+			videoTitle: z.string().nullable().optional(),
+			videoContext: z.string().nullable().optional(),
+			videoUrl: z.string().nullable().optional(),
+			question: z.string().nullable().optional(),
+			description: z.string().nullable().optional(),
+			sliders: z.array(likertSliderSchema).optional(),
+			options: z.array(quizOptionSchema).optional(),
 		})
 		.passthrough()
 		.default({ body: '' }),
@@ -129,6 +167,31 @@ function normalizeSlides(input: z.infer<typeof slidesSchema>): SlideDraft[] {
 		content: {
 			...slide.content,
 			body: slide.content?.body ?? '',
+			description: slide.content?.description ?? '',
+			sliders:
+				slide.type === 'likertScale'
+					? (slide.content?.sliders ?? []).map((slider) => ({
+							...slider,
+							labels: {
+								left:
+									slider.labels?.left ?? 'Not at all',
+								middle:
+									slider.labels?.middle ?? 'Somewhat',
+								right:
+									slider.labels?.right ?? 'Very much',
+							},
+							min: slider.min ?? 0,
+							max: slider.max ?? 5,
+						}))
+					: slide.content?.sliders,
+			options:
+				slide.type === 'knowledgeTest'
+					? (slide.content?.options ?? []).map((option) => ({
+							id: option.id,
+							text: option.text ?? '',
+							isCorrect: Boolean(option.isCorrect),
+						}))
+					: slide.content?.options,
 		},
 		settings: slide.settings ?? {},
 	}))

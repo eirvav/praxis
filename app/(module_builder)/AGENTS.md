@@ -57,9 +57,18 @@
   step
 
 ## Slides
-- Supported type: `context` (textarea). Stub files exist for additional types
-  under `_components/slide-types/` (quiz, video, likert, etc.)—currently empty.
-  Add implementations there and extend SlideDraft/type checks + renderers.
+- Supported types: `context`, `video`, `writtenResponse`, `likertScale`,
+  `videoResponse`, and `knowledgeTest`.
+- Likert Scale lives under `step-2/_components/slide-types/likert-scale-slide/`
+  and includes multi-slider editing plus per-slider range settings.
+- Video Upload and Text Response slides live in their own folders with
+  settings UIs under `step-2/_components/slide-types/`.
+- Video Response slide lives in its own folder with settings and summary UI.
+- Knowledge Test slide lives in its own folder with options editor and
+  settings UI.
+- Stub files exist for additional types under `_components/slide-types/`
+  (quiz, video response, etc.)—extend SlideDraft/type checks + renderers
+  when implementing new types.
 
 ## Entry / Quick Create
 - Sidebar "Quick Create" generates UUID and routes to step-1 for a new module.

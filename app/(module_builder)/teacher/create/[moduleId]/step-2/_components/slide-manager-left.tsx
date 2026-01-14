@@ -156,6 +156,7 @@ export function SlideManagerLeft() {
 									<Button
 										variant='outline'
 										className='flex h-auto flex-col gap-2 p-3 hover:border-primary hover:bg-primary/5 hover:text-primary'
+										onClick={() => addSlide('knowledgeTest')}
 									>
 										<ListTodo className='size-6' />
 										<span className='text-xs font-medium'>
@@ -165,6 +166,7 @@ export function SlideManagerLeft() {
 									<Button
 										variant='outline'
 										className='flex h-auto flex-col gap-2 p-3 hover:border-primary hover:bg-primary/5 hover:text-primary'
+										onClick={() => addSlide('videoResponse')}
 									>
 										<Camera className='size-6' />
 										<span className='text-xs font-medium'>
@@ -174,6 +176,7 @@ export function SlideManagerLeft() {
 									<Button
 										variant='outline'
 										className='flex h-auto flex-col gap-2 p-3 hover:border-primary hover:bg-primary/5 hover:text-primary'
+										onClick={() => addSlide('likertScale')}
 									>
 										<MoveHorizontal className='size-6' />
 										<span className='text-xs font-medium'>

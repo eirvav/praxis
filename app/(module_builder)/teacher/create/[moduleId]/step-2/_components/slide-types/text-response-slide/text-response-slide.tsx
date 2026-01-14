@@ -10,7 +10,7 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { EditorState } from 'lexical'
 import { AlignLeft, Info } from 'lucide-react';
 
-import { ToolbarPlugin } from './context-slide/toolbar-plugin'
+import { ToolbarPlugin } from '../context-slide/toolbar-plugin'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const theme = {
@@ -46,7 +46,7 @@ export function TextResponseSlide({
 	}
 
 	return (
-		<div className='flex h-full flex-col gap-4'>
+		<div className='flex min-h-[400px] flex-col gap-4'>
 			<Alert className='bg-primary/5 border-primary/20'>
 				<Info className='h-4 w-4' />
 				<AlertDescription className='text-primary border-primary/20'>
@@ -54,14 +54,14 @@ export function TextResponseSlide({
 					with reflections, open-ended answers, or feedback
 				</AlertDescription>
 			</Alert>
-			<div className='flex flex-1 flex-col overflow-hidden rounded-md border bg-background'>
+			<div className='flex min-h-[400px] flex-col overflow-hidden rounded-md border bg-background'>
 				<LexicalComposer initialConfig={initialConfig}>
 					<ToolbarPlugin />
-					<div className='relative flex-1 overflow-auto'>
+					<div className='relative min-h-[350px] overflow-auto'>
 						<RichTextPlugin
 							contentEditable={
 								<ContentEditable
-									className='min-h-full resize-none p-4 focus:outline-hidden'
+									className='min-h-[350px] resize-none p-4 focus:outline-hidden'
 									aria-placeholder='Enter question...'
 									placeholder={
 										<div className='pointer-events-none absolute top-4 left-4 text-muted-foreground'>

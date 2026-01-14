@@ -44,14 +44,14 @@ export function ContextSlide({
 	}
 
 	return (
-		<div className='flex h-full flex-col overflow-hidden rounded-md border bg-background'>
+		<div className='flex min-h-[400px] flex-col overflow-hidden rounded-md border bg-background'>
 			<LexicalComposer initialConfig={initialConfig}>
 				<ToolbarPlugin />
-				<div className='relative flex-1 overflow-auto'>
+				<div className='relative min-h-[450px] overflow-auto'>
 					<RichTextPlugin
 						contentEditable={
 							<ContentEditable
-								className='min-h-full resize-none p-4 focus:outline-hidden'
+								className='min-h-[450px] resize-none p-4 focus:outline-hidden'
 								aria-placeholder='Enter context...'
 								placeholder={
 									<div className='pointer-events-none absolute top-4 left-4 text-muted-foreground'>
