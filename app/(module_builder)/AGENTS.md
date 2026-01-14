@@ -66,6 +66,9 @@
 - Video Response slide lives in its own folder with settings and summary UI.
 - Knowledge Test slide lives in its own folder with options editor and
   settings UI.
+
+## Step 3 Review & Publish
+- Slide review shows one selected slide at a time using Step 3 components.
 - Stub files exist for additional types under `_components/slide-types/`
   (quiz, video response, etc.)—extend SlideDraft/type checks + renderers
   when implementing new types.

@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 import { publishModuleAction } from '../actions'
 import { useBuilder } from '../_components/builder-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-
+import { IconArrowLeft } from '@tabler/icons-react'
+import { SlideReview } from './_components/slide-review'
 export default function ReviewPublishPage() {
 	const { moduleId, module, slides, setLastSyncedAt } =
 		useBuilder()
@@ -18,11 +19,6 @@ export default function ReviewPublishPage() {
 	const [isPublishing, startPublishing] = useTransition()
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState<string | null>(null)
-
-	const previewSlide = useMemo(
-		() => slides[0],
-		[slides],
-	)
 
 	async function handlePublish() {
 		setError(null)
@@ -103,69 +99,10 @@ export default function ReviewPublishPage() {
 								</div>
 							</dl>
 						</div>
-						<div className='rounded-md border bg-muted/10 p-4'>
-							<h3 className='text-sm font-semibold'>
-								Slides ({slides.length})
-							</h3>
-							<div className='mt-3 flex flex-col gap-2 text-sm'>
-								{slides.length === 0 ? (
-									<p className='text-muted-foreground'>
-										No slides added yet.
-									</p>
-								) : (
-									slides.map((slide) => (
-										<div
-											key={slide.id}
-											className='flex items-center justify-between rounded-md border bg-background px-3 py-2'
-										>
-											<div>
-												<div className='text-xs text-muted-foreground'>
-													#{slide.position} ·{' '}
-													{slide.type}
-												</div>
-												<div className='font-medium'>
-													{slide.title ||
-														'Untitled'}
-												</div>
-											</div>
-											<div className='text-xs text-muted-foreground'>
-												{slide.settings?.visible ===
-												false
-													? 'Hidden'
-													: 'Visible'}
-											</div>
-										</div>
-									))
-								)}
-							</div>
-						</div>
+						<SlideReview slides={slides} />
 					</div>
 
 					<Separator />
-
-					<div className='space-y-3 rounded-md border bg-background p-4'>
-						<h3 className='text-sm font-semibold'>
-							Student preview
-						</h3>
-						{previewSlide ? (
-							<div className='space-y-2 rounded-md border bg-muted/10 p-4'>
-								<div className='text-xs text-muted-foreground'>
-									Slide #{previewSlide.position}
-								</div>
-								<div className='text-lg font-semibold'>
-									{previewSlide.title || 'Untitled'}
-								</div>
-								<p className='whitespace-pre-wrap text-sm'>
-									{previewSlide.content?.body ||
-										'No content yet.'}
-								</p>
-							</div>
-						) : (
-							<p className='text-sm text-muted-foreground'>
-								Add a slide to preview how students will see it.
-							</p>
-						)}
-					</div>
 
 					{error ? (
 						<div className='rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive'>
@@ -183,25 +120,18 @@ export default function ReviewPublishPage() {
 							<Link
 								href={`/teacher/create/${moduleId}/step-2`}
 							>
+								<IconArrowLeft className='size-4' />
 								Back to Step 2
 							</Link>
 						</Button>
 						<div className='flex gap-2'>
-							<Button
-								variant='secondary'
-								asChild
-							>
-								<Link href='/teacher'>
-									Return to teacher home
-								</Link>
-							</Button>
 							<Button
 								onClick={handlePublish}
 								disabled={isPublishing}
 							>
 								{isPublishing
 									? 'Publishing…'
-									: 'Publish now'}
+									: 'Publish Module'}
 							</Button>
 						</div>
 					</div>

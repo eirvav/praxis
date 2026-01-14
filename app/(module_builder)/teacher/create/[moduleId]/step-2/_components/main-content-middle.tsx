@@ -36,7 +36,7 @@ export function MainContentMiddle() {
 	}
 
 	return (
-		<Card className='flex w-full flex-col self-start'>
+		<Card className='flex w-full max-h-full flex-col overflow-hidden self-start'>
 			<CardHeader className='flex flex-row items-center justify-between gap-2 py-0 px-4 shrink-0'>
 				<div className='flex items-center gap-2'>
 					<CardTitle className='text-lg'>
@@ -48,7 +48,7 @@ export function MainContentMiddle() {
 				</div>
 			</CardHeader>
 			<Separator />
-			<CardContent className='bg-muted/10 p-4 pt-0'>
+			<CardContent className='bg-muted/10 p-4 pt-0 overflow-y-auto min-h-0'>
 				{activeSlide.type === 'context' && (
 					<ContextSlide
 						key={activeSlide.id}

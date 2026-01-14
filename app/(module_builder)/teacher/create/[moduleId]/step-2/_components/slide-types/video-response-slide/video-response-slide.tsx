@@ -1,6 +1,6 @@
 'use client'
 
-import { AlignLeft, Info } from 'lucide-react'
+import { AlignLeft, Camera, Info } from 'lucide-react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
@@ -56,18 +56,31 @@ export function VideoResponseSlide({ settings }: VideoResponseSlideProps) {
 					panel.
 				</AlertDescription>
 			</Alert>
-			<div className='rounded-lg border bg-background p-4'>
-				<div className='flex items-center gap-2'>
-					<AlignLeft className='size-4 text-muted-foreground' />
-					<span className='text-sm font-medium'>
-						Current response settings
-					</span>
+			<div className='flex w-full flex-col items-center justify-center gap-4 rounded-md border border-dashed bg-muted/5 p-6 text-center text-sm text-muted-foreground'>
+				<div className='rounded-full bg-muted p-4'>
+					<Camera className='size-6 text-muted-foreground' />
 				</div>
-				<ul className='mt-3 space-y-1 text-sm text-muted-foreground'>
-					{details.map((detail) => (
-						<li key={detail}>• {detail}</li>
-					))}
-				</ul>
+				<div>
+					<p className='font-medium text-foreground'>
+						Record a video response
+					</p>
+					<p className='text-xs text-muted-foreground'>
+						Students will record and submit responses here
+					</p>
+				</div>
+				<div className='w-full rounded-lg border bg-background/60 p-3 text-left'>
+					<div className='flex items-center gap-2'>
+						<AlignLeft className='size-4 text-muted-foreground' />
+						<span className='text-sm font-medium'>
+							Current response settings
+						</span>
+					</div>
+					<ul className='mt-3 space-y-1 text-sm text-muted-foreground'>
+						{details.map((detail) => (
+							<li key={detail}>• {detail}</li>
+						))}
+					</ul>
+				</div>
 			</div>
 		</div>
 	)

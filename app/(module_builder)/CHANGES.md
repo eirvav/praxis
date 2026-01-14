@@ -13,3 +13,4 @@
 - Added settings UI for video upload and written response slides
 - Added video response slide with builder settings UI and center instructions
 - Added knowledge test slide UI with options list and settings panel
+- Updated step 3 to review one slide at a time with a preview selector
