@@ -34,7 +34,7 @@ function generateId() {
 	)
 }
 
-function createOption(index: number): QuizOption {
+function createOption(): QuizOption {
 	return {
 		id: generateId(),
 		text: '',
@@ -52,7 +52,7 @@ export function QuizSlide({
 	const normalizedOptions =
 		options?.length > 0
 			? options
-			: [createOption(1), createOption(2), createOption(3)]
+			: [createOption(), createOption(), createOption()]
 
 	const handleUpdateOption = (id: string, text: string) => {
 		const nextOptions = normalizedOptions.map((option) =>
@@ -82,7 +82,7 @@ export function QuizSlide({
 	const handleAddOption = () => {
 		const nextOptions = [
 			...normalizedOptions,
-			createOption(normalizedOptions.length + 1),
+			createOption(),
 		]
 		onUpdate({ options: nextOptions })
 	}

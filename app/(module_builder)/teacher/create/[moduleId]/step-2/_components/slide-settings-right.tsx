@@ -111,9 +111,9 @@ export function SlideSettingsRight() {
 					!isTextResponse &&
 					!isVideoResponse &&
 					!isKnowledgeTest && (
-					<div className='rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground'>
-						Additional settings placeholder
-					</div>
+				<div className='rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground'>
+					Additional settings placeholder
+				</div>
 				)}
 			</CardContent>
 		</Card>

@@ -6,4 +6,5 @@
 - Moved video/text response slides into their own folders with settings UI.
 - Added video response slide center content and settings panel.
 - Added knowledge test slide UI and settings folder.
+- Added pending video upload tracking for publish-time uploads.
 

@@ -34,6 +34,13 @@ type BuilderContextValue = BuilderState & {
 	selectSlide: (id: string | null) => void
 	setLastSyncedAt: (value: string | null) => void
 	resetFromServer: (moduleData: ModuleDraft, slidesData: SlideDraft[]) => void
+	setPendingVideoFile: (
+		slideId: string,
+		file: File | null,
+		previewUrl?: string | null,
+	) => void
+	getPendingVideoFile: (slideId: string) => File | null
+	clearPendingVideoFiles: () => void
 }
 
 const BuilderContext = createContext<BuilderContextValue | null>(null)
@@ -56,6 +63,30 @@ function resequence(slides: SlideDraft[], sortSlides = true): SlideDraft[] {
 
 function storageKey(moduleId: string) {
 	return `module-builder-${moduleId}`
+}
+
+function isTemporaryVideoUrl(url?: string | null) {
+	if (!url) return false
+	return url.startsWith('blob:') || url.startsWith('data:')
+}
+
+function sanitizeStateForStorage(state: BuilderState): BuilderState {
+	const sanitizedSlides = state.slides.map((slide) => {
+		if (slide.type !== 'video') return slide
+		if (!isTemporaryVideoUrl(slide.content?.videoUrl)) return slide
+		return {
+			...slide,
+			content: {
+				...slide.content,
+				videoUrl: '',
+			},
+		}
+	})
+
+	return {
+		...state,
+		slides: sanitizedSlides,
+	}
 }
 
 function generateId() {
@@ -88,7 +119,7 @@ function createLikertSlider() {
 	}
 }
 
-function createQuizOption(label: string) {
+function createQuizOption() {
 	return {
 		id: generateId(),
 		text: '',
@@ -144,9 +175,10 @@ export function BuilderProvider({
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return
+		const sanitized = sanitizeStateForStorage(state)
 		window.localStorage.setItem(
 			storageKey(moduleId),
-			JSON.stringify(state),
+			JSON.stringify(sanitized),
 		)
 	}, [moduleId, state])
 
@@ -168,9 +200,9 @@ export function BuilderProvider({
 
 			const likertSlider = createLikertSlider()
 			const quizOptions = [
-				createQuizOption('Option 1'),
-				createQuizOption('Option 2'),
-				createQuizOption('Option 3'),
+				createQuizOption(),
+				createQuizOption(),
+				createQuizOption(),
 			]
 
 			const newSlide: SlideDraft = {
@@ -184,16 +216,36 @@ export function BuilderProvider({
 								description: '',
 								sliders: [likertSlider],
 							}
+						: type === 'video'
+							? {
+									videoTitle: '',
+									videoContext: '',
+									videoUrl: '',
+									videoPath: '',
+								}
 						: type === 'knowledgeTest'
 							? {
 									description: '',
 									question: '',
 									options: quizOptions,
 								}
-							: { body: '' },
+							: type === 'writtenResponse'
+								? { question: '' }
+								: { body: '' },
 				settings:
 					type === 'likertScale'
 						? { activeSliderId: likertSlider.id }
+						: type === 'video'
+							? {
+									requiredToWatch: false,
+									replayVideo: false,
+								}
+						: type === 'writtenResponse'
+							? {
+									requiredSlide: false,
+									maxWordsEnabled: false,
+									maxWords: null,
+								}
 						: type === 'videoResponse'
 							? {
 									requiredSlide: false,
@@ -339,6 +391,32 @@ export function BuilderProvider({
 		setState((prev) => ({ ...prev, lastSyncedAt: value }))
 	}, [])
 
+	const pendingVideoFilesRef = useMemo(
+		() => new Map<string, { file: File; previewUrl?: string | null }>(),
+		[],
+	)
+
+	const setPendingVideoFile = useCallback(
+		(slideId: string, file: File | null, previewUrl?: string | null) => {
+			if (!file) {
+				pendingVideoFilesRef.delete(slideId)
+				return
+			}
+			pendingVideoFilesRef.set(slideId, { file, previewUrl })
+		},
+		[pendingVideoFilesRef],
+	)
+
+	const getPendingVideoFile = useCallback(
+		(slideId: string) =>
+			pendingVideoFilesRef.get(slideId)?.file ?? null,
+		[pendingVideoFilesRef],
+	)
+
+	const clearPendingVideoFiles = useCallback(() => {
+		pendingVideoFilesRef.clear()
+	}, [pendingVideoFilesRef])
+
 	const resetFromServer = useCallback(
 		(moduleData: ModuleDraft, slidesData: SlideDraft[]) => {
 			setState({
@@ -366,6 +444,9 @@ export function BuilderProvider({
 			selectSlide,
 			setLastSyncedAt,
 			resetFromServer,
+			setPendingVideoFile,
+			getPendingVideoFile,
+			clearPendingVideoFiles,
 		}),
 		[
 			addSlide,
@@ -380,6 +461,9 @@ export function BuilderProvider({
 			state,
 			updateModule,
 			updateSlide,
+			setPendingVideoFile,
+			getPendingVideoFile,
+			clearPendingVideoFiles,
 		],
 	)
 

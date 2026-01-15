@@ -8,7 +8,7 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { EditorState } from 'lexical'
-import { AlignLeft, Info } from 'lucide-react';
+import { Info } from 'lucide-react'
 
 import { ToolbarPlugin } from '../context-slide/toolbar-plugin'
 import { Alert, AlertDescription } from '@/components/ui/alert'

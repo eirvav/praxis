@@ -19,6 +19,7 @@ interface VideoUploadSlideProps {
 			videoUrl: string
 		}>,
 	) => void
+	onSelectFile: (file: File | null, previewUrl?: string | null) => void
 }
 
 export function VideoUploadSlide({
@@ -26,19 +27,29 @@ export function VideoUploadSlide({
 	videoContext,
 	videoUrl,
 	onUpdate,
+	onSelectFile,
 }: VideoUploadSlideProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	// Local state for previewing uploaded file before it's saved/uploaded to server
 	// In a real app, this would handle the upload process
 	const [previewUrl, setPreviewUrl] = useState<string | null>(videoUrl || null)
+	const [error, setError] = useState<string | null>(null)
 
 	const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0]
 		if (file) {
+			if (file.size > 50 * 1024 * 1024) {
+				setError('Video must be 50MB or smaller.')
+				event.target.value = ''
+				return
+			}
+
+			setError(null)
 			// For this UI demo, we'll create a local object URL
 			const url = URL.createObjectURL(file)
 			setPreviewUrl(url)
 			onUpdate({ videoUrl: url })
+			onSelectFile(file, url)
 		}
 	}
 
@@ -114,7 +125,7 @@ export function VideoUploadSlide({
 									Click to upload video
 								</p>
 								<p className='text-xs text-muted-foreground'>
-									MP4, WebM, or MOV (max. 100MB)
+									MP4, WebM, or MOV (max. 50MB)
 								</p>
 							</div>
 						</div>
@@ -126,6 +137,11 @@ export function VideoUploadSlide({
 						className='hidden'
 						onChange={handleFileSelect}
 					/>
+					{error ? (
+						<p className='mt-2 text-xs text-destructive'>
+							{error}
+						</p>
+					) : null}
 				</div>
 			</div>
 		</div>

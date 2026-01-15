@@ -9,11 +9,8 @@ import {
 import {
 	Bold,
 	Italic,
-	Link,
 	List,
 	ListOrdered,
-	Image,
-	RemoveFormatting,
 	Underline,
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
@@ -26,7 +23,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
 
 export function ToolbarPlugin() {
 	const [editor] = useLexicalComposerContext()

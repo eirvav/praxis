@@ -5,6 +5,8 @@ import { useMemo, useTransition, type ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import { publishModuleAction } from '../actions'
+import { uploadPendingVideos } from '../publish-upload'
+import { validateSlidesForPublish } from '../publish-validation'
 import { BuilderHeader } from './builder-header'
 import { useBuilder } from './builder-context'
 import { Toaster } from '@/components/ui/sonner'
@@ -37,6 +39,8 @@ export function BuilderShell({
 		module,
 		slides,
 		setLastSyncedAt,
+		getPendingVideoFile,
+		clearPendingVideoFiles,
 	} = useBuilder()
 
 	const currentIndex = useMemo(() => {
@@ -57,10 +61,40 @@ export function BuilderShell({
 
 	const handlePublish = () => {
 		startPublishing(async () => {
+			if (!module.title) {
+				toast.error('Add a title before publishing')
+				return
+			}
+
+			const issues = validateSlidesForPublish(
+				slides,
+				(slideId) => Boolean(getPendingVideoFile(slideId)),
+			)
+			if (issues.length > 0) {
+				toast.error(issues[0]?.message ?? 'Slides are incomplete.')
+				return
+			}
+
+			let updatedSlides = slides
+			try {
+				updatedSlides = await uploadPendingVideos({
+					moduleId,
+					slides,
+					getPendingVideoFile,
+				})
+			} catch (uploadError) {
+				const message =
+					uploadError instanceof Error
+						? uploadError.message
+						: 'Video upload failed.'
+				toast.error(message)
+				return
+			}
+
 			const result = await publishModuleAction({
 				moduleId,
 				module,
-				slides,
+				slides: updatedSlides,
 			})
 
 			if (!result.ok) {
@@ -69,6 +103,7 @@ export function BuilderShell({
 			}
 
 			setLastSyncedAt(result.publishAt)
+			clearPendingVideoFiles()
 			toast.success('Module published')
 			router.push('/teacher')
 		})

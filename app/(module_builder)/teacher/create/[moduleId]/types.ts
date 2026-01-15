@@ -40,6 +40,7 @@ export type SlideDraft = {
 		videoTitle?: string
 		videoContext?: string
 		videoUrl?: string
+		videoPath?: string
 		question?: string
 		description?: string
 		sliders?: LikertScaleSlider[]

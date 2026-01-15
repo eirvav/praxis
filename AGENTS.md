@@ -3,6 +3,11 @@
 ## Project Structure
 .
 ├── app
+│   ├── api
+│   │   └── module-builder
+│   │       ├── CHANGES.md
+│   │       └── upload-video
+│   │           └── route.ts
 │   ├── (admin)
 │   │   ├── _components
 │   │   │   ├── dashboard-shell.tsx
@@ -27,10 +32,17 @@
 │   │   ├── teacher
 │   │   │   └── create
 │   │   │       └── [moduleId]
+│   │   │           ├── CHANGES.md
+│   │   │           ├── README.md
 │   │   │           ├── _components
+│   │   │           │   ├── CHANGES.md
 │   │   │           │   ├── builder-context.tsx
 │   │   │           │   ├── builder-header.tsx
 │   │   │           │   └── builder-shell.tsx
+│   │   │           ├── __tests__
+│   │   │           │   └── publish-validation.test.ts
+│   │   │           ├── publish-upload.ts
+│   │   │           ├── publish-validation.ts
 │   │   │           ├── step-1
 │   │   │           │   └── page.tsx
 │   │   │           ├── step-2
@@ -110,9 +122,12 @@
 ├── public
 │   └── logo.svg
 ├── AGENTS.md
+├── CHANGES.md
 ├── components.json
 ├── DEV-GUIDE.md
 ├── eslint.config.mjs
+├── jest.config.ts
+├── jest.setup.ts
 ├── next-env.d.ts
 ├── next.config.ts
 ├── package-lock.json
@@ -123,6 +138,9 @@
 ├── README.md
 ├── tailwind.config.ts
 ├── tree.sh
+├── types
+│   ├── CHANGES.md
+│   └── jest.d.ts
 └── tsconfig.json
 
 ## Useful Commands

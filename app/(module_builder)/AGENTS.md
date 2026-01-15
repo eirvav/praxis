@@ -30,8 +30,10 @@
   success/error, then navigates to step 2
 - Save slides (step 2): `saveSlidesAction` replaces slides for module; debounced
   manually via button
-- Publish (step 3 + header): `publishModuleAction` upserts module with
-  `publish_at` and replaces slides; on success toast + redirect to `/teacher`
+- Publish (step 3 + header): validates slide content/settings, uploads any
+  pending teacher videos to the private Supabase bucket, calls
+  `publishModuleAction` to upsert module with `publish_at` and replace slides;
+  on success toast + redirect to `/teacher`
 - Toaster: `components/ui/sonner.tsx`, mounted in `builder-shell`, position
   bottom-right
 

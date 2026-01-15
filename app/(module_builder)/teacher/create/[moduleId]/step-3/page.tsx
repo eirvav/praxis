@@ -6,14 +6,22 @@ import { useState, useTransition } from 'react'
 
 import { publishModuleAction } from '../actions'
 import { useBuilder } from '../_components/builder-context'
+import { uploadPendingVideos } from '../publish-upload'
+import { validateSlidesForPublish } from '../publish-validation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { SlideReview } from './_components/slide-review'
 export default function ReviewPublishPage() {
-	const { moduleId, module, slides, setLastSyncedAt } =
-		useBuilder()
+	const {
+		moduleId,
+		module,
+		slides,
+		setLastSyncedAt,
+		getPendingVideoFile,
+		clearPendingVideoFiles,
+	} = useBuilder()
 	const router = useRouter()
 
 	const [isPublishing, startPublishing] = useTransition()
@@ -30,10 +38,35 @@ export default function ReviewPublishPage() {
 		}
 
 		startPublishing(async () => {
+			const issues = validateSlidesForPublish(
+				slides,
+				(slideId) => Boolean(getPendingVideoFile(slideId)),
+			)
+			if (issues.length > 0) {
+				setError(issues[0]?.message ?? 'Slides are incomplete.')
+				return
+			}
+
+			let updatedSlides = slides
+			try {
+				updatedSlides = await uploadPendingVideos({
+					moduleId,
+					slides,
+					getPendingVideoFile,
+				})
+			} catch (uploadError) {
+				const message =
+					uploadError instanceof Error
+						? uploadError.message
+						: 'Video upload failed.'
+				setError(message)
+				return
+			}
+
 			const result = await publishModuleAction({
 				moduleId,
 				module,
-				slides,
+				slides: updatedSlides,
 			})
 
 			if (!result.ok) {
@@ -42,6 +75,7 @@ export default function ReviewPublishPage() {
 			}
 
 			setLastSyncedAt(result.publishAt)
+			clearPendingVideoFiles()
 			setSuccess('Published and saved')
 			router.push('/teacher')
 		})

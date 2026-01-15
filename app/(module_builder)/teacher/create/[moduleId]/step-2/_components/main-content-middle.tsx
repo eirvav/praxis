@@ -11,7 +11,12 @@ import { VideoResponseSlide } from './slide-types/video-response-slide/video-res
 import { QuizSlide } from './slide-types/quiz-slide/quiz-slide'
 
 export function MainContentMiddle() {
-	const { slides, selectedSlideId, updateSlide } = useBuilder()
+	const {
+		slides,
+		selectedSlideId,
+		updateSlide,
+		setPendingVideoFile,
+	} = useBuilder()
 
 	const activeSlide = slides.find((s) => s.id === selectedSlideId)
 	const slideTypeLabel =
@@ -76,6 +81,17 @@ export function MainContentMiddle() {
 									...updates,
 								},
 							})
+						}}
+						onSelectFile={(file, previewUrl) => {
+							setPendingVideoFile(activeSlide.id, file, previewUrl)
+							if (previewUrl) {
+								updateSlide(activeSlide.id, {
+									content: {
+										...activeSlide.content,
+										videoUrl: previewUrl,
+									},
+								})
+							}
 						}}
 					/>
 				)}
