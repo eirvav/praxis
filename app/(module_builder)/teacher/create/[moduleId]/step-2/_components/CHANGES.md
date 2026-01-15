@@ -7,4 +7,5 @@
 - Added video response slide center content and settings panel.
 - Added knowledge test slide UI and settings folder.
 - Added pending video upload tracking for publish-time uploads.
+- Triggered direct video uploads on file selection with background progress handling.
 

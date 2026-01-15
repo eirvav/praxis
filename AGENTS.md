@@ -6,6 +6,9 @@
 │   ├── api
 │   │   └── module-builder
 │   │       ├── CHANGES.md
+│   │       ├── signed-upload
+│   │       │   ├── CHANGES.md
+│   │       │   └── route.ts
 │   │       └── upload-video
 │   │           └── route.ts
 │   ├── (admin)
@@ -41,6 +44,7 @@
 │   │   │           │   └── builder-shell.tsx
 │   │   │           ├── __tests__
 │   │   │           │   └── publish-validation.test.ts
+│   │   │           ├── direct-upload.ts
 │   │   │           ├── publish-upload.ts
 │   │   │           ├── publish-validation.ts
 │   │   │           ├── step-1

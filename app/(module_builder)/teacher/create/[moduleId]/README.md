@@ -13,7 +13,7 @@ teacher-uploaded videos are stored privately in Supabase Storage.
 
 ## Publish Flow
 1. Step 3 and header publish actions validate slide content and settings.
-2. Pending video files are uploaded to Supabase Storage on publish.
+2. Video files are uploaded directly to Supabase Storage when selected in Step 2.
 3. Slides are persisted with normalized content/settings, including `videoPath`.
 4. Module is published by setting `publish_at` and saving slides.
 
@@ -23,6 +23,8 @@ teacher-uploaded videos are stored privately in Supabase Storage.
 - Size limit: 50MB
 - MIME types: mp4, webm, quicktime
 - Private by default; store `content.videoPath` only (no public URL)
+- Signed upload init endpoint: `app/api/module-builder/signed-upload/route.ts`
+- Direct-to-storage upload happens on Step 2 selection via signed URL
 
 ## Validation Rules (Summary)
 - Context: content body required.
@@ -34,9 +36,11 @@ teacher-uploaded videos are stored privately in Supabase Storage.
 
 ## Key Files
 - `actions.ts`: server-side validation + persistence.
+- `direct-upload.ts`: client helper for signed uploads on Step 2.
 - `publish-validation.ts`: client validation for publish.
 - `publish-upload.ts`: publish-time video upload helper.
-- `app/api/module-builder/upload-video/route.ts`: authenticated upload route.
+- `app/api/module-builder/upload-video/route.ts`: authenticated upload route (fallback).
+- `app/api/module-builder/signed-upload/route.ts`: signed upload init route.
 - `step-2/_components/main-content-middle.tsx`: pending video tracking.
 
 ## Supabase RLS

@@ -21,6 +21,7 @@ export default function ReviewPublishPage() {
 		setLastSyncedAt,
 		getPendingVideoFile,
 		clearPendingVideoFiles,
+		hasActiveVideoUploads,
 	} = useBuilder()
 	const router = useRouter()
 
@@ -31,6 +32,11 @@ export default function ReviewPublishPage() {
 	async function handlePublish() {
 		setError(null)
 		setSuccess(null)
+
+		if (hasActiveVideoUploads) {
+			setError('Wait for video uploads to finish before publishing.')
+			return
+		}
 
 		if (!module.title) {
 			setError('Add a title before publishing')

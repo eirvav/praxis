@@ -41,6 +41,10 @@ type BuilderContextValue = BuilderState & {
 	) => void
 	getPendingVideoFile: (slideId: string) => File | null
 	clearPendingVideoFiles: () => void
+	startVideoUpload: (slideId: string) => void
+	finishVideoUpload: (slideId: string) => void
+	isVideoUploading: (slideId: string) => boolean
+	hasActiveVideoUploads: boolean
 }
 
 const BuilderContext = createContext<BuilderContextValue | null>(null)
@@ -277,7 +281,16 @@ export function BuilderProvider({
 			setState((prev) => {
 				const slides = prev.slides.map((slide) =>
 					slide.id === id
-						? { ...slide, ...input }
+						? {
+								...slide,
+								...input,
+								content: input.content
+									? { ...slide.content, ...input.content }
+									: slide.content,
+								settings: input.settings
+									? { ...slide.settings, ...input.settings }
+									: slide.settings,
+							}
 						: slide,
 				)
 				return {
@@ -417,6 +430,27 @@ export function BuilderProvider({
 		pendingVideoFilesRef.clear()
 	}, [pendingVideoFilesRef])
 
+	const [uploadingVideoSlideIds, setUploadingVideoSlideIds] = useState<string[]>(
+		[],
+	)
+
+	const startVideoUpload = useCallback((slideId: string) => {
+		setUploadingVideoSlideIds((prev) =>
+			prev.includes(slideId) ? prev : [...prev, slideId],
+		)
+	}, [])
+
+	const finishVideoUpload = useCallback((slideId: string) => {
+		setUploadingVideoSlideIds((prev) => prev.filter((id) => id !== slideId))
+	}, [])
+
+	const isVideoUploading = useCallback(
+		(slideId: string) => uploadingVideoSlideIds.includes(slideId),
+		[uploadingVideoSlideIds],
+	)
+
+	const hasActiveVideoUploads = uploadingVideoSlideIds.length > 0
+
 	const resetFromServer = useCallback(
 		(moduleData: ModuleDraft, slidesData: SlideDraft[]) => {
 			setState({
@@ -447,6 +481,10 @@ export function BuilderProvider({
 			setPendingVideoFile,
 			getPendingVideoFile,
 			clearPendingVideoFiles,
+			startVideoUpload,
+			finishVideoUpload,
+			isVideoUploading,
+			hasActiveVideoUploads,
 		}),
 		[
 			addSlide,
@@ -464,6 +502,10 @@ export function BuilderProvider({
 			setPendingVideoFile,
 			getPendingVideoFile,
 			clearPendingVideoFiles,
+			startVideoUpload,
+			finishVideoUpload,
+			isVideoUploading,
+			hasActiveVideoUploads,
 		],
 	)
 

@@ -1,5 +1,9 @@
 # Lib changes
 
+## 2026-01-15
+- Added a service-role Supabase client helper for signed upload initialization.
+- Added fallback handling for publishable Supabase keys in server and browser clients.
+
 ## 2026-01-09
 - Added `"use cache: private"` + `cacheLife("seconds")` to `getUserWithRole` so authenticated Supabase lookups stay compatible with Cache Components without leaking shared cache entries.
 

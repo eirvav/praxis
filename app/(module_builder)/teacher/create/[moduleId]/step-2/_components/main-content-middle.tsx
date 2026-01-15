@@ -1,8 +1,11 @@
 'use client'
 
+import { toast } from 'sonner'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useBuilder } from '../../_components/builder-context'
+import { uploadVideoSlideFile } from '../../direct-upload'
 import { ContextSlide } from './slide-types/context-slide/context-slide'
 import { VideoUploadSlide } from './slide-types/video-upload-slide/video-upload-slide'
 import { TextResponseSlide } from './slide-types/text-response-slide/text-response-slide'
@@ -12,10 +15,13 @@ import { QuizSlide } from './slide-types/quiz-slide/quiz-slide'
 
 export function MainContentMiddle() {
 	const {
+		moduleId,
 		slides,
 		selectedSlideId,
 		updateSlide,
 		setPendingVideoFile,
+		startVideoUpload,
+		finishVideoUpload,
 	} = useBuilder()
 
 	const activeSlide = slides.find((s) => s.id === selectedSlideId)
@@ -87,11 +93,37 @@ export function MainContentMiddle() {
 							if (previewUrl) {
 								updateSlide(activeSlide.id, {
 									content: {
-										...activeSlide.content,
 										videoUrl: previewUrl,
 									},
 								})
 							}
+
+							if (!file) return
+
+							startVideoUpload(activeSlide.id)
+							uploadVideoSlideFile({
+								moduleId,
+								slideId: activeSlide.id,
+								file,
+							})
+								.then((path) => {
+									updateSlide(activeSlide.id, {
+										content: {
+											videoPath: path,
+										},
+									})
+									setPendingVideoFile(activeSlide.id, null)
+								})
+								.catch((error) => {
+									const message =
+										error instanceof Error
+											? error.message
+											: 'Video upload failed.'
+									toast.error(message)
+								})
+								.finally(() => {
+									finishVideoUpload(activeSlide.id)
+								})
 						}}
 					/>
 				)}

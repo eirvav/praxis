@@ -41,6 +41,7 @@ export function BuilderShell({
 		setLastSyncedAt,
 		getPendingVideoFile,
 		clearPendingVideoFiles,
+		hasActiveVideoUploads,
 	} = useBuilder()
 
 	const currentIndex = useMemo(() => {
@@ -61,6 +62,11 @@ export function BuilderShell({
 
 	const handlePublish = () => {
 		startPublishing(async () => {
+			if (hasActiveVideoUploads) {
+				toast.error('Wait for video uploads to finish before publishing.')
+				return
+			}
+
 			if (!module.title) {
 				toast.error('Add a title before publishing')
 				return

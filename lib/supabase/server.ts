@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createServiceRoleClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
@@ -8,10 +9,18 @@ import { cookies } from "next/headers";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!publishableKey) {
+    throw new Error("Missing Supabase publishable key.");
+  }
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    publishableKey,
     {
       cookies: {
         getAll() {
@@ -28,6 +37,19 @@ export async function createClient() {
             // user sessions.
           }
         },
+      },
+    },
+  );
+}
+
+export function createServiceClient() {
+  return createServiceRoleClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
       },
     },
   );
