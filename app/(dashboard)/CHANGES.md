@@ -1,5 +1,9 @@
 # Dashboard route group changes
 
+## 2026-01-15
+- Added hover "Start" button overlay on student module cards in `/student` page
+- Button links to `/student/player/[moduleId]` for launching module player
+
 ## 2026-01-09
 - Simplified `/teacher` and `/student` pages to display only a greeting message: "Hello firstName, you are <ROLE>".
 - Moved `_components` folder from `(dashboard)` to `(admin)` route group. All shared dashboard components (dashboard-shell, role-badge, role-gate) are now located in `app/(admin)/_components/`.

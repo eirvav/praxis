@@ -1,9 +1,11 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { Play } from "lucide-react"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardFallback } from "@/components/dashboard-fallback"
 import { SiteHeader } from "@/components/site-header"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   SidebarInset,
@@ -79,7 +81,7 @@ export default async function StudentPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   {modules.map((module) => (
-                    <Card key={module.id}>
+                    <Card key={module.id} className="group relative">
                       <CardHeader>
                         <CardTitle>{module.title || "Untitled module"}</CardTitle>
                         <p className="text-sm text-muted-foreground">
@@ -96,6 +98,14 @@ export default async function StudentPage() {
                             : "Draft"}
                         </span>
                       </CardContent>
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button asChild size="lg" className="gap-2">
+                          <Link href={`/student/player/${module.id}`}>
+                            <Play className="size-4" />
+                            Start
+                          </Link>
+                        </Button>
+                      </div>
                     </Card>
                   ))}
                 </div>

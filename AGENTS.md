@@ -92,6 +92,18 @@
 │   │   │           └── types.ts
 │   │   ├── AGENTS.md
 │   │   └── CHANGES.md
+│   ├── (module_player)
+│   │   ├── _components
+│   │   │   ├── media-permission-gate.tsx
+│   │   │   ├── player-context.tsx
+│   │   │   └── player-shell.tsx
+│   │   ├── student
+│   │   │   └── player
+│   │   │       └── [moduleId]
+│   │   │           ├── layout.tsx
+│   │   │           └── page.tsx
+│   │   ├── AGENTS.md
+│   │   └── CHANGES.md
 │   ├── auth
 │   │   ├── confirm
 │   │   │   └── route.ts
