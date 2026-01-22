@@ -1,5 +1,14 @@
 # Module Player Changes
 
+## 2026-01-15 - Audio Context Cleanup Fix
+
+### Fixed
+- Fixed "Cannot close a closed AudioContext" error when proceeding to slides
+- Audio context cleanup was happening in two useEffects causing double-close
+- Now only closes in the audio monitoring useEffect with state check
+- Stream cleanup separated: MediaPermissionGate only cleans up if permissions denied,
+  PlayerContext handles cleanup when leaving module player entirely
+
 ## 2026-01-15 - Audio Level Indicator
 
 ### Added

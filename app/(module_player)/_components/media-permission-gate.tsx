@@ -14,7 +14,6 @@ export function MediaPermissionGate() {
 	const streamRef = useRef<MediaStream | null>(null)
 	const permissionsGrantedRef = useRef(false)
 	const audioContextRef = useRef<AudioContext | null>(null)
-	const analyserRef = useRef<AnalyserNode | null>(null)
 	const animationFrameRef = useRef<number | null>(null)
 
 	const [cameraStatus, setCameraStatus] = useState<PermissionStatus>('pending')
@@ -29,7 +28,6 @@ export function MediaPermissionGate() {
 		const video = videoRef.current
 		if (!video || !localStream) return
 
-		console.log('Attaching stream to video element')
 		video.srcObject = localStream
 
 		// Explicitly try to play
@@ -55,15 +53,15 @@ export function MediaPermissionGate() {
 		source.connect(analyser)
 
 		audioContextRef.current = audioContext
-		analyserRef.current = analyser
 
 		// Monitor audio levels
 		const dataArray = new Uint8Array(analyser.frequencyBinCount)
+		let isRunning = true
 
 		const updateLevel = () => {
-			if (!analyserRef.current) return
+			if (!isRunning) return
 
-			analyserRef.current.getByteFrequencyData(dataArray)
+			analyser.getByteFrequencyData(dataArray)
 
 			// Calculate average level
 			const sum = dataArray.reduce((acc, val) => acc + val, 0)
@@ -77,13 +75,16 @@ export function MediaPermissionGate() {
 
 		updateLevel()
 
-		// Cleanup
+		// Cleanup - this is the ONLY place we close the audio context
 		return () => {
+			isRunning = false
 			if (animationFrameRef.current) {
 				cancelAnimationFrame(animationFrameRef.current)
+				animationFrameRef.current = null
 			}
-			if (audioContextRef.current) {
+			if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
 				audioContextRef.current.close()
+				audioContextRef.current = null
 			}
 		}
 	}, [localStream])
@@ -101,8 +102,6 @@ export function MediaPermissionGate() {
 				audio: true,
 			})
 
-			console.log('Stream obtained:', stream)
-
 			streamRef.current = stream
 			setLocalStream(stream)
 
@@ -115,7 +114,7 @@ export function MediaPermissionGate() {
 
 			if (hasVideo && hasAudio) {
 				permissionsGrantedRef.current = true
-				// Store stream in context for later use
+				// Store stream in context - PlayerContext handles cleanup when leaving module
 				setMediaStream(stream)
 			}
 		} catch (err) {
@@ -152,22 +151,15 @@ export function MediaPermissionGate() {
 		}
 	}, [cameraStatus, micStatus, setPermissionsGranted])
 
-	// Cleanup ONLY on unmount - use ref to check if we should stop tracks
+	// Cleanup stream ONLY if permissions weren't granted (user denied/closed without continuing)
+	// If permissions were granted, PlayerContext owns the stream and handles cleanup
 	useEffect(() => {
 		return () => {
-			// Only stop tracks if permissions weren't granted (stream not passed to context)
 			if (streamRef.current && !permissionsGrantedRef.current) {
-				console.log('Cleanup: stopping tracks')
 				streamRef.current.getTracks().forEach((track) => track.stop())
 			}
-			if (animationFrameRef.current) {
-				cancelAnimationFrame(animationFrameRef.current)
-			}
-			if (audioContextRef.current) {
-				audioContextRef.current.close()
-			}
 		}
-	}, []) // Empty deps - only runs on unmount
+	}, [])
 
 	const bothGranted = cameraStatus === 'granted' && micStatus === 'granted'
 	const hasStream = localStream !== null
